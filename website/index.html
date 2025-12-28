@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShinobiRPG - The Unlimited Winter</title>
+    <!-- 
+      BUILD_ID: 20251228_2055_PREMIUM
+      This unique ID ensures Cloudflare sees this file as new on every deploy.
+    -->
+    <meta name="deploy-version" content="2025.12.28.v3-Monolith">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:ital,wght@0,300;0,400;1,400&family=Bangers&display=swap"
+        rel="stylesheet">
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #000000;
+            /* AMOLED Black */
+            --accent: #006400;
+            /* Dark Green Premium */
+            --accent-glow: #00ff00;
+            --text-primary: #ffffff;
+            --glass-bg: rgba(0, 40, 0, 0.2);
+            --glass-border: rgba(0, 255, 0, 0.3);
+            --bubble-bg: rgba(255, 255, 255, 0.95);
+            --bubble-text: #000000;
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Lato', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--bg-dark);
+            font-family: var(--font-body);
+            color: var(--text-primary);
+        }
+
+        /* --- NAVIGATION SYSTEM --- */
+        #app {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        section {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        section.active-section {
+            display: block;
+            opacity: 1;
+            z-index: 10;
+        }
+
+        /* --- PREMIUM OPENING ANIMATION --- */
+        #opening-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        #opening-svg {
+            width: 300px;
+            height: 300px;
+            filter: drop-shadow(0 0 20px var(--accent));
+        }
+
+        #opening-svg path {
+            stroke: var(--accent-glow);
+            stroke-width: 1.5;
+            fill: none;
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000;
+            animation: drawPath 4s ease forwards;
+        }
+
+        @keyframes drawPath {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        /* --- HUB PREMIUM UI --- */
+        .hub-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #0d1f0d 0%, #000 100%);
+        }
+
+        .hub-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            padding: 4rem;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+            transform: translateY(0);
+            transition: transform 0.5s ease;
+        }
+
+        .hub-title {
+            font-family: var(--font-heading);
+            font-size: 4rem;
+            letter-spacing: 5px;
+            background: linear-gradient(to bottom, #fff 30%, var(--accent-glow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2.5rem;
+            text-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .hub-btn {
+            display: block;
+            width: 100%;
+            padding: 1.2rem;
+            margin: 1.2rem 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--accent);
+            color: #fff;
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            border-radius: 10px;
+        }
+
+        .hub-btn:hover {
+            background: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+            transform: scale(1.05);
+            letter-spacing: 2px;
+        }
+
+        /* --- JUTSU DATABASE --- */
+        #jutsu-page {
+            overflow-y: auto;
+            background: #000;
+            padding: 3rem;
+            height: 100%;
+        }
+
+        .db-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 2rem;
+        }
+
+        .db-card {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 20px;
+            padding: 20px;
+            transition: 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .db-card:hover {
+            border-color: var(--accent-glow);
+            transform: translateY(-10px);
+            background: #0d0d0d;
+        }
+
+        .db-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        /* --- STORY MODE PANELS --- */
+        #story-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            opacity: 0;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .panel.active {
+            display: flex;
+            opacity: 1;
+            z-index: 5;
+        }
+
+        .bg-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 10s linear;
+        }
+
+        .panel.active .bg-img {
+            transform: scale(1.1);
+        }
+
+        .speech-bubble {
+            position: absolute;
+            background: var(--bubble-bg);
+            color: #000;
+            padding: 1.5rem 2rem;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            max-width: 50%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+            border: 3px solid #000;
+            z-index: 100;
+        }
+
+        .bubble-name {
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 5px;
+            font-family: var(--font-heading);
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 6px;
+            background: #111;
+            z-index: 1000;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-glow);
+            width: 0%;
+            transition: width 0.5s;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        @media (max-width: 768px) {
+            .hub-title {
+                font-size: 2.5rem;
+            }
+
+            .hub-glass {
+                padding: 2rem;
+            }
+
+            .speech-bubble {
+                width: 85%;
+                max-width: 85%;
+                left: 7.5% !important;
+                transform: none !important;
+                bottom: 10%;
+                top: auto !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ULTIMATE OPENING ANIMATION -->
+    <div id="opening-layer">
+        <svg id="opening-svg" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 496">
+            <!-- Full Path from openinganimation.svg -->
+            <path stroke="currentColor"
+                d="M303.767,251.671 C313.786,252.487 320.131,258.646 326.146,265.153 C329.444,268.722 327.958,272.555 325.599,275.983 C336.186,286.486 324.647,302.133 313.944,304.254 C306.672,305.695 300.023,304.643 293.976,300.506 C286.64,295.486 279.533,290.175 277.84,279.321 C272.998,287.172 266.73,289.998 258.83,289.454 C255.847,289.249 255.218,291.223 255.357,293.694 C255.565,297.386 255.036,300.872 251.234,302.535 C247.243,304.28 243.695,303.222 240.05,300.772 C234.582,297.097 231.915,292.725 232.422,285.831 C232.956,278.565 232.1,271.208 232.169,263.894 C232.254,254.937 234.646,252.723 243.515,252.685 C245.679,252.676 247.854,252.828 250.003,252.656 C262.945,251.619 271.139,258.718 278.113,268.895 C282.344,257.144 290.619,251.075 303.767,251.671 Z" />
+            <path stroke="currentColor"
+                d="M300.15,274.276 C298.548,275.361 297.236,276.808 297.602,278.789 C298.351,282.856 302.46,283.02 305.536,284.629 C301.395,286.86 298.65,286.646 295.75,284.104 C291.318,280.218 290.898,272.187 294.902,267.864 C298.845,263.607 303.699,263.785 308.862,268.378 C312.442,271.563 316.552,271.092 318.279,267.214 C319.98,263.396 317.886,260.801 315.11,258.659 C307.805,253.024 299.762,252.322 291.68,256.374 C282.822,260.814 279.244,268.507 280.285,278.269 C281.219,287.023 285.967,293.092 294.164,296.12 C307.215,300.942 321.255,292.108 320.838,279.587 C320.723,276.121 319.322,273.556 315.723,273.423 C310.771,273.242 305.765,272.732 300.15,274.276 Z" />
+            <path stroke="currentColor"
+                d="M110.477,234.777 C98.924,235.632 91.183,229.379 84.484,221.765 C80.9,217.691 82.284,213.927 88.095,208.469 C86.312,205.641 83.967,203.132 83.58,199.39 C82.172,185.737 95.052,178.908 107.824,182.433 C114.259,184.209 119.188,188.691 123.554,193.487 C127.577,197.907 126.89,200.257 120.934,207.029 C130.776,220.207 126.608,231.674 110.477,234.777 Z" />
+            <path stroke="currentColor"
+                d="M248,8C115.4,8,8,115.4,8,248s107.4,240,240,240s240-107.4,240-240S380.6,8,248,8z M248,448c-110.5,0-200-89.5-200-200S137.5,48,248,48s200,89.5,200,200S358.5,448,248,448z" />
+        </svg>
+    </div>
+
+    <div id="app">
+
+        <!-- HUB OVERLAY -->
+        <section id="hub-section" class="active-section">
+            <div class="hub-container">
+                <div class="hub-glass">
+                    <h1 class="hub-title">MENMA</h1>
+                    <p id="welcome-msg" style="margin-bottom: 2rem; font-size: 1.2rem; opacity: 0.8;">The journey from
+                        Discord to the Web begins here.</p>
+
+                    <button class="hub-btn" onclick="app.router('game')">Story Core</button>
+                    <button class="hub-btn" onclick="app.router('jutsus')">Database</button>
+                    <button class="hub-btn" onclick="window.location.href='/oauth/login'" id="login-btn">Sign
+                        In</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- JUTSU DATABASE -->
+        <section id="jutsus-section">
+            <div id="jutsu-page">
+                <div
+                    style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 1rem;">
+                    <h1 class="hub-title" style="font-size: 2rem; margin:0;">SCROLLS</h1>
+                    <button class="hub-btn" style="width: auto; padding: 0.5rem 1.5rem;"
+                        onclick="app.router('hub')">Hub</button>
+                </div>
+                <div class="db-grid" id="jutsu-grid"></div>
+            </div>
+        </section>
+
+        <!-- STORY MODE -->
+        <section id="game-section">
+            <div id="story-container">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+
+                <!-- AUTO-GENERATED PANELS BY JS -->
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // --- ASSETS & CONFIG ---
+        const STORY_DATA = [
+            { id: 1, bg: 'assets/konoha_field.png', text: 'It\'s time for daily practice!', name: 'Naruto' },
+            { id: 2, bg: 'https://i.postimg.cc/Pq3jsLG0/image.png', text: 'Sasuke is missing again...', name: 'Naruto' },
+            { id: 3, bg: 'https://i.postimg.cc/HxqFdX65/image.png', text: 'I have a bad feeling about this.', name: 'Naruto' },
+            { id: 4, bg: 'https://i.postimg.cc/Y25KNKfY/image.png', text: 'The council has summoned us.', name: 'Kakashi' },
+            { id: 5, bg: 'https://i.postimg.cc/HnhQM9ys/image.png', text: 'The mysterious power has returned.', name: 'Hokage' },
+            { id: 6, isSplit: true, left: 'https://i.postimg.cc/cLprV4YS/image.png', right: 'https://i.postimg.cc/Kv4jjgrd/image.png' },
+            { id: 7, bg: 'https://i.postimg.cc/BQJXphFB/image.png', isChoice: true, options: ['shadow_clone', 'rasengan'] },
+            { id: 8, bg: 'https://i.postimg.cc/TPTpRNkD/image.png', text: 'The journey to the Land of Earth begins.' },
+            { id: 12, bg: 'https://i.postimg.cc/6qcnqKwB/eye.png', text: 'Something is watching us...' },
+            { id: 15, isMinigame: true },
+            { id: 16, bg: 'https://i.postimg.cc/TPTpRNkD/image.png', npc: 'https://i.postimg.cc/LX73fc5q/image.png', text: 'Coming here was a mistake.' },
+            { id: 99, bg: 'assets/konoha_field.png', text: 'TO BE CONTINUED...', isOutro: true }
+        ];
+
+        const bgMusic = new Howl({ src: ['assets/bgmusic.mp3'], loop: true, volume: 0.4 });
+
+        // --- APP ENGINE ---
+        const app = {
+            state: { curIdx: 0, user: null, jutsus: [] },
+
+            init() {
+                // Opening handling
+                gsap.to('#opening-svg path', { delay: 4, duration: 1, fill: '#00ff00', stroke: 'none' });
+                gsap.to('#opening-layer', {
+                    delay: 5.5, duration: 1.5, opacity: 0, onComplete: () => {
+                        document.getElementById('opening-layer').style.display = 'none';
+                    }
+                });
+
+                // LocalStorage
+                const user = localStorage.getItem('discord_username');
+                if (user) {
+                    document.getElementById('welcome-msg').innerText = `Welcome back, ${user}.`;
+                    document.getElementById('login-btn').style.display = 'none';
+                }
+
+                this.renderStoryPanels();
+                this.router('hub');
+                this.fetchJutsus();
+            },
+
+            router(page) {
+                document.querySelectorAll('section').forEach(s => s.classList.remove('active-section'));
+                document.getElementById(`${page}-section`).classList.add('active-section');
+                if (page === 'game') {
+                    if (!bgMusic.playing()) bgMusic.play();
+                    this.state.curIdx = 0;
+                    this.updateStoryDisplay();
+                }
+            },
+
+            renderStoryPanels() {
+                const container = document.getElementById('story-container');
+                STORY_DATA.forEach((d, i) => {
+                    const el = document.createElement('div');
+                    el.className = `panel ${i === 0 ? 'active' : ''}`;
+                    el.id = `panel-${i}`;
+
+                    if (d.isSplit) {
+                        el.innerHTML = `<div class="background-layer" style="display:flex;">
+                            <img src="${d.left}" style="width:50%; height:100%; object-fit:cover;">
+                            <img src="${d.right}" style="width:50%; height:100%; object-fit:cover;">
+                        </div>`;
+                    } else if (d.isMinigame) {
+                        el.innerHTML = `<div id="minigame-container" style="width:100%; height:100%;"></div>
+                        <button class="hub-btn" style="position:fixed; z-index:1000; width:200px;" onclick="app.startMinigame()">CLIMB</button>`;
+                    } else {
+                        el.innerHTML = `<div class="background-layer"><img src="${d.bg}" class="bg-img"></div>`;
+                        if (d.npc) {
+                            el.innerHTML += `<img src="${d.npc}" style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); height:80%; z-index:2;">`;
+                        }
+                        if (d.text) {
+                            el.innerHTML += `<div class="speech-bubble hidden">
+                                ${d.name ? `<div class="bubble-name">${d.name}</div>` : ''}
+                                <p>${d.text}</p>
+                            </div>`;
+                        }
+                        if (d.isChoice) {
+                            el.innerHTML += `<div class="content-layer active" style="display:flex; flex-direction:column; justify-content:center; align-items:center; pointer-events:auto;">
+                                <button class="hub-btn" onclick="app.next()">Shadow Clone</button>
+                                <button class="hub-btn" onclick="app.next()">Rasengan</button>
+                            </div>`;
+                        }
+                    }
+                    container.appendChild(el);
+                });
+
+                container.onclick = (e) => {
+                    if (e.target.tagName !== 'BUTTON') this.next();
+                };
+            },
+
+            next() {
+                const curView = STORY_DATA[this.state.curIdx];
+                const curEl = document.getElementById(`panel-${this.state.curIdx}`);
+
+                // If there is hidden text, reveal it first
+                const hiddenBubble = curEl.querySelector('.speech-bubble.hidden');
+                if (hiddenBubble) {
+                    hiddenBubble.classList.remove('hidden');
+                    gsap.fromTo(hiddenBubble, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out' });
+                    return;
+                }
+
+                if (this.state.curIdx < STORY_DATA.length - 1) {
+                    this.state.curIdx++;
+                    this.updateStoryDisplay();
+                } else {
+                    this.router('hub');
+                }
+            },
+
+            updateStoryDisplay() {
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                const next = document.getElementById(`panel-${this.state.curIdx}`);
+                next.classList.add('active');
+
+                const prog = (this.state.curIdx / (STORY_DATA.length - 1)) * 100;
+                gsap.to('.progress-fill', { width: `${prog}%` });
+            },
+
+            async fetchJutsus() {
+                try {
+                    const res = await fetch('/api/jutsus');
+                    const data = await res.json();
+                    const grid = document.getElementById('jutsu-grid');
+                    Object.entries(data).forEach(([name, item]) => {
+                        const card = document.createElement('div');
+                        card.className = 'db-card';
+                        card.innerHTML = `<img src="${item.gif || 'https://via.placeholder.com/150'}"><h3>${name}</h3><p>${item.rank}-Rank</p>`;
+                        grid.appendChild(card);
+                    });
+                } catch (e) { }
+            },
+
+            startMinigame() {
+                alert("The mountain is steep! (Demo version: Pass automatically)");
+                this.next();
+            }
+        };
+
+        window.onload = () => app.init();
+    </script>
+</body>
+
+</html>
