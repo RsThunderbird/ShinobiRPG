@@ -1,5 +1,5 @@
 define(['scenes/base-scene', 'asset-loader', 'gui/button', 'gui/radio-button', 'gui/simple-button', 'gui/panel',
-    'scenes/arcs', 'models/warrior', 'models/mage', 'models/rogue', 'models/huntress'],
+  'scenes/arcs', 'models/warrior', 'models/mage', 'models/rogue', 'models/huntress'],
   function (BaseScene, AssetLoader, Button, RadioButton, SimpleButton, Panel, Arcs,
     Warrior, Mage, Rogue, Huntress) {
     var HeroSelectionScene = BaseScene.extend({
@@ -139,7 +139,7 @@ define(['scenes/base-scene', 'asset-loader', 'gui/button', 'gui/radio-button', '
             h: (10 * this.zoom)
           },
           pressedCallback: (function () {
-            if(this.showHeroDescription){
+            if (this.showHeroDescription) {
               this.showHeroDescription = false;
               return;
             }
@@ -168,7 +168,7 @@ define(['scenes/base-scene', 'asset-loader', 'gui/button', 'gui/radio-button', '
             h: (18 * this.zoom)
           },
           pressedCallback: (function () {
-            console.info('Challenges not implemented yet');
+            // Challenges feature not yet implemented
           }).bind(this)
         });
 
@@ -201,7 +201,16 @@ define(['scenes/base-scene', 'asset-loader', 'gui/button', 'gui/radio-button', '
             h: 24
           },
           pressedCallback: (function () {
-            console.info('New game not implemented yet');
+            if (this.selectedHero) {
+              // Save the selected hero class to localStorage
+              localStorage.setItem('LAST_CLASS', this.selectedHero.text);
+
+              // Transition to the GAME scene
+              this.game.changeScene({
+                sceneName: "GAME",
+                heroClass: this.selectedHero.text
+              });
+            }
           }).bind(this)
         });
 
@@ -252,7 +261,7 @@ define(['scenes/base-scene', 'asset-loader', 'gui/button', 'gui/radio-button', '
 
       onResourcesLoaded: function () {
         this.initScene();
-            this.ready = true;
+        this.ready = true;
       },
 
       selectHero: function (heroButton) {
@@ -270,8 +279,8 @@ define(['scenes/base-scene', 'asset-loader', 'gui/button', 'gui/radio-button', '
         this.selectedHero = heroButton;
       },
 
-      getHeroDescription: function(type){
-        switch(type){
+      getHeroDescription: function (type) {
+        switch (type) {
           case 'WARRIOR':
             return Warrior.description;
           case 'MAGE':
@@ -319,7 +328,7 @@ define(['scenes/base-scene', 'asset-loader', 'gui/button', 'gui/radio-button', '
         // draw title
         var titleImg = this.aLoader.spriteData('banners').image;
         this.context.drawImage(titleImg, 0, 136, titleImg.width, 28,
-            (canvasW / 2) - (titleImg.width / 2 * zoom), (canvasH / 3) - (titleImg.height / 2), titleImg.width * 2, 28 * zoom);
+          (canvasW / 2) - (titleImg.width / 2 * zoom), (canvasH / 3) - (titleImg.height / 2), titleImg.width * 2, 28 * zoom);
 
         // draw buttons
         this.children.forEach((function (element) {
@@ -330,7 +339,7 @@ define(['scenes/base-scene', 'asset-loader', 'gui/button', 'gui/radio-button', '
           this.newGameButton.draw(this.context);
         }
 
-        if(this.showHeroDescription){
+        if (this.showHeroDescription) {
           this.heroDescriptionPanel.draw(this.context);
         }
       }
