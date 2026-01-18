@@ -23,14 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
         path.style.strokeDasharray = length;
         path.style.strokeDashoffset = length;
 
-        // Animate each path - faster
-        tl.to(path, { strokeDashoffset: 0, duration: 0.5, ease: "power2.inOut" }, "-=0.35"); // Heavily overlapped for speed
+        // Animate each path
+        tl.to(path, { strokeDashoffset: 0, duration: 0.8, ease: "power1.out" }, "-=0.2"); // Overlap animations
     });
 
-    // Play the animation
-    window.onload = () => {
-        tl.play();
-    };
+    // Play the animation, then fade out the overlay
+    tl.play();
     tl.then(() => {
         // After SVG animation, start background music and fade in main content
         bgMusic.play();
