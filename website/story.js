@@ -7,6 +7,8 @@ const assets = {
     cave: 'https://i.postimg.cc/3wBzWVMP/image.png',
     vines: 'https://i.postimg.cc/RCbGs9Qb/image.png',
     exit: 'https://i.postimg.cc/wjb0PzpB/image.png',
+    walkingForward: 'https://i.postimg.cc/1zPM81Fp/image.png',
+    vinesMinigameBg: 'https://i.postimg.cc/Hn5BJY6Q/image.png',
     walkingSound: 'https://assets.mixkit.co/sfx/preview/mixkit-footsteps-in-the-forest-ground-1230.mp3' // Placeholder
 };
 
@@ -14,6 +16,20 @@ let currentStage = 'blinking';
 
 function init() {
     startBlinkingAnimation();
+    setupMobileFullScreen();
+}
+
+function setupMobileFullScreen() {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+        document.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            }
+        }, { once: true });
+    }
 }
 
 function startBlinkingAnimation() {
@@ -175,11 +191,11 @@ function finishBatsMinigame() {
 
 function walkingForwardEffect() {
     const caveBg = document.getElementById('cave-bg');
-    caveBg.src = assets.cave;
+    caveBg.src = assets.walkingForward;
     caveBg.style.opacity = 1;
 
     gsap.to(caveBg, {
-        scale: 4,
+        scale: 2,
         opacity: 0,
         duration: 5,
         ease: 'power2.in',
@@ -200,6 +216,9 @@ function startVinesMinigame() {
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    const exitImg = document.getElementById('exit-img');
+    exitImg.src = assets.vinesMinigameBg;
 
     const vineImg = new Image();
     vineImg.src = assets.vines;
@@ -364,6 +383,85 @@ function initThreeForest() {
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
+    // Mobile controls logic
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+        document.getElementById('mobile-controls').style.display = 'block';
+        const joystick = document.getElementById('joystick');
+        const joystickContainer = document.getElementById('joystick-container');
+        let joystickActive = false;
+        let touchStartX, touchStartY;
+
+        joystickContainer.addEventListener('touchstart', (e) => {
+            joystickActive = true;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!joystickActive) return;
+            const touchX = e.touches[0].clientX;
+            const touchY = e.touches[0].clientY;
+
+            const dx = touchX - touchStartX;
+            const dy = touchY - touchStartY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const maxDist = 40;
+
+            const angle = Math.atan2(dy, dx);
+            const moveX = Math.min(dist, maxDist) * Math.cos(angle);
+            const moveY = Math.min(dist, maxDist) * Math.sin(angle);
+
+            joystick.style.transform = `translate(${moveX}px, ${moveY}px)`;
+
+            moveForward = moveY < -10;
+            moveBackward = moveY > 10;
+            moveLeft = moveX < -10;
+            moveRight = moveX > 10;
+        });
+
+        window.addEventListener('touchend', () => {
+            joystickActive = false;
+            joystick.style.transform = 'translate(0, 0)';
+            moveForward = moveBackward = moveLeft = moveRight = false;
+        });
+
+        // Touch look
+        let lastTouchX, lastTouchY;
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches[0].clientX > window.innerWidth / 2) {
+                lastTouchX = e.touches[0].clientX;
+                lastTouchY = e.touches[0].clientY;
+            }
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches[0].clientX > window.innerWidth / 2 && !joystickActive) {
+                const touchX = e.touches[0].clientX;
+                const touchY = e.touches[0].clientY;
+
+                if (lastTouchX !== undefined && lastTouchY !== undefined) {
+                    const dx = touchX - lastTouchX;
+                    const dy = touchY - lastTouchY;
+
+                    yaw -= dx * 0.005;
+                    pitch -= dy * 0.005;
+                    pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
+                }
+
+                lastTouchX = touchX;
+                lastTouchY = touchY;
+            }
+        });
+
+        window.addEventListener('touchend', (e) => {
+            if (e.touches.length === 0) {
+                lastTouchX = undefined;
+                lastTouchY = undefined;
+            }
+        });
+    }
+
     let yaw = 0, pitch = 0;
     document.addEventListener('mousemove', (e) => {
         if (document.pointerLockElement === renderer.domElement) {
@@ -374,7 +472,7 @@ function initThreeForest() {
     });
 
     renderer.domElement.addEventListener('click', () => {
-        renderer.domElement.requestPointerLock();
+        if (!isMobile) renderer.domElement.requestPointerLock();
     });
 
     function animate() {
@@ -399,7 +497,7 @@ function initThreeForest() {
         gsap.to(loadingScreen, {
             opacity: 0, duration: 1.5, onComplete: () => {
                 loadingScreen.style.display = 'none';
-                showNarrative("You've entered the Forest. Use W/A/S/D to move and your mouse to look around.", [
+                showNarrative("You've entered the Forest. Use W/A/S/D or Joystick to move and touch/mouse to look around.", [
                     { text: "Let's explore", action: () => { } }
                 ]);
             }
