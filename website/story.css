@@ -1,0 +1,258 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #000;
+    font-family: 'Cinzel', serif;
+    color: #fff;
+}
+
+#game-viewport {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+#landscape-warning {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    text-align: center;
+}
+
+#landscape-warning img {
+    width: 100px;
+    filter: invert(1);
+    margin-bottom: 20px;
+}
+
+@media screen and (orientation: portrait) and (max-width: 1024px) {
+    #landscape-warning {
+        display: flex;
+    }
+}
+
+#eye-blinking-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.eyelid {
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    background-color: #000;
+}
+
+.eyelid.top { top: 0; }
+.eyelid.bottom { bottom: 0; }
+
+#story-container {
+    width: 100%;
+    height: 100%;
+    transition: filter 2s ease;
+}
+
+#story-container.blurred {
+    filter: blur(20px);
+}
+
+.stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.stage.active {
+    display: flex;
+}
+
+#cave-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 5s ease, opacity 2s ease;
+}
+
+.cave-exit {
+    position: absolute;
+    cursor: pointer;
+    /* border: 2px solid red; /* for debug */
+}
+
+.cave-exit.left {
+    top: 30%;
+    left: 15%;
+    width: 25%;
+    height: 50%;
+}
+
+.cave-exit.right {
+    top: 30%;
+    right: 15%;
+    width: 25%;
+    height: 50%;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    z-index: 500;
+}
+
+.modal.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.narrative-text {
+    font-size: 2rem;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+    text-align: center;
+}
+
+#bats-container {
+    position: relative;
+    width: 80vw;
+    height: 80vh;
+    border: 1px solid rgba(255,255,255,0.2);
+    overflow: hidden;
+}
+
+.bat {
+    position: absolute;
+    width: 80px;
+    height: auto;
+    cursor: pointer;
+    user-select: none;
+}
+
+#vines-bg-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#exit-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#vines-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+#loading-screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#three-container {
+    width: 100%;
+    height: 100%;
+}
+
+#mobile-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 150px;
+    height: 150px;
+    display: none;
+    z-index: 200;
+}
+
+#joystick-container {
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    position: relative;
+}
+
+#joystick {
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 50%;
+    position: absolute;
+    top: 30px;
+    left: 30px;
+}
+
+#ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding-bottom: 50px;
+}
+
+#narrative-box {
+    background: rgba(0,0,0,0.7);
+    padding: 20px;
+    border: 2px solid #555;
+    max-width: 80%;
+    font-size: 1.5rem;
+    display: none;
+    pointer-events: auto;
+}
