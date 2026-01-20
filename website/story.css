@@ -266,29 +266,29 @@ html {
 }
 
 #narrative-box {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    padding: 30px 40px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    max-width: 700px;
-    width: 80%;
-    font-size: 1.2rem;
+    background: rgba(20, 20, 20, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 40px 50px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    max-width: 800px;
+    width: 90%;
+    font-size: 1.3rem;
     display: none;
     pointer-events: auto;
     text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-    animation: slideUp 0.5s ease-out;
-    color: #fff;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+    animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    color: #f0f0f0;
     font-family: 'Outfit', sans-serif;
-    line-height: 1.6;
+    line-height: 1.8;
 }
 
 @keyframes slideUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(40px);
     }
 
     to {
@@ -298,13 +298,58 @@ html {
 }
 
 .narrative-text {
-    font-size: 1.4rem;
-    text-shadow: none;
-    margin-bottom: 20px;
+    font-size: 1.25rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 30px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+.story-choice-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 12px 24px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.story-choice-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 #bats-text {
-    margin-bottom: 10px;
-    font-family: 'Outfit', sans-serif;
-    letter-spacing: 1px;
+    margin-bottom: 20px;
+    font-family: 'Bangers', cursive;
+    letter-spacing: 2px;
+    font-size: 3rem;
+    color: #ff4757;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    animation: pulseText 1.5s infinite;
+}
+
+@keyframes pulseText {
+    0% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
 }

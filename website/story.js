@@ -22,17 +22,17 @@ function startBlinkingAnimation() {
     const eyelidsBottom = document.querySelector('.eyelid.bottom');
     const storyContainer = document.getElementById('story-container');
 
-    // Slower blinks as requested
-    tl.to([eyelidsTop, eyelidsBottom], { height: '30%', duration: 1.5, repeat: 2, yoyo: true, ease: 'power1.inOut' })
-        .to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 2.5, ease: 'power2.inOut' })
-        .to(storyContainer, { filter: 'blur(0px)', duration: 4 }, '-=1')
+    // Slower blinks as requested - significantly slower
+    tl.to([eyelidsTop, eyelidsBottom], { height: '35%', duration: 3, repeat: 2, yoyo: true, ease: 'power1.inOut' })
+        .to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 4, ease: 'power2.inOut' })
+        .to(storyContainer, { filter: 'blur(0px)', duration: 5 }, '-=2')
         .add(() => {
             showNarrative("You gradually open your eyes. You find yourself in the middle of a cave.", [
                 {
                     text: "Look around", action: () => {
                         showNarrative("To your left and right, the cave splits. You need to decide to go left or right.", [
                             {
-                                text: "Continue", action: () => {
+                                text: "Make a choice", action: () => {
                                     setupCaveChoice();
                                 }
                             }
@@ -61,10 +61,10 @@ function setupCaveChoice() {
 
 function handleChoice(choice) {
     if (choice === 'right') {
-        showNarrative("You go into the dark right path, but the tunnel narrows until it's impossible to pass. It's a dead end.", [
+        showNarrative("You step into the suffocating darkness of the right tunnel. The air grows stale, and the walls close in until it is impossible to move forward. It is a dead end.", [
             {
-                text: "Return to the split", action: () => {
-                    showNarrative("You walk back to where you started.", [
+                text: "Turn back", action: () => {
+                    showNarrative("You carefully retrace your steps back to the main cavern, relieved to escape the crushing tight space.", [
                         { text: "Take the left path", action: () => handleChoice('left') }
                     ]);
                 }
@@ -82,16 +82,16 @@ function showNarrative(text, buttons = []) {
     box.innerHTML = `<p class="narrative-text">${text}</p>`;
 
     const btnContainer = document.createElement('div');
-    btnContainer.className = 'cta-buttons'; // Use landing page button styles if possible, or define in story.css
-    btnContainer.style.marginTop = '20px';
+    btnContainer.className = 'cta-buttons';
+    btnContainer.style.marginTop = '30px';
+    btnContainer.style.display = 'flex';
+    btnContainer.style.gap = '15px';
     btnContainer.style.justifyContent = 'center';
 
     buttons.forEach(btn => {
         const b = document.createElement('button');
         b.innerText = btn.text;
-        b.className = 'glass-btn';
-        b.style.padding = '10px 20px';
-        b.style.fontSize = '1rem';
+        b.className = 'story-choice-btn'; // New class for clearer styling
         b.onclick = () => {
             box.style.display = 'none';
             btn.action();
