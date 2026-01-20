@@ -102,4 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
             playGameBtn.style.display = 'none';
         });
     }
+
+    const actionBtn = document.querySelector('.action-btn');
+    if (actionBtn) {
+        actionBtn.addEventListener('click', () => {
+            window.location.href = 'story.html';
+        });
+    }
 });

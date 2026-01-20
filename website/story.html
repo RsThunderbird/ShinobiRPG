@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ShinobiRPG - The Story Begins</title>
+    <link rel="stylesheet" href="story.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bangers&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+</head>
+<body>
+    <div id="landscape-warning">
+        <div class="warning-content">
+            <img src="https://cdn-icons-png.flaticon.com/512/610/610260.png" alt="Rotate Device">
+            <p>Please turn your device to landscape mode to continue the story.</p>
+        </div>
+    </div>
+
+    <div id="game-viewport">
+        <!-- Story stages will be injected here -->
+        <div id="eye-blinking-overlay">
+            <div class="eyelid top"></div>
+            <div class="eyelid bottom"></div>
+        </div>
+
+        <div id="story-container" class="blurred">
+            <!-- Stage 1: Cave Choice -->
+            <div id="cave-stage" class="stage active">
+                <img src="https://i.postimg.cc/3wBzWVMP/image.png" id="cave-bg" alt="Cave background">
+                <div class="cave-exit left" id="exit-left"></div>
+                <div class="cave-exit right" id="exit-right"></div>
+            </div>
+
+            <!-- Stage 2: Minigame 1 (Bats) -->
+            <div id="bats-minigame" class="modal">
+                <div class="modal-content">
+                    <p id="bats-text" class="narrative-text">This path seems full of bats..</p>
+                    <div id="bats-container"></div>
+                </div>
+            </div>
+
+            <!-- Stage 3: Minigame 2 (Vines) -->
+            <div id="vines-stage" class="stage">
+                <div id="vines-bg-container">
+                    <img src="https://i.postimg.cc/wjb0PzpB/image.png" id="exit-img" alt="Cave exit">
+                    <canvas id="vines-canvas"></canvas>
+                </div>
+                <div id="vines-overlay-img-container">
+                    <!-- Vines will be drawn/placed here -->
+                </div>
+            </div>
+
+            <!-- Stage 4: Three.js Forest -->
+            <div id="forest-stage" class="stage">
+                <div id="loading-screen">
+                    <div class="loader"></div>
+                    <p>Entering the Forest of Konoha...</p>
+                </div>
+                <div id="three-container"></div>
+                <div id="mobile-controls">
+                    <div id="joystick-container">
+                        <div id="joystick"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="ui-overlay">
+            <div id="narrative-box"></div>
+        </div>
+    </div>
+
+    <script src="story.js"></script>
+</body>
+</html>
