@@ -144,9 +144,8 @@ function startBatsMinigame() {
             batsCleared++;
             if (batsCleared >= totalBats) {
                 finishBatsMinigame();
-            } else if (batsCleared % 3 === 0) { // Spawn more as you clear
-                spawnBat();
-                spawnBat();
+            } else {
+                spawnBat(); // Spawn a new one to replace the cleared one until total is reached
             }
         }, { once: true });
 
