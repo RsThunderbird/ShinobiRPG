@@ -14,8 +14,6 @@ let currentStage = 'blinking';
 
 function init() {
     startBlinkingAnimation();
-    setupCaveChoice();
-    setupBatsMinigame();
 }
 
 function startBlinkingAnimation() {
@@ -24,46 +22,76 @@ function startBlinkingAnimation() {
     const eyelidsBottom = document.querySelector('.eyelid.bottom');
     const storyContainer = document.getElementById('story-container');
 
-    // Several blinks
-    tl.to([eyelidsTop, eyelidsBottom], { height: '10%', duration: 0.3, repeat: 3, yoyo: true, ease: 'power1.inOut' })
-      .to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 1.5, ease: 'power2.inOut' })
-      .to(storyContainer, { filter: 'blur(0px)', duration: 3 }, '-=1');
+    // Slower blinks as requested
+    tl.to([eyelidsTop, eyelidsBottom], { height: '30%', duration: 1.5, repeat: 2, yoyo: true, ease: 'power1.inOut' })
+        .to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 2.5, ease: 'power2.inOut' })
+        .to(storyContainer, { filter: 'blur(0px)', duration: 4 }, '-=1')
+        .add(() => {
+            showNarrative("You gradually open your eyes. The air is cold and damp. You find yourself at the mouth of a mysterious cave.", [
+                {
+                    text: "Look around", action: () => {
+                        showNarrative("To your left and right, the cave splits. A faint light flickers from the left, while the right is shrouded in darkness.", [
+                            {
+                                text: "Continue", action: () => {
+                                    setupCaveChoice();
+                                }
+                            }
+                        ]);
+                    }
+                }
+            ]);
+        });
 }
 
 function setupCaveChoice() {
     const leftExit = document.getElementById('exit-left');
     const rightExit = document.getElementById('exit-right');
 
+    // Explicitly show cave stage
+    document.getElementById('cave-stage').classList.add('active');
+
     leftExit.addEventListener('click', () => {
         handleChoice('left');
-    });
+    }, { once: true });
 
     rightExit.addEventListener('click', () => {
         handleChoice('right');
-    });
+    }, { once: true });
 }
 
 function handleChoice(choice) {
     if (choice === 'right') {
-        showNarrative("You enter the right cave but it was a dead end.", [
-            { text: "Go to left cave", action: () => handleChoice('left') }
+        showNarrative("You venture into the dark right path, but the tunnel narrows until it's impossible to pass. It's a dead end.", [
+            {
+                text: "Return to the split", action: () => {
+                    showNarrative("You walk back to where you started. The left path still beckons.", [
+                        { text: "Take the left path", action: () => handleChoice('left') }
+                    ]);
+                }
+            }
         ]);
     } else {
-        startLeftCaveTransition();
+        showNarrative("You choose the left path. The flickering light grows brighter as you descend deeper into the earth...", [
+            { text: "Walk forward", action: () => startLeftCaveTransition() }
+        ]);
     }
 }
 
 function showNarrative(text, buttons = []) {
     const box = document.getElementById('narrative-box');
-    box.innerHTML = `<p>${text}</p>`;
+    box.innerHTML = `<p class="narrative-text">${text}</p>`;
 
     const btnContainer = document.createElement('div');
-    btnContainer.style.marginTop = '10px';
+    btnContainer.className = 'cta-buttons'; // Use landing page button styles if possible, or define in story.css
+    btnContainer.style.marginTop = '20px';
+    btnContainer.style.justifyContent = 'center';
 
     buttons.forEach(btn => {
         const b = document.createElement('button');
         b.innerText = btn.text;
-        b.className = 'action-btn'; // Use existing style if any
+        b.className = 'glass-btn';
+        b.style.padding = '10px 20px';
+        b.style.fontSize = '1rem';
         b.onclick = () => {
             box.style.display = 'none';
             btn.action();
@@ -76,27 +104,31 @@ function showNarrative(text, buttons = []) {
 }
 
 function startLeftCaveTransition() {
-    // Black screen and sound
-    gsap.to('#cave-bg', { opacity: 0, duration: 1, onComplete: () => {
-        const walkingSound = new Howl({
-            src: [assets.walkingSound],
-            volume: 0.5
-        });
-        walkingSound.play();
+    gsap.to('#cave-bg', {
+        opacity: 0, duration: 1.5, onComplete: () => {
+            const walkingSound = new Howl({
+                src: [assets.walkingSound],
+                volume: 0.5
+            });
+            walkingSound.play();
 
-        setTimeout(() => {
-            document.getElementById('bats-minigame').classList.add('active');
-            startBatsMinigame();
-        }, 2000);
-    }});
-}
-
-function setupBatsMinigame() {
-    // Initial setup if needed
+            showNarrative("Suddenly, the ceiling begins to shake. Hundreds of wings flap in unison!", [
+                {
+                    text: "Prepare yourself!", action: () => {
+                        document.getElementById('bats-minigame').classList.add('active');
+                        startBatsMinigame();
+                    }
+                }
+            ]);
+        }
+    });
 }
 
 function startBatsMinigame() {
     const container = document.getElementById('bats-container');
+    const batsText = document.getElementById('bats-text');
+    batsText.innerHTML = "CLEAR THE BATS BY CLICKING ON THEM!";
+
     let batsCleared = 0;
     const totalBats = 15;
 
@@ -112,50 +144,50 @@ function startBatsMinigame() {
             batsCleared++;
             if (batsCleared >= totalBats) {
                 finishBatsMinigame();
-            } else {
+            } else if (batsCleared % 3 === 0) { // Spawn more as you clear
+                spawnBat();
                 spawnBat();
             }
-        });
+        }, { once: true });
 
         container.appendChild(bat);
 
-        // Random movement
         gsap.to(bat, {
-            x: (Math.random() - 0.5) * 200,
-            y: (Math.random() - 0.5) * 200,
-            duration: 1 + Math.random(),
+            x: (Math.random() - 0.5) * 300,
+            y: (Math.random() - 0.5) * 300,
+            duration: 0.8 + Math.random(),
             repeat: -1,
-            yoyo: true
+            yoyo: true,
+            ease: "sine.inOut"
         });
     }
 
-    // Spawn initial bats
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
         spawnBat();
     }
 }
 
 function finishBatsMinigame() {
     document.getElementById('bats-minigame').classList.remove('active');
-    showNarrative("The bats are cleared. You walk forwards...", []);
-    setTimeout(() => {
-        document.getElementById('narrative-box').style.display = 'none';
-        walkingForwardEffect();
-    }, 2000);
+    showNarrative("The swarm disperses. You are exhausted but safe. Ahead, you see a strange green glow blocking the exit.", [
+        { text: "Investigate the glow", action: () => walkingForwardEffect() }
+    ]);
 }
 
 function walkingForwardEffect() {
     const caveBg = document.getElementById('cave-bg');
-    caveBg.src = assets.cave; // Reset or use a specific "forward" image if available
+    caveBg.src = assets.cave;
     caveBg.style.opacity = 1;
 
     gsap.to(caveBg, {
-        scale: 3,
+        scale: 4,
         opacity: 0,
-        duration: 4,
-        ease: 'power1.in',
+        duration: 5,
+        ease: 'power2.in',
         onComplete: () => {
-            startVinesMinigame();
+            showNarrative("Massive vines have blockaded the exit! You'll need to cut through them to escape this cavern.", [
+                { text: "Cut the vines", action: () => startVinesMinigame() }
+            ]);
         }
     });
 }
@@ -175,14 +207,13 @@ function startVinesMinigame() {
 
     let vines = [];
     vineImg.onload = () => {
-        // Create a grid of vines
-        const rows = 4;
-        const cols = 6;
+        const rows = 5;
+        const cols = 8;
         const vWidth = canvas.width / cols;
         const vHeight = canvas.height / rows;
 
-        for(let r=0; r<rows; r++) {
-            for(let c=0; c<cols; c++) {
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
                 vines.push({
                     x: c * vWidth,
                     y: r * vHeight,
@@ -206,7 +237,7 @@ function startVinesMinigame() {
 
     let isDrawing = false;
     canvas.addEventListener('mousedown', () => isDrawing = true);
-    canvas.addEventListener('mouseup', () => isDrawing = false);
+    window.addEventListener('mouseup', () => isDrawing = false);
     canvas.addEventListener('mousemove', (e) => {
         if (!isDrawing) return;
         checkSlash(e.clientX, e.clientY);
@@ -216,7 +247,7 @@ function startVinesMinigame() {
         isDrawing = true;
         checkSlash(e.touches[0].clientX, e.touches[0].clientY);
     });
-    canvas.addEventListener('touchend', () => isDrawing = false);
+    window.addEventListener('touchend', () => isDrawing = false);
     canvas.addEventListener('touchmove', (e) => {
         if (!isDrawing) return;
         checkSlash(e.touches[0].clientX, e.touches[0].clientY);
@@ -240,18 +271,14 @@ function startVinesMinigame() {
 }
 
 function finishVinesMinigame() {
-    showNarrative("The vines are gone. You step out into the sunlight...", []);
-    setTimeout(() => {
-        document.getElementById('narrative-box').style.display = 'none';
-        startForestStage();
-    }, 2000);
+    showNarrative("Finally! The path is clear. You shield your eyes as the blinding sunlight of the surface hits you...", [
+        { text: "Step into the light", action: () => startForestStage() }
+    ]);
 }
 
 function startForestStage() {
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
     document.getElementById('forest-stage').classList.add('active');
-
-    // Initialize Three.js Forest here
     initThreeForest();
 }
 
@@ -259,115 +286,78 @@ function initThreeForest() {
     const container = document.getElementById('three-container');
     const loadingScreen = document.getElementById('loading-screen');
 
-    // Three.js basic setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a2f1a); // Darker forest sky
-    scene.fog = new THREE.FogExp2(0x1a2f1a, 0.05);
+    scene.background = new THREE.Color(0x0a1a0a);
+    scene.fog = new THREE.FogExp2(0x0a1a0a, 0.04);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
-    const moonLight = new THREE.DirectionalLight(0x5555ff, 0.8);
+    const moonLight = new THREE.DirectionalLight(0x4444ff, 1.2);
     moonLight.position.set(50, 100, 50);
     moonLight.castShadow = true;
     scene.add(moonLight);
 
-    // Ground
-    const groundGeometry = new THREE.PlaneGeometry(500, 500);
-    const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x113311 });
+    const groundGeometry = new THREE.PlaneGeometry(1000, 1000);
+    const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x051a05 });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Forest Generation (Rainforest / Naruto vibe)
     function createTree(x, z, type = 0) {
         const group = new THREE.Group();
-        const scale = 0.5 + Math.random() * 2;
+        const scale = 0.8 + Math.random() * 2.5;
 
-        if (type === 0) { // Large trunk tree
-            const trunkGeom = new THREE.CylinderGeometry(0.5 * scale, 0.8 * scale, 10 * scale, 8);
-            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3d2b1f });
-            const trunk = new THREE.Mesh(trunkGeom, trunkMat);
-            trunk.position.y = 5 * scale;
-            trunk.castShadow = true;
-            group.add(trunk);
+        const trunkGeom = new THREE.CylinderGeometry(0.3 * scale, 0.5 * scale, 12 * scale, 8);
+        const trunkMat = new THREE.MeshLambertMaterial({ color: 0x2d1b0f });
+        const trunk = new THREE.Mesh(trunkGeom, trunkMat);
+        trunk.position.y = 6 * scale;
+        trunk.castShadow = true;
+        group.add(trunk);
 
-            const leavesGeom = new THREE.DodecahedronGeometry(4 * scale, 1);
-            const leavesMat = new THREE.MeshLambertMaterial({ color: 0x0a3d0a });
-            const leaves = new THREE.Mesh(leavesGeom, leavesMat);
-            leaves.position.y = 10 * scale;
-            leaves.castShadow = true;
-            group.add(leaves);
-        } else { // Slender tree
-            const trunkGeom = new THREE.CylinderGeometry(0.2 * scale, 0.3 * scale, 8 * scale, 6);
-            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x4b3621 });
-            const trunk = new THREE.Mesh(trunkGeom, trunkMat);
-            trunk.position.y = 4 * scale;
-            trunk.castShadow = true;
-            group.add(trunk);
-
-            for(let i=0; i<3; i++) {
-                const leavesGeom = new THREE.ConeGeometry(2 * scale, 4 * scale, 6);
-                const leavesMat = new THREE.MeshLambertMaterial({ color: 0x1b4d3e });
-                const leaves = new THREE.Mesh(leavesGeom, leavesMat);
-                leaves.position.y = (6 + i*2) * scale;
-                leaves.castShadow = true;
-                group.add(leaves);
-            }
-        }
+        const leavesGeom = new THREE.DodecahedronGeometry(5 * scale, 0);
+        const leavesMat = new THREE.MeshLambertMaterial({ color: 0x0a2d0a });
+        const leaves = new THREE.Mesh(leavesGeom, leavesMat);
+        leaves.position.y = 12 * scale;
+        leaves.castShadow = true;
+        group.add(leaves);
 
         group.position.set(x, 0, z);
         scene.add(group);
     }
 
-    for (let i = 0; i < 400; i++) {
+    for (let i = 0; i < 300; i++) {
         createTree(
-            (Math.random() - 0.5) * 400,
-            (Math.random() - 0.5) * 400,
-            Math.random() > 0.5 ? 0 : 1
+            (Math.random() - 0.5) * 600,
+            (Math.random() - 0.5) * 600
         );
     }
 
-    camera.position.y = 1.6; // Eye level
-    camera.position.z = 10;
+    camera.position.set(0, 1.8, 20);
 
-    // Controls
-    let moveForward = false;
-    let moveBackward = false;
-    let moveLeft = false;
-    let moveRight = false;
+    let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 
-    const onKeyDown = (event) => {
-        switch (event.code) {
-            case 'ArrowUp':
+    const onKeyDown = (e) => {
+        switch (e.code) {
             case 'KeyW': moveForward = true; break;
-            case 'ArrowLeft':
-            case 'KeyA': moveLeft = true; break;
-            case 'ArrowDown':
             case 'KeyS': moveBackward = true; break;
-            case 'ArrowRight':
+            case 'KeyA': moveLeft = true; break;
             case 'KeyD': moveRight = true; break;
         }
     };
-
-    const onKeyUp = (event) => {
-        switch (event.code) {
-            case 'ArrowUp':
+    const onKeyUp = (e) => {
+        switch (e.code) {
             case 'KeyW': moveForward = false; break;
-            case 'ArrowLeft':
-            case 'KeyA': moveLeft = false; break;
-            case 'ArrowDown':
             case 'KeyS': moveBackward = false; break;
-            case 'ArrowRight':
+            case 'KeyA': moveLeft = false; break;
             case 'KeyD': moveRight = false; break;
         }
     };
@@ -375,14 +365,12 @@ function initThreeForest() {
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
-    // Mouse look
-    let yaw = 0;
-    let pitch = 0;
+    let yaw = 0, pitch = 0;
     document.addEventListener('mousemove', (e) => {
         if (document.pointerLockElement === renderer.domElement) {
             yaw -= e.movementX * 0.002;
             pitch -= e.movementY * 0.002;
-            pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, pitch));
+            pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
         }
     });
 
@@ -390,95 +378,13 @@ function initThreeForest() {
         renderer.domElement.requestPointerLock();
     });
 
-    // Mobile controls
-    const joystick = document.getElementById('joystick');
-    const joystickContainer = document.getElementById('joystick-container');
-    let joystickActive = false;
-    let touchStartX, touchStartY;
-
-    if ('ontouchstart' in window) {
-        document.getElementById('mobile-controls').style.display = 'block';
-
-        joystickContainer.addEventListener('touchstart', (e) => {
-            joystickActive = true;
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if (!joystickActive) return;
-            const touchX = e.touches[0].clientX;
-            const touchY = e.touches[0].clientY;
-
-            const dx = touchX - touchStartX;
-            const dy = touchY - touchStartY;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            const maxDist = 40;
-
-            const angle = Math.atan2(dy, dx);
-            const moveX = Math.min(dist, maxDist) * Math.cos(angle);
-            const moveY = Math.min(dist, maxDist) * Math.sin(angle);
-
-            joystick.style.transform = `translate(${moveX}px, ${moveY}px)`;
-
-            // Movement logic based on joystick
-            moveForward = moveY < -10;
-            moveBackward = moveY > 10;
-            moveLeft = moveX < -10;
-            moveRight = moveX > 10;
-        });
-
-        window.addEventListener('touchend', () => {
-            joystickActive = false;
-            joystick.style.transform = 'translate(0, 0)';
-            moveForward = moveBackward = moveLeft = moveRight = false;
-        });
-
-        // Touch look
-        let lastTouchX, lastTouchY;
-        window.addEventListener('touchstart', (e) => {
-            if (e.touches[0].clientX > window.innerWidth / 2) {
-                lastTouchX = e.touches[0].clientX;
-                lastTouchY = e.touches[0].clientY;
-            }
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if (e.touches[0].clientX > window.innerWidth / 2 && !joystickActive) {
-                const touchX = e.touches[0].clientX;
-                const touchY = e.touches[0].clientY;
-
-                if (lastTouchX !== undefined && lastTouchY !== undefined) {
-                    const dx = touchX - lastTouchX;
-                    const dy = touchY - lastTouchY;
-
-                    yaw -= dx * 0.005;
-                    pitch -= dy * 0.005;
-                    pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, pitch));
-                }
-
-                lastTouchX = touchX;
-                lastTouchY = touchY;
-            }
-        });
-
-        window.addEventListener('touchend', (e) => {
-            if (e.touches.length === 0) {
-                lastTouchX = undefined;
-                lastTouchY = undefined;
-            }
-        });
-    }
-
     function animate() {
         requestAnimationFrame(animate);
-
-        const speed = 0.15;
+        const speed = 0.2;
         const direction = new THREE.Vector3();
         camera.getWorldDirection(direction);
         direction.y = 0;
         direction.normalize();
-
         const side = new THREE.Vector3().crossVectors(camera.up, direction).normalize();
 
         if (moveForward) camera.position.addScaledVector(direction, speed);
@@ -487,20 +393,19 @@ function initThreeForest() {
         if (moveRight) camera.position.addScaledVector(side, -speed);
 
         camera.rotation.set(pitch, yaw, 0, 'YXZ');
-
         renderer.render(scene, camera);
     }
 
-    // Hide loading screen after a bit
     setTimeout(() => {
-        gsap.to(loadingScreen, { opacity: 0, duration: 1, onComplete: () => loadingScreen.style.display = 'none' });
-    }, 3000);
+        gsap.to(loadingScreen, {
+            opacity: 0, duration: 1.5, onComplete: () => {
+                loadingScreen.style.display = 'none';
+                showNarrative("You've entered the Forbidden Forest. Use W/A/S/D to move and your mouse to look around.", [
+                    { text: "Let's explore", action: () => { } }
+                ]);
+            }
+        });
+    }, 4000);
 
     animate();
-
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
 }

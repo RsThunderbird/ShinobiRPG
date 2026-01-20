@@ -1,112 +1,31 @@
-// Global audio element
-let bgMusic;
-
 document.addEventListener('DOMContentLoaded', () => {
-    const introOverlay = document.getElementById('intro-animation-overlay');
-    const appContent = document.getElementById('app-content');
+    // Landing page is static now with glassmorphism
+    // If there's any specific logic needed for buttons or animations, it will go here.
 
-    // --- Background Music Integration ---
-    // Make sure 'assets' directory exists or adjust path
-    bgMusic = new Howl({
-        src: ['bgmusicstatic.mp3'], // Assuming it's in the same directory for now
-        volume: 0.0, // Start at 0 volume
-        loop: true,
-        autoplay: false // Will play after animation
-    });
-
-    // --- Handwriting Animation ---
-    const paths = Array.from(document.querySelectorAll('#intro-animation-overlay svg path'));
-    let tl = gsap.timeline({ paused: true }); // Pause timeline initially
-
-    paths.forEach(path => {
-        const length = path.getTotalLength();
-        path.style.strokeDasharray = length;
-        path.style.strokeDashoffset = length;
-
-        // Animate each path
-        tl.to(path, { strokeDashoffset: 0, duration: 0.8, ease: "power1.out" }, "-=0.2"); // Overlap animations
-    });
-
-    // Play the animation, then fade out the overlay
-    tl.play();
-    tl.then(() => {
-        // After SVG animation, start background music and fade in main content
-        bgMusic.play();
-        bgMusic.fade(0, 0.3, 2000); // Fade in to 30% volume over 2 seconds
-
-        gsap.to(introOverlay, {
-            opacity: 0,
-            duration: 1,
-            onComplete: () => {
-                introOverlay.classList.add('hidden'); // Add hidden class after fade
-                // Show main content if it was hidden for the animation
-                // appContent.style.display = 'block'; // If you want to explicitly show
-            }
-        });
-    });
-
-
-    // --- Navigation Logic (from previous step) ---
-    const navLinks = document.querySelectorAll('.nav-link');
-    const pageSections = document.querySelectorAll('.page-section');
-
-    function showPage(pageId) {
-        pageSections.forEach(section => {
-            if (section.id === `${pageId}-page`) {
-                section.classList.add('active');
-            } else {
-                section.classList.remove('active');
-            }
+    // Add subtle parallax effect to glass container
+    const glass = document.querySelector('.glass-container');
+    if (glass) {
+        document.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 50;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 50;
+            glass.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
         });
 
-        navLinks.forEach(link => {
-            if (link.dataset.page === pageId) {
-                link.classList.add('active');
-            } else {
-                link.classList.remove('active');
-            }
+        document.addEventListener('mouseenter', () => {
+            glass.style.transition = 'none';
+        });
+
+        document.addEventListener('mouseleave', () => {
+            glass.style.transition = 'all 0.5s ease';
+            glass.style.transform = `rotateY(0deg) rotateX(0deg)`;
         });
     }
 
-    navLinks.forEach(link => {
+    // Official Site external link
+    const externalLinks = document.querySelectorAll('.external-link');
+    externalLinks.forEach(link => {
         link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const pageId = e.target.dataset.page;
-            if (pageId) {
-                showPage(pageId);
-                history.pushState({ page: pageId }, '', `#${pageId}`);
-            }
+            // No need to preventDefault if it's external
         });
     });
-
-    window.addEventListener('popstate', (event) => {
-        if (event.state && event.state.page) {
-            showPage(event.state.page);
-        } else {
-            showPage('home');
-        }
-    });
-
-    const initialPage = window.location.hash.substring(1) || 'home';
-    showPage(initialPage);
-
-    // --- Game Page Logic ---
-    const playGameBtn = document.getElementById('play-game-btn');
-    const gameContainer = document.getElementById('game-container');
-    const gameIframe = document.getElementById('game-iframe');
-
-    if (playGameBtn && gameContainer && gameIframe) {
-        playGameBtn.addEventListener('click', () => {
-            gameIframe.src = 'pixel-dungeon-game/index.html';
-            gameContainer.style.display = 'block';
-            playGameBtn.style.display = 'none';
-        });
-    }
-
-    const actionBtn = document.querySelector('.action-btn');
-    if (actionBtn) {
-        actionBtn.addEventListener('click', () => {
-            window.location.href = 'story.html';
-        });
-    }
 });

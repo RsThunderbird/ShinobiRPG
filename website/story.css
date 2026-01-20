@@ -1,4 +1,5 @@
-body, html {
+body,
+html {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -59,8 +60,13 @@ body, html {
     background-color: #000;
 }
 
-.eyelid.top { top: 0; }
-.eyelid.bottom { bottom: 0; }
+.eyelid.top {
+    top: 0;
+}
+
+.eyelid.bottom {
+    bottom: 0;
+}
 
 #story-container {
     width: 100%;
@@ -133,7 +139,7 @@ body, html {
 
 .narrative-text {
     font-size: 2rem;
-    text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
     text-align: center;
 }
 
@@ -141,7 +147,7 @@ body, html {
     position: relative;
     width: 80vw;
     height: 80vh;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     overflow: hidden;
 }
 
@@ -197,8 +203,13 @@ body, html {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 #three-container {
@@ -219,7 +230,7 @@ body, html {
 #joystick-container {
     width: 100px;
     height: 100px;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     position: relative;
 }
@@ -227,7 +238,7 @@ body, html {
 #joystick {
     width: 40px;
     height: 40px;
-    background: rgba(255,255,255,0.5);
+    background: rgba(255, 255, 255, 0.5);
     border-radius: 50%;
     position: absolute;
     top: 30px;
@@ -248,11 +259,45 @@ body, html {
 }
 
 #narrative-box {
-    background: rgba(0,0,0,0.7);
-    padding: 20px;
-    border: 2px solid #555;
-    max-width: 80%;
-    font-size: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 30px 40px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    max-width: 700px;
+    width: 80%;
+    font-size: 1.2rem;
     display: none;
     pointer-events: auto;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    animation: slideUp 0.5s ease-out;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    line-height: 1.6;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.narrative-text {
+    font-size: 1.4rem;
+    text-shadow: none;
+    margin-bottom: 20px;
+}
+
+#bats-text {
+    margin-bottom: 10px;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 1px;
 }
