@@ -27,10 +27,10 @@ function startBlinkingAnimation() {
         .to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 2.5, ease: 'power2.inOut' })
         .to(storyContainer, { filter: 'blur(0px)', duration: 4 }, '-=1')
         .add(() => {
-            showNarrative("You gradually open your eyes. The air is cold and damp. You find yourself at the mouth of a mysterious cave.", [
+            showNarrative("You gradually open your eyes. You find yourself in the middle of a cave.", [
                 {
                     text: "Look around", action: () => {
-                        showNarrative("To your left and right, the cave splits. A faint light flickers from the left, while the right is shrouded in darkness.", [
+                        showNarrative("To your left and right, the cave splits. You need to decide to go left or right.", [
                             {
                                 text: "Continue", action: () => {
                                     setupCaveChoice();
@@ -61,17 +61,17 @@ function setupCaveChoice() {
 
 function handleChoice(choice) {
     if (choice === 'right') {
-        showNarrative("You venture into the dark right path, but the tunnel narrows until it's impossible to pass. It's a dead end.", [
+        showNarrative("You go into the dark right path, but the tunnel narrows until it's impossible to pass. It's a dead end.", [
             {
                 text: "Return to the split", action: () => {
-                    showNarrative("You walk back to where you started. The left path still beckons.", [
+                    showNarrative("You walk back to where you started.", [
                         { text: "Take the left path", action: () => handleChoice('left') }
                     ]);
                 }
             }
         ]);
     } else {
-        showNarrative("You choose the left path. The flickering light grows brighter as you descend deeper into the earth...", [
+        showNarrative("You choose the left path. The oxygen level is getting lower...", [
             { text: "Walk forward", action: () => startLeftCaveTransition() }
         ]);
     }
@@ -112,7 +112,7 @@ function startLeftCaveTransition() {
             });
             walkingSound.play();
 
-            showNarrative("Suddenly, the ceiling begins to shake. Hundreds of wings flap in unison!", [
+            showNarrative("Suddenly, You see alot of bats!", [
                 {
                     text: "Prepare yourself!", action: () => {
                         document.getElementById('bats-minigame').classList.add('active');
@@ -168,8 +168,8 @@ function startBatsMinigame() {
 
 function finishBatsMinigame() {
     document.getElementById('bats-minigame').classList.remove('active');
-    showNarrative("The swarm disperses. You are exhausted but safe. Ahead, you see a strange green glow blocking the exit.", [
-        { text: "Investigate the glow", action: () => walkingForwardEffect() }
+    showNarrative("You clear the swarm of bats. You see the exit of the cave.", [
+        { text: "Walk forward", action: () => walkingForwardEffect() }
     ]);
 }
 
@@ -184,7 +184,7 @@ function walkingForwardEffect() {
         duration: 5,
         ease: 'power2.in',
         onComplete: () => {
-            showNarrative("Massive vines have blockaded the exit! You'll need to cut through them to escape this cavern.", [
+            showNarrative("Massive vines have blocked the exit! You'll need to cut them.", [
                 { text: "Cut the vines", action: () => startVinesMinigame() }
             ]);
         }
@@ -270,8 +270,8 @@ function startVinesMinigame() {
 }
 
 function finishVinesMinigame() {
-    showNarrative("Finally! The path is clear. You shield your eyes as the blinding sunlight of the surface hits you...", [
-        { text: "Step into the light", action: () => startForestStage() }
+    showNarrative("Finally! The path is clear. You see a dense forest...", [
+        { text: "Go", action: () => startForestStage() }
     ]);
 }
 
@@ -399,7 +399,7 @@ function initThreeForest() {
         gsap.to(loadingScreen, {
             opacity: 0, duration: 1.5, onComplete: () => {
                 loadingScreen.style.display = 'none';
-                showNarrative("You've entered the Forbidden Forest. Use W/A/S/D to move and your mouse to look around.", [
+                showNarrative("You've entered the Forest. Use W/A/S/D to move and your mouse to look around.", [
                     { text: "Let's explore", action: () => { } }
                 ]);
             }
