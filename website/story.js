@@ -10,7 +10,8 @@ const assets = {
     walkingForward: 'https://i.postimg.cc/1zPM81Fp/image.png',
     vinesMinigameBg: 'https://i.postimg.cc/Hn5BJY6Q/image.png',
     walkingSound: 'https://assets.mixkit.co/sfx/preview/mixkit-footsteps-in-the-forest-ground-1230.mp3', // Placeholder
-    forestMusic: 'assets/bgmusicstatic.mp3'
+    forestMusic: 'assets/bgmusicstatic.mp3',
+    watchtowerModel: 'assets/wt.glb'
 };
 
 let currentStage = 'blinking';
@@ -298,6 +299,7 @@ function finishVinesMinigame() {
 function startForestStage() {
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
     document.getElementById('forest-stage').classList.add('active');
+    document.getElementById('compass-container').style.display = 'flex';
     initThreeForest();
 }
 
@@ -315,57 +317,61 @@ function initThreeForest() {
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb); // Sky blue
-    scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
+    scene.fog = new THREE.FogExp2(0x87ceeb, 0.012);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Lower for mobile performance
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ReinhardToneMapping;
     container.appendChild(renderer.domElement);
 
+    // Post-Processing
+    const composer = new THREE.EffectComposer(renderer);
+    const renderPass = new THREE.RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const bloomPass = new THREE.UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0.5, // strength
+        0.4, // radius
+        0.85 // threshold
+    );
+    composer.addPass(bloomPass);
+
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
     sunLight.position.set(100, 200, 100);
     sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 2048;
-    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.mapSize.width = 1024;
+    sunLight.shadow.mapSize.height = 1024;
     sunLight.shadow.camera.left = -500;
     sunLight.shadow.camera.right = 500;
     sunLight.shadow.camera.top = 500;
     sunLight.shadow.camera.bottom = -500;
-    sunLight.shadow.camera.far = 1000;
     scene.add(sunLight);
 
     // Natural Terrain
     const groundSize = 1000;
-    const segments = 128;
+    const segments = 120;
     const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize, segments, segments);
-
-    // Add bumps/noise to terrain
     const vertices = groundGeometry.attributes.position.array;
     for (let i = 0; i < vertices.length; i += 3) {
-        const x = vertices[i];
-        const y = vertices[i + 1];
-        // Simple noise logic
-        vertices[i + 2] = getTerrainHeight(x, y);
+        vertices[i + 2] = getTerrainHeight(vertices[i], vertices[i + 1]);
     }
     groundGeometry.computeVertexNormals();
 
-    const groundMaterial = new THREE.MeshLambertMaterial({
-        color: 0x2d5a27,
-        side: THREE.DoubleSide
-    });
+    const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x2d5a27 });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Helper function to get terrain height at (x, z)
     function getTerrainHeight(x, z) {
         return Math.sin(x * 0.05) * Math.cos(z * 0.05) * 2 +
             Math.sin(x * 0.02) * 5 +
@@ -375,174 +381,92 @@ function initThreeForest() {
     // Clouds
     function createCloud(x, y, z) {
         const group = new THREE.Group();
-        const count = 3 + Math.floor(Math.random() * 4);
-        const mat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
-
-        for (let i = 0; i < count; i++) {
-            const geo = new THREE.SphereGeometry(10 + Math.random() * 10, 8, 8);
+        const mat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+        for (let i = 0; i < 4; i++) {
+            const geo = new THREE.SphereGeometry(10 + Math.random() * 5, 8, 8);
             const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.set(i * 15, Math.random() * 5, Math.random() * 10);
+            mesh.position.set(i * 12, Math.random() * 5, Math.random() * 10);
             group.add(mesh);
         }
         group.position.set(x, y, z);
         scene.add(group);
     }
-
-    for (let i = 0; i < 20; i++) {
-        createCloud(
-            (Math.random() - 0.5) * 800,
-            100 + Math.random() * 50,
-            (Math.random() - 0.5) * 800
-        );
-    }
+    for (let i = 0; i < 15; i++) createCloud((Math.random() - 0.5) * 1000, 150, (Math.random() - 0.5) * 1000);
 
     // Trees
     function createTree(x, z) {
         const group = new THREE.Group();
-        const scale = 0.8 + Math.random() * 2.5;
-        const terrainY = getTerrainHeight(x, z);
-
-        const trunkGeom = new THREE.CylinderGeometry(0.3 * scale, 0.5 * scale, 12 * scale, 8);
-        const trunkMat = new THREE.MeshLambertMaterial({ color: 0x2d1b0f });
-        const trunk = new THREE.Mesh(trunkGeom, trunkMat);
-        trunk.position.y = 6 * scale;
-        trunk.castShadow = true;
-        group.add(trunk);
-
-        const leavesGeom = new THREE.DodecahedronGeometry(5 * scale, 0);
-        const leavesMat = new THREE.MeshLambertMaterial({ color: 0x1a4d1a });
-        const leaves = new THREE.Mesh(leavesGeom, leavesMat);
-        leaves.position.y = 12 * scale;
-        leaves.castShadow = true;
-        group.add(leaves);
-
-        group.position.set(x, terrainY, z);
+        const scale = 0.8 + Math.random() * 2;
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3 * scale, 0.5 * scale, 10 * scale, 8), new THREE.MeshLambertMaterial({ color: 0x2d1b0f }));
+        trunk.position.y = 5 * scale; trunk.castShadow = true; group.add(trunk);
+        const leaves = new THREE.Mesh(new THREE.DodecahedronGeometry(4 * scale, 0), new THREE.MeshLambertMaterial({ color: 0x1a4d1a }));
+        leaves.position.y = 10 * scale; leaves.castShadow = true; group.add(leaves);
+        group.position.set(x, getTerrainHeight(x, z), z);
         scene.add(group);
+    }
+
+    // Random trees
+    for (let i = 0; i < 300; i++) {
+        const x = (Math.random() - 0.5) * 800, z = (Math.random() - 0.5) * 800;
+        if (Math.abs(x) > 30 || Math.abs(z) > 30) createTree(x, z);
     }
 
     // Flowers
     function createFlower(x, z) {
-        const colors = [0xffffff, 0xffeb3b, 0xf44336, 0xe91e63];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const terrainY = getTerrainHeight(x, z);
-
-        const stemGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.5);
-        const stemMat = new THREE.MeshLambertMaterial({ color: 0x4caf50 });
-        const stem = new THREE.Mesh(stemGeo, stemMat);
-        stem.position.set(x, terrainY + 0.25, z);
-        scene.add(stem);
-
-        const petalGeo = new THREE.SphereGeometry(0.2, 8, 8);
-        const petalMat = new THREE.MeshLambertMaterial({ color: color });
-        const pedal = new THREE.Mesh(petalGeo, petalMat);
-        pedal.position.set(x, terrainY + 0.5, z);
-        scene.add(pedal);
+        const color = [0xffffff, 0xffeb3b, 0xf44336][Math.floor(Math.random() * 3)];
+        const y = getTerrainHeight(x, z);
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4), new THREE.MeshLambertMaterial({ color: 0x4caf50 }));
+        stem.position.set(x, y + 0.2, z); scene.add(stem);
+        const pedal = new THREE.Mesh(new THREE.SphereGeometry(0.15, 6, 6), new THREE.MeshLambertMaterial({ color: color }));
+        pedal.position.set(x, y + 0.4, z); scene.add(pedal);
     }
+    for (let i = 0; i < 100; i++) createFlower((Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200);
 
-    // Outpost & Guardian
-    const outpostPos = new THREE.Vector3(250, 0, -250);
+    // Watchtower & Guardian
+    const outpostPos = new THREE.Vector3(200, 0, -200);
     outpostPos.y = getTerrainHeight(outpostPos.x, outpostPos.z);
-    let guardianNPC;
 
-    function createOutpost() {
-        const group = new THREE.Group();
+    const loader = new THREE.GLTFLoader();
+    loader.load(assets.watchtowerModel, (gltf) => {
+        const model = gltf.scene;
+        model.scale.set(5, 5, 5);
+        model.position.copy(outpostPos);
+        model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+        scene.add(model);
 
-        // Base tower
-        const baseGeo = new THREE.CylinderGeometry(4, 5, 20, 8);
-        const woodMat = new THREE.MeshLambertMaterial({ color: 0x5d4037 });
-        const base = new THREE.Mesh(baseGeo, woodMat);
-        base.position.y = 10;
-        base.castShadow = true;
-        base.receiveShadow = true;
-        group.add(base);
+        // Add torches around watchtower
+        for (let i = 0; i < 4; i++) {
+            const angle = (i / 4) * Math.PI * 2;
+            const tx = outpostPos.x + Math.cos(angle) * 8;
+            const tz = outpostPos.z + Math.sin(angle) * 8;
+            const ty = getTerrainHeight(tx, tz) + 2;
 
-        // Platform
-        const platGeo = new THREE.BoxGeometry(12, 1, 12);
-        const plat = new THREE.Mesh(platGeo, woodMat);
-        plat.position.y = 20;
-        plat.castShadow = true;
-        plat.receiveShadow = true;
-        group.add(plat);
+            const torch = new THREE.PointLight(0xffaa44, 15, 20);
+            torch.position.set(tx, ty, tz);
+            scene.add(torch);
 
-        // Roof
-        const roofGeo = new THREE.ConeGeometry(8, 10, 4);
-        const roofMat = new THREE.MeshLambertMaterial({ color: 0x3e2723 });
-        const roof = new THREE.Mesh(roofGeo, roofMat);
-        roof.position.y = 25;
-        roof.rotation.y = Math.PI / 4;
-        roof.castShadow = true;
-        group.add(roof);
-
-        group.position.copy(outpostPos);
-        scene.add(group);
-
-        // Guardian NPC
-        const gGroup = new THREE.Group();
-        const bodyGeo = new THREE.CapsuleGeometry(0.4, 1, 4, 8);
-        const bodyMat = new THREE.MeshLambertMaterial({ color: 0x2196f3 });
-        const body = new THREE.Mesh(bodyGeo, bodyMat);
-        body.position.y = 21.5;
-        gGroup.add(body);
-
-        const headGeo = new THREE.SphereGeometry(0.4, 8, 8);
-        const headMat = new THREE.MeshLambertMaterial({ color: 0xffccbc });
-        const head = new THREE.Mesh(headGeo, headMat);
-        head.position.y = 22.5;
-        gGroup.add(head);
-
-        gGroup.position.copy(outpostPos);
-        gGroup.position.x += 2;
-        scene.add(gGroup);
-        guardianNPC = gGroup;
-    }
-
-    // Simple Pathways
-    function createPathway() {
-        // Just a series of flatter, brownish segments towards the outpost
-        const points = [];
-        const start = new THREE.Vector3(0, 0, 0);
-        const end = outpostPos.clone();
-
-        for (let i = 0; i <= 20; i++) {
-            const t = i / 20;
-            const p = new THREE.Vector3().lerpVectors(start, end, t);
-            p.y = getTerrainHeight(p.x, p.z) + 0.1;
-
-            const pathSegGeo = new THREE.CircleGeometry(4, 8);
-            const pathMat = new THREE.MeshLambertMaterial({ color: 0x6d4c41, side: THREE.DoubleSide });
-            const seg = new THREE.Mesh(pathSegGeo, pathMat);
-            seg.position.copy(p);
-            seg.rotation.x = -Math.PI / 2;
-            scene.add(seg);
-
-            // Add flowers near the path
-            if (i % 2 === 0) {
-                createFlower(p.x + 10 + Math.random() * 5, p.z + 5);
-                createFlower(p.x - 10 - Math.random() * 5, p.z - 5);
-            }
+            // Visual for torch
+            const torchMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2), new THREE.MeshLambertMaterial({ color: 0x444444 }));
+            torchMesh.position.set(tx, ty - 1, tz);
+            scene.add(torchMesh);
+            const flame = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
+            flame.position.set(tx, ty, tz);
+            scene.add(flame);
         }
-    }
+    });
 
-    createOutpost();
-    createPathway();
-
-    // Random trees (away from path)
-    for (let i = 0; i < 400; i++) {
-        const x = (Math.random() - 0.5) * 800;
-        const z = (Math.random() - 0.5) * 800;
-        // Don't place trees too close to center or outpost path
-        if (Math.abs(x) > 20 || Math.abs(z) > 20) {
-            createTree(x, z);
-        }
-    }
+    // Guardian NPC outside
+    const gGroup = new THREE.Group();
+    gGroup.add(new THREE.Mesh(new THREE.CapsuleGeometry(0.4, 1, 4, 8), new THREE.MeshLambertMaterial({ color: 0x2196f3 })));
+    const gHead = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), new THREE.MeshLambertMaterial({ color: 0xffccbc }));
+    gHead.position.y = 1; gGroup.add(gHead);
+    gGroup.position.set(outpostPos.x + 10, outpostPos.y + 1, outpostPos.z + 10);
+    scene.add(gGroup);
 
     camera.position.set(0, 10, 20);
-
     let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-    let isRunning = false;
-    let canJump = true;
-    let velocity = new THREE.Vector3();
-    let playerHeight = 2.0;
+    let isRunning = false, canJump = true, velocity = new THREE.Vector3(), playerHeight = 2.0;
+    let yaw = 0, pitch = 0;
 
     const onKeyDown = (e) => {
         switch (e.code) {
@@ -568,216 +492,90 @@ function initThreeForest() {
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
-    // Interaction logic
     function checkInteraction() {
-        const dist = camera.position.distanceTo(outpostPos);
-        if (dist < 15) {
-            showNarrative("Guardian: Hello there, traveler. Be careful in these woods.", [
-                { text: "Continue", action: () => { } }
-            ]);
+        const dist = camera.position.distanceTo(gGroup.position);
+        if (dist < 8) {
+            showNarrative("Guardian: Greetings! I'm watching over this forest. Stay safe.", [{ text: "Okay", action: () => { } }]);
         }
     }
 
-    // Mobile controls logic
+    // Mobile controls
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (isMobile) {
         document.getElementById('mobile-controls').style.display = 'block';
-        const joystick = document.getElementById('joystick');
-        const joystickContainer = document.getElementById('joystick-container');
-        const jumpBtn = document.getElementById('jump-btn');
-        const runBtn = document.getElementById('run-btn');
+        const joystick = document.getElementById('joystick'), jc = document.getElementById('joystick-container');
+        let jActive = false, tsX, tsY;
 
-        let joystickActive = false;
-        let touchStartX, touchStartY;
-
-        // FIXED JOYSTICK LOGIC
-        joystickContainer.addEventListener('touchstart', (e) => {
-            joystickActive = true;
-            const touch = e.touches[0];
-            const rect = joystickContainer.getBoundingClientRect();
-            touchStartX = rect.left + rect.width / 2;
-            touchStartY = rect.top + rect.height / 2;
-            e.preventDefault();
+        jc.addEventListener('touchstart', (e) => {
+            jActive = true; const t = e.touches[0], r = jc.getBoundingClientRect();
+            tsX = r.left + r.width / 2; tsY = r.top + r.height / 2; e.preventDefault();
         }, { passive: false });
 
         window.addEventListener('touchmove', (e) => {
-            if (!joystickActive) return;
-            const touch = Array.from(e.touches).find(t => {
-                const rect = joystickContainer.getBoundingClientRect();
-                return t.clientX > rect.left - 50 && t.clientX < rect.right + 50 &&
-                    t.clientY > rect.top - 50 && t.clientY < rect.bottom + 50;
-            }) || e.touches[0];
-
-            const dx = touch.clientX - touchStartX;
-            const dy = touch.clientY - touchStartY;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const maxDist = 40;
-
-            const angle = Math.atan2(dy, dx);
-            const moveX = Math.min(dist, maxDist) * Math.cos(angle);
-            const moveY = Math.min(dist, maxDist) * Math.sin(angle);
-
-            joystick.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
-
-            moveForward = moveY < -10;
-            moveBackward = moveY > 10;
-            moveLeft = moveX < -10;
-            moveRight = moveX > 10;
+            if (!jActive) return;
+            const t = Array.from(e.touches).find(t => { const r = jc.getBoundingClientRect(); return t.clientX > r.left - 50 && t.clientX < r.right + 50 && t.clientY > r.top - 50 && t.clientY < r.bottom + 50; }) || e.touches[0];
+            const dx = t.clientX - tsX, dy = t.clientY - tsY, d = Math.sqrt(dx * dx + dy * dy), max = 40;
+            const a = Math.atan2(dy, dx), mx = Math.min(d, max) * Math.cos(a), my = Math.min(d, max) * Math.sin(a);
+            joystick.style.transform = `translate(calc(-50% + ${mx}px), calc(-50% + ${my}px))`;
+            moveForward = my < -10; moveBackward = my > 10; moveLeft = mx < -10; moveRight = mx > 10;
         }, { passive: false });
 
-        window.addEventListener('touchend', () => {
-            if (!joystickActive) return;
-            joystickActive = false;
-            joystick.style.transform = 'translate(-50%, -50%)';
-            moveForward = moveBackward = moveLeft = moveRight = false;
-        });
+        window.addEventListener('touchend', () => { if (!jActive) return; jActive = false; joystick.style.transform = 'translate(-50%, -50%)'; moveForward = moveBackward = moveLeft = moveRight = false; });
+        document.getElementById('jump-btn').addEventListener('touchstart', (e) => { if (canJump) { velocity.y = 15; canJump = false; } e.preventDefault(); }, { passive: false });
+        document.getElementById('run-btn').addEventListener('touchstart', (e) => { isRunning = true; e.preventDefault(); }, { passive: false });
+        document.getElementById('run-btn').addEventListener('touchend', (e) => { isRunning = false; e.preventDefault(); }, { passive: false });
 
-        // Mobile Buttons
-        if (jumpBtn) {
-            jumpBtn.addEventListener('touchstart', (e) => {
-                if (canJump) { velocity.y = 15; canJump = false; }
-                e.preventDefault();
-            }, { passive: false });
-        }
-        if (runBtn) {
-            runBtn.addEventListener('touchstart', (e) => {
-                isRunning = true;
-                e.preventDefault();
-            }, { passive: false });
-            runBtn.addEventListener('touchend', (e) => {
-                isRunning = false;
-                e.preventDefault();
-            }, { passive: false });
-        }
-
-        // Touch look - restricted to right side of screen
-        let lastTouchX, lastTouchY;
-        let lookTouchId = null;
-
-        window.addEventListener('touchstart', (e) => {
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const t = e.changedTouches[i];
-                if (t.clientX > window.innerWidth / 2) {
-                    lookTouchId = t.identifier;
-                    lastTouchX = t.clientX;
-                    lastTouchY = t.clientY;
-                }
-            }
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const t = e.changedTouches[i];
-                if (t.identifier === lookTouchId) {
-                    const dx = t.clientX - lastTouchX;
-                    const dy = t.clientY - lastTouchY;
-
-                    yaw -= dx * 0.005;
-                    pitch -= dy * 0.005;
-                    pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
-
-                    lastTouchX = t.clientX;
-                    lastTouchY = t.clientY;
-                }
-            }
-        });
-
-        window.addEventListener('touchend', (e) => {
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === lookTouchId) {
-                    lookTouchId = null;
-                }
-            }
-            // Double tap or click near outpost on mobile?
-            if (camera.position.distanceTo(outpostPos) < 20) {
-                checkInteraction();
-            }
-        });
+        let ltX, ltY, lookId = null;
+        window.addEventListener('touchstart', (e) => { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (t.clientX > window.innerWidth / 2) { lookId = t.identifier; ltX = t.clientX; ltY = t.clientY; } } });
+        window.addEventListener('touchmove', (e) => { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (t.identifier === lookId) { yaw -= (t.clientX - ltX) * 0.005; pitch -= (t.clientY - ltY) * 0.005; pitch = Math.max(-1.4, Math.min(1.4, pitch)); ltX = t.clientX; ltY = t.clientY; } } });
+        window.addEventListener('touchend', (e) => { for (let i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === lookId) lookId = null; if (camera.position.distanceTo(gGroup.position) < 15) checkInteraction(); });
     }
 
-    let yaw = 0, pitch = 0;
-    document.addEventListener('mousemove', (e) => {
-        if (document.pointerLockElement === renderer.domElement) {
-            yaw -= e.movementX * 0.002;
-            pitch -= e.movementY * 0.002;
-            pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
-        }
-    });
+    document.addEventListener('mousemove', (e) => { if (document.pointerLockElement === renderer.domElement) { yaw -= e.movementX * 0.002; pitch -= e.movementY * 0.002; pitch = Math.max(-1.4, Math.min(1.4, pitch)); } });
+    renderer.domElement.addEventListener('click', () => { if (!isMobile) renderer.domElement.requestPointerLock(); checkInteraction(); });
 
-    renderer.domElement.addEventListener('click', () => {
-        if (!isMobile) renderer.domElement.requestPointerLock();
-        checkInteraction(); // Also allow click to interact
-    });
-
-    const clock = new THREE.Clock();
-    const compassPointer = document.getElementById('compass-pointer');
-    const distanceText = document.getElementById('distance-text');
+    const clock = new THREE.Clock(), compassPtr = document.getElementById('compass-pointer'), distTxt = document.getElementById('distance-text');
 
     function animate() {
         requestAnimationFrame(animate);
         const delta = clock.getDelta();
-
         let speed = isRunning ? 0.6 : 0.3;
+        const dir = new THREE.Vector3(); camera.getWorldDirection(dir); dir.y = 0; dir.normalize();
+        const side = new THREE.Vector3().crossVectors(camera.up, dir).normalize();
+        const mVec = new THREE.Vector3();
+        if (moveForward) mVec.add(dir); if (moveBackward) mVec.addScaledVector(dir, -1);
+        if (moveLeft) mVec.add(side); if (moveRight) mVec.addScaledVector(side, -1);
+        if (mVec.length() > 0) camera.position.addScaledVector(mVec.normalize(), speed);
 
-        const direction = new THREE.Vector3();
-        camera.getWorldDirection(direction);
-        direction.y = 0;
-        direction.normalize();
-        const side = new THREE.Vector3().crossVectors(camera.up, direction).normalize();
-
-        const moveVec = new THREE.Vector3();
-        if (moveForward) moveVec.add(direction);
-        if (moveBackward) moveVec.addScaledVector(direction, -1);
-        if (moveLeft) moveVec.add(side);
-        if (moveRight) moveVec.addScaledVector(side, -1);
-
-        if (moveVec.length() > 0) {
-            moveVec.normalize();
-            camera.position.addScaledVector(moveVec, speed);
-        }
-
-        // Gravity and Jump
-        velocity.y -= 40 * delta; // Gravity
-        camera.position.y += velocity.y * delta;
-
-        const terrainY = getTerrainHeight(camera.position.x, camera.position.z);
-        if (camera.position.y < terrainY + playerHeight) {
-            camera.position.y = terrainY + playerHeight;
-            velocity.y = 0;
-            canJump = true;
-        }
-
+        velocity.y -= 40 * delta; camera.position.y += velocity.y * delta;
+        const tY = getTerrainHeight(camera.position.x, camera.position.z);
+        if (camera.position.y < tY + playerHeight) { camera.position.y = tY + playerHeight; velocity.y = 0; canJump = true; }
         camera.rotation.set(pitch, yaw, 0, 'YXZ');
 
-        // Compass logic
-        const playerPos = new THREE.Vector2(camera.position.x, camera.position.z);
-        const targetPos = new THREE.Vector2(outpostPos.x, outpostPos.z);
-        const dirToTarget = targetPos.clone().sub(playerPos);
-        const angleToTarget = Math.atan2(dirToTarget.x, dirToTarget.y); // Note: Three.js coordinates
+        // FIXED COMPASS MATH
+        const dx = outpostPos.x - camera.position.x, dz = outpostPos.z - camera.position.z;
+        const angleToTarget = Math.atan2(dx, -dz);
+        const relAngle = angleToTarget + yaw;
+        if (compassPtr) compassPtr.style.transform = `translate(-50%, -50%) rotate(${relAngle}rad)`;
+        if (distTxt) distTxt.innerText = Math.floor(camera.position.distanceTo(outpostPos)) + "m";
 
-        // We need the angle relative to camera yaw
-        const relativeAngle = angleToTarget + yaw;
-        if (compassPointer) {
-            compassPointer.style.transform = `translate(-50%, -50%) rotate(${relativeAngle}rad)`;
-        }
-        if (distanceText) {
-            const d = Math.floor(camera.position.distanceTo(outpostPos));
-            distanceText.innerText = d + "m";
-        }
-
-        renderer.render(scene, camera);
+        composer.render();
     }
 
     setTimeout(() => {
-        gsap.to(loadingScreen, {
-            opacity: 0, duration: 1.5, onComplete: () => {
-                loadingScreen.style.display = 'none';
-                forestMusic.play();
-                showNarrative("You've entered the Forest. Follow the compass to find the Outpost. Press E or Click to interact with the Guardian.", [
-                    { text: "Let's explore", action: () => { } }
-                ]);
-            }
-        });
+        if (loadingScreen) {
+            gsap.to(loadingScreen, {
+                opacity: 0,
+                duration: 1.5,
+                onComplete: () => {
+                    loadingScreen.style.display = 'none';
+                    forestMusic.play();
+                    showNarrative("You've entered the Forest. Follow the compass to find the Watchtower. Click/Tap near the Guardian to talk.", [
+                        { text: "Let's explore", action: () => { } }
+                    ]);
+                }
+            });
+        }
     }, 4000);
 
     animate();

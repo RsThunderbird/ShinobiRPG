@@ -347,7 +347,7 @@ html {
     right: 30px;
     top: 50%;
     transform: translateY(-50%);
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
     gap: 10px;
