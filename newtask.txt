@@ -16,3 +16,9 @@ Note: zoro npc 3d model is a T pose 3d model meaning we probably can apply whate
 position. if user picks up 5 pieces of meat just display Complete on screen for now.
 
 for the conversation between user and zoro just make sure the text is displayed on screen and the audio is played. in a clean format.
+
+
+new:
+bruh you ruined it. Why did u use images for cave exit and why didnt u use the vines image i gave you? Go back to the old version and bring these back. If possible, 
+seperate the forest and the cave sections into two so that we can edit freely. And i also checked, zoro is not there near the watch tower.
+Restore the old stuff and then we'll work on the new stuff.
