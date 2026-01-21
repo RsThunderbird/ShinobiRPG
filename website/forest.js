@@ -95,7 +95,7 @@ function initThreeForest() {
 
     loader.load(assets.zoroModel, (gltf) => {
         zoroModel = gltf.scene;
-        zoroModel.scale.set(4, 4, 4);
+        zoroModel.scale.set(0.05, 0.05, 0.05); // Reduced from 4 to 0.05
         zoroModel.position.copy(zoroPos);
         zoroModel.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
         scene.add(zoroModel);
