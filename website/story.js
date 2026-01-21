@@ -305,34 +305,94 @@ function initThreeForest() {
     const loadingScreen = document.getElementById('loading-screen');
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a1a0a);
-    scene.fog = new THREE.FogExp2(0x0a1a0a, 0.04);
+    scene.background = new THREE.Color(0x87ceeb); // Sky blue
+    scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
-    const moonLight = new THREE.DirectionalLight(0x4444ff, 1.2);
-    moonLight.position.set(50, 100, 50);
-    moonLight.castShadow = true;
-    scene.add(moonLight);
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    sunLight.position.set(100, 200, 100);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.left = -500;
+    sunLight.shadow.camera.right = 500;
+    sunLight.shadow.camera.top = 500;
+    sunLight.shadow.camera.bottom = -500;
+    sunLight.shadow.camera.far = 1000;
+    scene.add(sunLight);
 
-    const groundGeometry = new THREE.PlaneGeometry(1000, 1000);
-    const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x051a05 });
+    // Natural Terrain
+    const groundSize = 1000;
+    const segments = 128;
+    const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize, segments, segments);
+
+    // Add bumps/noise to terrain
+    const vertices = groundGeometry.attributes.position.array;
+    for (let i = 0; i < vertices.length; i += 3) {
+        const x = vertices[i];
+        const y = vertices[i + 1];
+        // Simple noise logic
+        vertices[i + 2] = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 2 +
+            Math.sin(x * 0.02) * 5 +
+            Math.cos(y * 0.02) * 5;
+    }
+    groundGeometry.computeVertexNormals();
+
+    const groundMaterial = new THREE.MeshLambertMaterial({
+        color: 0x2d5a27,
+        side: THREE.DoubleSide
+    });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
 
+    // Helper function to get terrain height at (x, z)
+    function getTerrainHeight(x, z) {
+        return Math.sin(x * 0.05) * Math.cos(z * 0.05) * 2 +
+            Math.sin(x * 0.02) * 5 +
+            Math.cos(z * 0.02) * 5;
+    }
+
+    // Clouds
+    function createCloud(x, y, z) {
+        const group = new THREE.Group();
+        const count = 3 + Math.floor(Math.random() * 4);
+        const mat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+
+        for (let i = 0; i < count; i++) {
+            const geo = new THREE.SphereGeometry(10 + Math.random() * 10, 8, 8);
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(i * 15, Math.random() * 5, Math.random() * 10);
+            group.add(mesh);
+        }
+        group.position.set(x, y, z);
+        scene.add(group);
+    }
+
+    for (let i = 0; i < 20; i++) {
+        createCloud(
+            (Math.random() - 0.5) * 800,
+            100 + Math.random() * 50,
+            (Math.random() - 0.5) * 800
+        );
+    }
+
     function createTree(x, z, type = 0) {
         const group = new THREE.Group();
         const scale = 0.8 + Math.random() * 2.5;
+        const terrainY = getTerrainHeight(x, z);
 
         const trunkGeom = new THREE.CylinderGeometry(0.3 * scale, 0.5 * scale, 12 * scale, 8);
         const trunkMat = new THREE.MeshLambertMaterial({ color: 0x2d1b0f });
@@ -348,20 +408,24 @@ function initThreeForest() {
         leaves.castShadow = true;
         group.add(leaves);
 
-        group.position.set(x, 0, z);
+        group.position.set(x, terrainY, z);
         scene.add(group);
     }
 
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 400; i++) {
         createTree(
-            (Math.random() - 0.5) * 600,
-            (Math.random() - 0.5) * 600
+            (Math.random() - 0.5) * 800,
+            (Math.random() - 0.5) * 800
         );
     }
 
-    camera.position.set(0, 1.8, 20);
+    camera.position.set(0, 10, 20);
 
     let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+    let isRunning = false;
+    let canJump = true;
+    let velocity = new THREE.Vector3();
+    let playerHeight = 1.8;
 
     const onKeyDown = (e) => {
         switch (e.code) {
@@ -369,6 +433,8 @@ function initThreeForest() {
             case 'KeyS': moveBackward = true; break;
             case 'KeyA': moveLeft = true; break;
             case 'KeyD': moveRight = true; break;
+            case 'ShiftLeft': isRunning = true; break;
+            case 'Space': if (canJump) { velocity.y = 15; canJump = false; } break;
         }
     };
     const onKeyUp = (e) => {
@@ -377,6 +443,7 @@ function initThreeForest() {
             case 'KeyS': moveBackward = false; break;
             case 'KeyA': moveLeft = false; break;
             case 'KeyD': moveRight = false; break;
+            case 'ShiftLeft': isRunning = false; break;
         }
     };
 
@@ -389,22 +456,32 @@ function initThreeForest() {
         document.getElementById('mobile-controls').style.display = 'block';
         const joystick = document.getElementById('joystick');
         const joystickContainer = document.getElementById('joystick-container');
+        const jumpBtn = document.getElementById('jump-btn');
+        const runBtn = document.getElementById('run-btn');
+
         let joystickActive = false;
         let touchStartX, touchStartY;
 
+        // FIXED JOYSTICK LOGIC
         joystickContainer.addEventListener('touchstart', (e) => {
             joystickActive = true;
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        });
+            const touch = e.touches[0];
+            const rect = joystickContainer.getBoundingClientRect();
+            touchStartX = rect.left + rect.width / 2;
+            touchStartY = rect.top + rect.height / 2;
+            e.preventDefault();
+        }, { passive: false });
 
         window.addEventListener('touchmove', (e) => {
             if (!joystickActive) return;
-            const touchX = e.touches[0].clientX;
-            const touchY = e.touches[0].clientY;
+            const touch = Array.from(e.touches).find(t => {
+                const rect = joystickContainer.getBoundingClientRect();
+                return t.clientX > rect.left - 50 && t.clientX < rect.right + 50 &&
+                    t.clientY > rect.top - 50 && t.clientY < rect.bottom + 50;
+            }) || e.touches[0];
 
-            const dx = touchX - touchStartX;
-            const dy = touchY - touchStartY;
+            const dx = touch.clientX - touchStartX;
+            const dy = touch.clientY - touchStartY;
             const dist = Math.sqrt(dx * dx + dy * dy);
             const maxDist = 40;
 
@@ -412,52 +489,76 @@ function initThreeForest() {
             const moveX = Math.min(dist, maxDist) * Math.cos(angle);
             const moveY = Math.min(dist, maxDist) * Math.sin(angle);
 
-            joystick.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            joystick.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
 
             moveForward = moveY < -10;
             moveBackward = moveY > 10;
             moveLeft = moveX < -10;
             moveRight = moveX > 10;
-        });
+        }, { passive: false });
 
         window.addEventListener('touchend', () => {
+            if (!joystickActive) return;
             joystickActive = false;
-            joystick.style.transform = 'translate(0, 0)';
+            joystick.style.transform = 'translate(-50%, -50%)';
             moveForward = moveBackward = moveLeft = moveRight = false;
         });
 
-        // Touch look
+        // Mobile Buttons
+        if (jumpBtn) {
+            jumpBtn.addEventListener('touchstart', (e) => {
+                if (canJump) { velocity.y = 15; canJump = false; }
+                e.preventDefault();
+            }, { passive: false });
+        }
+        if (runBtn) {
+            runBtn.addEventListener('touchstart', (e) => {
+                isRunning = true;
+                e.preventDefault();
+            }, { passive: false });
+            runBtn.addEventListener('touchend', (e) => {
+                isRunning = false;
+                e.preventDefault();
+            }, { passive: false });
+        }
+
+        // Touch look - restricted to right side of screen
         let lastTouchX, lastTouchY;
+        let lookTouchId = null;
+
         window.addEventListener('touchstart', (e) => {
-            if (e.touches[0].clientX > window.innerWidth / 2) {
-                lastTouchX = e.touches[0].clientX;
-                lastTouchY = e.touches[0].clientY;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (t.clientX > window.innerWidth / 2) {
+                    lookTouchId = t.identifier;
+                    lastTouchX = t.clientX;
+                    lastTouchY = t.clientY;
+                }
             }
         });
 
         window.addEventListener('touchmove', (e) => {
-            if (e.touches[0].clientX > window.innerWidth / 2 && !joystickActive) {
-                const touchX = e.touches[0].clientX;
-                const touchY = e.touches[0].clientY;
-
-                if (lastTouchX !== undefined && lastTouchY !== undefined) {
-                    const dx = touchX - lastTouchX;
-                    const dy = touchY - lastTouchY;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (t.identifier === lookTouchId) {
+                    const dx = t.clientX - lastTouchX;
+                    const dy = t.clientY - lastTouchY;
 
                     yaw -= dx * 0.005;
                     pitch -= dy * 0.005;
                     pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
-                }
 
-                lastTouchX = touchX;
-                lastTouchY = touchY;
+                    lastTouchX = t.clientX;
+                    lastTouchY = t.clientY;
+                }
             }
         });
 
         window.addEventListener('touchend', (e) => {
-            if (e.touches.length === 0) {
-                lastTouchX = undefined;
-                lastTouchY = undefined;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === lookTouchId) {
+                    lookTouchId = null;
+                }
             }
         });
     }
@@ -475,19 +576,41 @@ function initThreeForest() {
         if (!isMobile) renderer.domElement.requestPointerLock();
     });
 
+    const clock = new THREE.Clock();
+
     function animate() {
         requestAnimationFrame(animate);
-        const speed = 0.2;
+        const delta = clock.getDelta();
+
+        let speed = isRunning ? 0.4 : 0.2;
+
         const direction = new THREE.Vector3();
         camera.getWorldDirection(direction);
         direction.y = 0;
         direction.normalize();
         const side = new THREE.Vector3().crossVectors(camera.up, direction).normalize();
 
-        if (moveForward) camera.position.addScaledVector(direction, speed);
-        if (moveBackward) camera.position.addScaledVector(direction, -speed);
-        if (moveLeft) camera.position.addScaledVector(side, speed);
-        if (moveRight) camera.position.addScaledVector(side, -speed);
+        const moveVec = new THREE.Vector3();
+        if (moveForward) moveVec.add(direction);
+        if (moveBackward) moveVec.addScaledVector(direction, -1);
+        if (moveLeft) moveVec.add(side);
+        if (moveRight) moveVec.addScaledVector(side, -1);
+
+        if (moveVec.length() > 0) {
+            moveVec.normalize();
+            camera.position.addScaledVector(moveVec, speed);
+        }
+
+        // Gravity and Jump
+        velocity.y -= 40 * delta; // Gravity
+        camera.position.y += velocity.y * delta;
+
+        const terrainY = getTerrainHeight(camera.position.x, camera.position.z);
+        if (camera.position.y < terrainY + playerHeight) {
+            camera.position.y = terrainY + playerHeight;
+            velocity.y = 0;
+            canJump = true;
+        }
 
         camera.rotation.set(pitch, yaw, 0, 'YXZ');
         renderer.render(scene, camera);
@@ -497,7 +620,7 @@ function initThreeForest() {
         gsap.to(loadingScreen, {
             opacity: 0, duration: 1.5, onComplete: () => {
                 loadingScreen.style.display = 'none';
-                showNarrative("You've entered the Forest. Use W/A/S/D or Joystick to move and touch/mouse to look around.", [
+                showNarrative("You've entered the Forest. Use W/A/S/D or Joystick to move, SHIFT/Button to run, SPACE/Button to jump, and touch/mouse to look around.", [
                     { text: "Let's explore", action: () => { } }
                 ]);
             }
@@ -506,3 +629,6 @@ function initThreeForest() {
 
     animate();
 }
+
+
+

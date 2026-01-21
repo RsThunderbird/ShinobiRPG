@@ -1,33 +1,8 @@
-user blinking animation IMPORTANT: redirect to story.
-user blinking animation.
-when they wake up they see a cave with 2 exits and they gotta choose one. Its a dynamic environment in which they can look around and all. **the entire project must also support mobiles and desktops, for mobiles ask them to turn their mobile landscape mode** U can take a look at the image yourself to add the interactivity for the 2 caves.: https://i.postimg.cc/3wBzWVMP/image.png
+OKAYYYY
+IM really happy with the progress but its now time to continue working, we got down a huge chunk of the thing but we still need to continue working on the thing.
+the forest, i mean. We'll make a full on game just Because we can. I love how the forest turned out, BUT we need to make it better. 
+It's too dark, add a sun, clouds, light allat. 
+the terrain is too flat, make a "natural" terrain like random bumps and allat. 
+Further controls: add space to jump and shift to run. For mobile, the joystick was as if it was pulling me towards bottom right, fix it and add equal support.
 
-user chooses between 2 ways, the left one leads to a different storyline and the right one too, to some extent until they combine into one single storyline.
-the left cave:
-as soon as user clicks left cave, the screen goes black and a sound plays (walkingsound.mp3) also yeah the caves are interactive, we'll discuss this later.
-After the sound text on the screen "This path seems full of bats.."
-minigame1 started:
-clear the bats minigame. SO this is basically a clicking simulator where random bats will be spawning on the screen(the screen meaning open another like window for this minigame inside the website and use this image for the bats: https://i.postimg.cc/yNPHqWLC/image.png <== is a singular bat image, we'll reuse it to create multiple and basically user clicks on them to make them go away, make it moderate difficulty.)
-
-after that, the bats are cleared and user can walk forwards. 
-How are we gonna do this? apparently we can add a zoom effect to any image using: he 2D "Scaling" Trick (The Budget Option)
-If you don't want to deal with 3D software at all, you can use a single high-quality 2D image and use CSS Scaling.
-
-The Effect: When the user clicks "Walk," the background image slowly zooms in (increases in scale) and fades out, while the next location fades in already zoomed out.
-
-Why it works: It mimics the optical flow of moving forward without needing 3D assets.
-
-
-okay after the complicated process of making the user walk, xd(reuse it)
-user comes to minigame 2 which is basically getting the bails/leaves/roots of tree off the exit. We're gonna use this: https://i.postimg.cc/RCbGs9Qb/image.png this is an image of tree vines. Basically we're gonna use this to cover this image: https://i.postimg.cc/wjb0PzpB/image.png you can open this image yourself to get a better idea of how the image looks like to place the vines better. 
-the game:
-swipe and slash game. users gotta clear all the vines after that they're free to go outside the cave. 
-
-right cave: i feel like its a bit excessive already, let's make it so that cave right leads to cave left regardless. 
-Just make a text saying "you enter the right cave but it was a dead end" with a button "Goto left cave." 
-
-now, we're out of the cave this is where the heavylifting for you starts. Because we're gonna make a finite forest area and player can walk around in it normally. the mobile controls must be clean and clear though. For pc its the usual wasd and camera mouse. So for us to do this properly, i need to tell you more about the forest. The forest is a region near Konohagakure, so it is a Naruto world forest. I care alot about this forest and should be the main attraction of this entire story so spend 90% of the time here as the other places ive done the hard work already. But everything should be perfect, i recommend 3.js for the forest (first person btw)
-
-
-this also means that we're gonna SCRAP and delete everything else related to the website on this directory. We're only gonna maintain a clean 
-landing page, the event redirect and this new story redirect.
+We'll go step by step, so finish this first then we'll add map, a quest tracker, an outpost and the quest itself, do the above first though.
