@@ -194,7 +194,7 @@ function initThreeForest() {
             const angle = Math.random() * Math.PI * 2, dist = 5 + Math.random() * 25;
             const mx = zoroPos.x + Math.cos(angle) * dist, mz = zoroPos.z + Math.sin(angle) * dist, my = getTerrainHeight(mx, mz);
             loader.load(assets.meatModel, (gltf) => {
-                const meat = gltf.scene; meat.scale.set(1.5, 1.5, 1.5); meat.position.set(mx, my + 0.5, mz);
+                const meat = gltf.scene; meat.scale.set(0.02, 0.02, 0.02); meat.position.set(mx, my + 0.5, mz);
                 meat.traverse(n => { if (n.isMesh) { n.castShadow = true; n.userData.isMeat = true; } });
                 scene.add(meat); meatsArray.push(meat);
             });

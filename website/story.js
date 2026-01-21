@@ -85,6 +85,8 @@ function handleChoice(choice) {
     }
 }
 
+window.showNarrative = showNarrative;
+window.showNotification = showNotification;
 function showNarrative(text, buttons = []) {
     const box = document.getElementById('narrative-box');
     box.innerHTML = `<p class="narrative-text">${text}</p>`;
