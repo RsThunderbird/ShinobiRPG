@@ -1,24 +1,5 @@
+now that we have the forest and cave seperated ill fix the cave later because u ruined it.
 
-i provided the 3d model for the guardian npc, we need to rename the guardian guy to 'zoro' the 3d model name is zoro.glb
-Now the story and the quests begin.
-Zoro is lost. He talks to user.
-Dialogue:
-dialogue 1: zoro voice: Huh? Who are you? Do you know what this place is? dialogue1.mp3 (im including text as well because we'll be using captions)
-user: I was kidnapped by someone and trapped in that cave nearby! This must be the Konoha Forest. (no mp3 for user dialogue)
-dialogue 2: Konoha Forest? Where's Luffy? Get me out of here and I will help you with the kidnapper! dialogue2.mp3
-user: Luffy? I don't know who your talking about. Come, let's go to the village and ask for help. 
-dialogue3: Okay. But first find me some food! dialogue3.mp3
-user: alright...
-food quest begins, show notification on screen and then ask the user to bring 5 pieces of meat for zoro. meat.glb for meat scatter around 15
-meats near the area of watchtower. Click to take. 
+But anyway, Zoro is still nowhere to be seen. I dont know why. Make the compass point towards zoro. 
 
-Note: zoro npc 3d model is a T pose 3d model meaning we probably can apply whatever animations we want but for now, let it be normal standing 
-position. if user picks up 5 pieces of meat just display Complete on screen for now.
-
-for the conversation between user and zoro just make sure the text is displayed on screen and the audio is played. in a clean format.
-
-
-new:
-bruh you ruined it. Why did u use images for cave exit and why didnt u use the vines image i gave you? Go back to the old version and bring these back. If possible, 
-seperate the forest and the cave sections into two so that we can edit freely. And i also checked, zoro is not there near the watch tower.
-Restore the old stuff and then we'll work on the new stuff.
+And also, the meat quest. I want the meat to be scattered around Zoro. all of the glb models are ready. 
