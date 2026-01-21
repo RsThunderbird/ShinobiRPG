@@ -1,8 +1,10 @@
-OKAYYYY
-IM really happy with the progress but its now time to continue working, we got down a huge chunk of the thing but we still need to continue working on the thing.
-the forest, i mean. We'll make a full on game just Because we can. I love how the forest turned out, BUT we need to make it better. 
-It's too dark, add a sun, clouds, light allat. 
-the terrain is too flat, make a "natural" terrain like random bumps and allat. 
-Further controls: add space to jump and shift to run. For mobile, the joystick was as if it was pulling me towards bottom right, fix it and add equal support.
+PERFECT 10/10
+Now we'll work on the same thing; the forest adding details and features to it. We need to play the bgmusicstatic.mp3 to the background of the 
+forest music. Then we need to add a Directional Guide, a compass on the middle right of the screen. Basically points towards an 
+Outpost. Yes, we need to make like a watch tower with an npc inside. This npc is called Guardian and is a simple npc. The outpost 
+should also be simple. the user can indeed interact with this npc, for now, he says hello.
+Since we now have an outpost, we need to add pathways accross the terrain, flowers on the side, again super low poly for formality and so that
+the world dosent feel empty. 
 
-We'll go step by step, so finish this first then we'll add map, a quest tracker, an outpost and the quest itself, do the above first though.
+then i need you to make me a "our limitations and how much we can do with this" in a user.txt file. Basically i need more information on how much
+more we can do with 3.js and its limitations and capabilities. Also include the absolute pinnacle of what we can do with this.

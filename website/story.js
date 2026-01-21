@@ -9,7 +9,8 @@ const assets = {
     exit: 'https://i.postimg.cc/wjb0PzpB/image.png',
     walkingForward: 'https://i.postimg.cc/1zPM81Fp/image.png',
     vinesMinigameBg: 'https://i.postimg.cc/Hn5BJY6Q/image.png',
-    walkingSound: 'https://assets.mixkit.co/sfx/preview/mixkit-footsteps-in-the-forest-ground-1230.mp3' // Placeholder
+    walkingSound: 'https://assets.mixkit.co/sfx/preview/mixkit-footsteps-in-the-forest-ground-1230.mp3', // Placeholder
+    forestMusic: 'assets/bgmusicstatic.mp3'
 };
 
 let currentStage = 'blinking';
@@ -304,6 +305,14 @@ function initThreeForest() {
     const container = document.getElementById('three-container');
     const loadingScreen = document.getElementById('loading-screen');
 
+    // Forest Music
+    const forestMusic = new Howl({
+        src: [assets.forestMusic],
+        loop: true,
+        volume: 0.4,
+        autoplay: false
+    });
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb); // Sky blue
     scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
@@ -343,9 +352,7 @@ function initThreeForest() {
         const x = vertices[i];
         const y = vertices[i + 1];
         // Simple noise logic
-        vertices[i + 2] = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 2 +
-            Math.sin(x * 0.02) * 5 +
-            Math.cos(y * 0.02) * 5;
+        vertices[i + 2] = getTerrainHeight(x, y);
     }
     groundGeometry.computeVertexNormals();
 
@@ -389,7 +396,8 @@ function initThreeForest() {
         );
     }
 
-    function createTree(x, z, type = 0) {
+    // Trees
+    function createTree(x, z) {
         const group = new THREE.Group();
         const scale = 0.8 + Math.random() * 2.5;
         const terrainY = getTerrainHeight(x, z);
@@ -402,7 +410,7 @@ function initThreeForest() {
         group.add(trunk);
 
         const leavesGeom = new THREE.DodecahedronGeometry(5 * scale, 0);
-        const leavesMat = new THREE.MeshLambertMaterial({ color: 0x0a2d0a });
+        const leavesMat = new THREE.MeshLambertMaterial({ color: 0x1a4d1a });
         const leaves = new THREE.Mesh(leavesGeom, leavesMat);
         leaves.position.y = 12 * scale;
         leaves.castShadow = true;
@@ -412,11 +420,120 @@ function initThreeForest() {
         scene.add(group);
     }
 
+    // Flowers
+    function createFlower(x, z) {
+        const colors = [0xffffff, 0xffeb3b, 0xf44336, 0xe91e63];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const terrainY = getTerrainHeight(x, z);
+
+        const stemGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.5);
+        const stemMat = new THREE.MeshLambertMaterial({ color: 0x4caf50 });
+        const stem = new THREE.Mesh(stemGeo, stemMat);
+        stem.position.set(x, terrainY + 0.25, z);
+        scene.add(stem);
+
+        const petalGeo = new THREE.SphereGeometry(0.2, 8, 8);
+        const petalMat = new THREE.MeshLambertMaterial({ color: color });
+        const pedal = new THREE.Mesh(petalGeo, petalMat);
+        pedal.position.set(x, terrainY + 0.5, z);
+        scene.add(pedal);
+    }
+
+    // Outpost & Guardian
+    const outpostPos = new THREE.Vector3(250, 0, -250);
+    outpostPos.y = getTerrainHeight(outpostPos.x, outpostPos.z);
+    let guardianNPC;
+
+    function createOutpost() {
+        const group = new THREE.Group();
+
+        // Base tower
+        const baseGeo = new THREE.CylinderGeometry(4, 5, 20, 8);
+        const woodMat = new THREE.MeshLambertMaterial({ color: 0x5d4037 });
+        const base = new THREE.Mesh(baseGeo, woodMat);
+        base.position.y = 10;
+        base.castShadow = true;
+        base.receiveShadow = true;
+        group.add(base);
+
+        // Platform
+        const platGeo = new THREE.BoxGeometry(12, 1, 12);
+        const plat = new THREE.Mesh(platGeo, woodMat);
+        plat.position.y = 20;
+        plat.castShadow = true;
+        plat.receiveShadow = true;
+        group.add(plat);
+
+        // Roof
+        const roofGeo = new THREE.ConeGeometry(8, 10, 4);
+        const roofMat = new THREE.MeshLambertMaterial({ color: 0x3e2723 });
+        const roof = new THREE.Mesh(roofGeo, roofMat);
+        roof.position.y = 25;
+        roof.rotation.y = Math.PI / 4;
+        roof.castShadow = true;
+        group.add(roof);
+
+        group.position.copy(outpostPos);
+        scene.add(group);
+
+        // Guardian NPC
+        const gGroup = new THREE.Group();
+        const bodyGeo = new THREE.CapsuleGeometry(0.4, 1, 4, 8);
+        const bodyMat = new THREE.MeshLambertMaterial({ color: 0x2196f3 });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.position.y = 21.5;
+        gGroup.add(body);
+
+        const headGeo = new THREE.SphereGeometry(0.4, 8, 8);
+        const headMat = new THREE.MeshLambertMaterial({ color: 0xffccbc });
+        const head = new THREE.Mesh(headGeo, headMat);
+        head.position.y = 22.5;
+        gGroup.add(head);
+
+        gGroup.position.copy(outpostPos);
+        gGroup.position.x += 2;
+        scene.add(gGroup);
+        guardianNPC = gGroup;
+    }
+
+    // Simple Pathways
+    function createPathway() {
+        // Just a series of flatter, brownish segments towards the outpost
+        const points = [];
+        const start = new THREE.Vector3(0, 0, 0);
+        const end = outpostPos.clone();
+
+        for (let i = 0; i <= 20; i++) {
+            const t = i / 20;
+            const p = new THREE.Vector3().lerpVectors(start, end, t);
+            p.y = getTerrainHeight(p.x, p.z) + 0.1;
+
+            const pathSegGeo = new THREE.CircleGeometry(4, 8);
+            const pathMat = new THREE.MeshLambertMaterial({ color: 0x6d4c41, side: THREE.DoubleSide });
+            const seg = new THREE.Mesh(pathSegGeo, pathMat);
+            seg.position.copy(p);
+            seg.rotation.x = -Math.PI / 2;
+            scene.add(seg);
+
+            // Add flowers near the path
+            if (i % 2 === 0) {
+                createFlower(p.x + 10 + Math.random() * 5, p.z + 5);
+                createFlower(p.x - 10 - Math.random() * 5, p.z - 5);
+            }
+        }
+    }
+
+    createOutpost();
+    createPathway();
+
+    // Random trees (away from path)
     for (let i = 0; i < 400; i++) {
-        createTree(
-            (Math.random() - 0.5) * 800,
-            (Math.random() - 0.5) * 800
-        );
+        const x = (Math.random() - 0.5) * 800;
+        const z = (Math.random() - 0.5) * 800;
+        // Don't place trees too close to center or outpost path
+        if (Math.abs(x) > 20 || Math.abs(z) > 20) {
+            createTree(x, z);
+        }
     }
 
     camera.position.set(0, 10, 20);
@@ -425,7 +542,7 @@ function initThreeForest() {
     let isRunning = false;
     let canJump = true;
     let velocity = new THREE.Vector3();
-    let playerHeight = 1.8;
+    let playerHeight = 2.0;
 
     const onKeyDown = (e) => {
         switch (e.code) {
@@ -435,6 +552,7 @@ function initThreeForest() {
             case 'KeyD': moveRight = true; break;
             case 'ShiftLeft': isRunning = true; break;
             case 'Space': if (canJump) { velocity.y = 15; canJump = false; } break;
+            case 'KeyE': checkInteraction(); break;
         }
     };
     const onKeyUp = (e) => {
@@ -449,6 +567,16 @@ function initThreeForest() {
 
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
+
+    // Interaction logic
+    function checkInteraction() {
+        const dist = camera.position.distanceTo(outpostPos);
+        if (dist < 15) {
+            showNarrative("Guardian: Hello there, traveler. Be careful in these woods.", [
+                { text: "Continue", action: () => { } }
+            ]);
+        }
+    }
 
     // Mobile controls logic
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -560,6 +688,10 @@ function initThreeForest() {
                     lookTouchId = null;
                 }
             }
+            // Double tap or click near outpost on mobile?
+            if (camera.position.distanceTo(outpostPos) < 20) {
+                checkInteraction();
+            }
         });
     }
 
@@ -574,15 +706,18 @@ function initThreeForest() {
 
     renderer.domElement.addEventListener('click', () => {
         if (!isMobile) renderer.domElement.requestPointerLock();
+        checkInteraction(); // Also allow click to interact
     });
 
     const clock = new THREE.Clock();
+    const compassPointer = document.getElementById('compass-pointer');
+    const distanceText = document.getElementById('distance-text');
 
     function animate() {
         requestAnimationFrame(animate);
         const delta = clock.getDelta();
 
-        let speed = isRunning ? 0.4 : 0.2;
+        let speed = isRunning ? 0.6 : 0.3;
 
         const direction = new THREE.Vector3();
         camera.getWorldDirection(direction);
@@ -613,6 +748,23 @@ function initThreeForest() {
         }
 
         camera.rotation.set(pitch, yaw, 0, 'YXZ');
+
+        // Compass logic
+        const playerPos = new THREE.Vector2(camera.position.x, camera.position.z);
+        const targetPos = new THREE.Vector2(outpostPos.x, outpostPos.z);
+        const dirToTarget = targetPos.clone().sub(playerPos);
+        const angleToTarget = Math.atan2(dirToTarget.x, dirToTarget.y); // Note: Three.js coordinates
+
+        // We need the angle relative to camera yaw
+        const relativeAngle = angleToTarget + yaw;
+        if (compassPointer) {
+            compassPointer.style.transform = `translate(-50%, -50%) rotate(${relativeAngle}rad)`;
+        }
+        if (distanceText) {
+            const d = Math.floor(camera.position.distanceTo(outpostPos));
+            distanceText.innerText = d + "m";
+        }
+
         renderer.render(scene, camera);
     }
 
@@ -620,7 +772,8 @@ function initThreeForest() {
         gsap.to(loadingScreen, {
             opacity: 0, duration: 1.5, onComplete: () => {
                 loadingScreen.style.display = 'none';
-                showNarrative("You've entered the Forest. Use W/A/S/D or Joystick to move, SHIFT/Button to run, SPACE/Button to jump, and touch/mouse to look around.", [
+                forestMusic.play();
+                showNarrative("You've entered the Forest. Follow the compass to find the Outpost. Press E or Click to interact with the Guardian.", [
                     { text: "Let's explore", action: () => { } }
                 ]);
             }
