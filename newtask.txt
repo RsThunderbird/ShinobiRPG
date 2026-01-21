@@ -9,3 +9,6 @@ Yeah just add the watchtower and the npc. Then add these:
 just make sure it dosent lag the game for mobile users.
 
 **Lighting:** We can add "Directional Light" (for the sun) and "Point Light" (for the torches) to make the game look more realistic.
+
+we have a problem, the game isnt loading, stuck on loading screen so we need to lower our quality settings or somethings just wrong because it dosent
+load after 5 minutes. Remove the lightning and bloom i guess or keep it minimal.
