@@ -1,14 +1,18 @@
-hmm, that was good butt not good enough. first of all thats not a watch tower xd, thats like a wooden cone with nothing on it. 
-so i went to sketch fab and found us one! wt.glb use that instead. For the npc, just make the npc stand infront of the watchtower outside so we dont have
-to do all the interiors. ALso the compass isnt accurate at all! it took me the wrong direction! Remove the "pathways" and the old watchtower completely. 
-ANd please make the compass accurate, it also appears on the storyline phase during the caves, can we make it so that it only appears when we enter the forest?
-if its too complicated or game breaking or risky, leave it alone.
 
-Yeah just add the watchtower and the npc. Then add these: 
-**Post-Processing:** We can add "Bloom" (glow), Depth of Field (blurring far objects), and Color Grading to make the game look movie-quality.
-just make sure it dosent lag the game for mobile users.
+i provided the 3d model for the guardian npc, we need to rename the guardian guy to 'zoro' the 3d model name is zoro.glb
+Now the story and the quests begin.
+Zoro is lost. He talks to user.
+Dialogue:
+dialogue 1: zoro voice: Huh? Who are you? Do you know what this place is? dialogue1.mp3 (im including text as well because we'll be using captions)
+user: I was kidnapped by someone and trapped in that cave nearby! This must be the Konoha Forest. (no mp3 for user dialogue)
+dialogue 2: Konoha Forest? Where's Luffy? Get me out of here and I will help you with the kidnapper! dialogue2.mp3
+user: Luffy? I don't know who your talking about. Come, let's go to the village and ask for help. 
+dialogue3: Okay. But first find me some food! dialogue3.mp3
+user: alright...
+food quest begins, show notification on screen and then ask the user to bring 5 pieces of meat for zoro. meat.glb for meat scatter around 15
+meats near the area of watchtower. Click to take. 
 
-**Lighting:** We can add "Directional Light" (for the sun) and "Point Light" (for the torches) to make the game look more realistic.
+Note: zoro npc 3d model is a T pose 3d model meaning we probably can apply whatever animations we want but for now, let it be normal standing 
+position. if user picks up 5 pieces of meat just display Complete on screen for now.
 
-we have a problem, the game isnt loading, stuck on loading screen so we need to lower our quality settings or somethings just wrong because it dosent
-load after 5 minutes. Remove the lightning and bloom i guess or keep it minimal.
+for the conversation between user and zoro just make sure the text is displayed on screen and the audio is played. in a clean format.
