@@ -2,21 +2,21 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
 });
 
-const assets = {
+window.assets = {
     bat: 'https://i.postimg.cc/yNPHqWLC/image.png',
     cave: 'https://i.postimg.cc/3wBzWVMP/image.png',
     vines: 'https://i.postimg.cc/RCbGs9Qb/image.png',
     exit: 'https://i.postimg.cc/wjb0PzpB/image.png',
     walkingForward: 'https://i.postimg.cc/1zPM81Fp/image.png',
     vinesMinigameBg: 'https://i.postimg.cc/Hn5BJY6Q/image.png',
-    walkingSound: 'https://assets.mixkit.co/sfx/preview/mixkit-footsteps-in-the-forest-ground-1230.mp3', // Placeholder
-    forestMusic: 'assets/bgmusicstatic.mp3',
-    watchtowerModel: 'assets/wt.glb',
-    zoroModel: 'assets/zoro.glb',
-    meatModel: 'assets/meat.glb',
-    dialogue1: 'assets/dialogue1.mp3',
-    dialogue2: 'assets/dialogue2.mp3',
-    dialogue3: 'assets/dialogue3.mp3'
+    walkingSound: 'https://assets.mixkit.co/sfx/preview/mixkit-footsteps-in-the-forest-ground-1230.mp3',
+    forestMusic: 'assets/bgmusicstatic.mp3?v=1',
+    watchtowerModel: 'assets/wt.glb?v=1',
+    zoroModel: 'assets/zoro.glb?v=1',
+    meatModel: 'assets/meat.glb?v=1',
+    dialogue1: 'assets/dialogue1.mp3?v=1',
+    dialogue2: 'assets/dialogue2.mp3?v=1',
+    dialogue3: 'assets/dialogue3.mp3?v=1'
 };
 
 function init() {
@@ -73,6 +73,7 @@ function handleChoice(choice) {
             { text: "Go Left", action: () => handleChoice('left') }
         ]);
     } else {
+        document.getElementById('narrative-box').style.display = 'none';
         // Transition using the "walking forward" asset
         const caveBg = document.getElementById('cave-bg');
         gsap.to(caveBg, {
@@ -124,6 +125,7 @@ function showNotification(text) {
 }
 
 function startBatsMinigame() {
+    document.getElementById('narrative-box').style.display = 'none';
     const stage = document.getElementById('bats-minigame');
     stage.classList.add('active');
     const container = document.getElementById('bats-container');

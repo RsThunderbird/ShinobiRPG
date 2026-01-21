@@ -6,6 +6,7 @@ function initThreeForest() {
     let questActive = false;
     let meatCollected = 0;
     const meatsArray = [];
+    const assets = window.assets; // Ensure we use the global assets
 
     const forestMusic = new Howl({
         src: [assets.forestMusic],
@@ -94,12 +95,11 @@ function initThreeForest() {
 
     loader.load(assets.zoroModel, (gltf) => {
         zoroModel = gltf.scene;
-        zoroModel.scale.set(4, 4, 4); // Slightly larger
+        zoroModel.scale.set(4, 4, 4);
         zoroModel.position.copy(zoroPos);
         zoroModel.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
         scene.add(zoroModel);
 
-        // Add a subtle spotlight on Zoro so he stands out
         const spot = new THREE.SpotLight(0xffffff, 1, 30, Math.PI / 4, 0.5);
         spot.position.set(zoroPos.x, zoroPos.y + 15, zoroPos.z);
         spot.target = zoroModel;
@@ -108,7 +108,6 @@ function initThreeForest() {
         console.log("Zoro successfully loaded at:", zoroModel.position);
     }, undefined, (err) => {
         console.error("Error loading Zoro model, using placeholder:", err);
-        // Fallback: Blue cylinder if model fails
         zoroModel = new THREE.Group();
         const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2, 8), new THREE.MeshLambertMaterial({ color: 0x0000ff }));
         mesh.position.y = 1;
@@ -142,6 +141,7 @@ function initThreeForest() {
     };
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
+
     function checkInteraction() {
         if (!zoroModel) return;
         const dist = camera.position.distanceTo(zoroPos);
@@ -190,7 +190,6 @@ function initThreeForest() {
         questActive = true;
         document.getElementById('quest-ui').classList.remove('hidden');
         showNotification("NEW QUEST: Find 5 pieces of Meat for Zoro!");
-        // Spawn meat AROUND ZORO
         for (let i = 0; i < 15; i++) {
             const angle = Math.random() * Math.PI * 2, dist = 5 + Math.random() * 25;
             const mx = zoroPos.x + Math.cos(angle) * dist, mz = zoroPos.z + Math.sin(angle) * dist, my = getTerrainHeight(mx, mz);
@@ -278,7 +277,6 @@ function initThreeForest() {
         if (camera.position.y < ty + playerHeight) { camera.position.y = ty + playerHeight; velocity.y = 0; canJump = true; }
         camera.rotation.set(pitch, yaw, 0, 'YXZ');
 
-        // POINT COMPASS TO ZORO
         const dx = zoroPos.x - camera.position.x, dz = zoroPos.z - camera.position.z;
         const angle = Math.atan2(dx, -dz);
         if (cPtr) cPtr.style.transform = `translate(-50%, -50%) rotate(${angle + yaw}rad)`;

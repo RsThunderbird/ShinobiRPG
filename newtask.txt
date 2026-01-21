@@ -1,5 +1,6 @@
-now that we have the forest and cave seperated ill fix the cave later because u ruined it.
+Zoro 3d model dosent load, it actually rendered your fallback so i added new zoro.glb to try to fix it. THE SOUNDS dialogues DO NOT play during the 
+convo with zoro and no notificaiton of quest start, no quest, no meats lying around nothing. Do it in a systematic way. 
 
-But anyway, Zoro is still nowhere to be seen. I dont know why. Make the compass point towards zoro. 
-
-And also, the meat quest. I want the meat to be scattered around Zoro. all of the glb models are ready. 
+for the cave part, during the bats game the text box dosent disappear the one that says "you walk into left" something realted.
+make that box go away as soon as u enter the cave or u cant finish the bats minigame.
+Make the dialogues and the 3d model work. 
