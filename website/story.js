@@ -16,12 +16,84 @@ window.assets = {
     meatModel: 'assets/meat.glb?v=1',
     dialogue1: 'assets/dialogue1.mp3?v=1',
     dialogue2: 'assets/dialogue2.mp3?v=1',
-    dialogue3: 'assets/dialogue3.mp3?v=1'
+    dialogue3: 'assets/dialogue3.mp3?v=1',
+    caveAudio: '../cave.mp3',
+    narrator1: '../narrator1.mp3',
+    narrator2: '../narrator2.mp3'
 };
 
 function init() {
-    setupMobileFullScreen();
-    startBlinkingAnimation();
+    setupStartScreen();
+}
+
+function setupStartScreen() {
+    const startBtn = document.getElementById('start-button');
+    startBtn.onclick = () => {
+        // Enforce Fullscreen
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen();
+        }
+
+        // Start Cave Music (45% Volume)
+        const caveMusic = new Howl({
+            src: [assets.caveAudio],
+            volume: 0.45,
+            loop: true
+        });
+        caveMusic.play();
+
+        // Start Narrator 1
+        new Howl({ src: [assets.narrator1] }).play();
+
+        // Hide Start Screen and start Cinematic
+        gsap.to('#start-screen', {
+            opacity: 0,
+            duration: 1,
+            onComplete: () => {
+                document.getElementById('start-screen').classList.remove('active');
+                startLogCinematic();
+            }
+        });
+    };
+}
+
+function startLogCinematic() {
+    const stage = document.getElementById('cinematic-stage');
+    stage.classList.add('active');
+
+    // Play Narrator 2 during cinematic
+    const n2 = new Howl({ src: [assets.narrator2] });
+    n2.play();
+
+    let clicks = 0;
+    const log = document.getElementById('log');
+    const counter = document.getElementById('click-counter');
+
+    log.onclick = () => {
+        clicks++;
+        counter.innerText = `${clicks} / 3`;
+
+        // Visual feedback
+        const axe = document.getElementById('axe');
+        if (axe) gsap.fromTo(axe, { rotate: -45, x: 0 }, { rotate: -10, x: 80, duration: 0.1, yoyo: true, repeat: 1 });
+        gsap.to(log, { x: 5, duration: 0.1, yoyo: true, repeat: 3 });
+
+        if (clicks >= 3) {
+            log.onclick = null;
+            // Transition to the main story
+            gsap.to(stage, {
+                opacity: 0,
+                duration: 2,
+                onComplete: () => {
+                    stage.classList.remove('active');
+                    document.getElementById('story-container').classList.remove('hidden');
+                    startBlinkingAnimation();
+                }
+            });
+        }
+    };
 }
 
 function setupMobileFullScreen() {

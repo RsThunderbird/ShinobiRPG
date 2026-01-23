@@ -7,6 +7,8 @@ function initThreeForest() {
     let meatCollected = 0;
     const meatsArray = [];
     const assets = window.assets; // Ensure we use the global assets
+    let zoroMixer;
+    let zoroIdleAction;
 
     const forestMusic = new Howl({
         src: [assets.forestMusic],
@@ -95,17 +97,30 @@ function initThreeForest() {
 
     loader.load(assets.zoroModel, (gltf) => {
         zoroModel = gltf.scene;
-        zoroModel.scale.set(0.05, 0.05, 0.05); // Reduced from 4 to 0.05
+
+        // Normalize height to 2 meters
+        const box = new THREE.Box3().setFromObject(zoroModel);
+        const size = box.getSize(new THREE.Vector3());
+        const scaleFactor = 2 / size.y;
+        zoroModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
         zoroModel.position.copy(zoroPos);
         zoroModel.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
         scene.add(zoroModel);
+
+        // Animation mixer setup
+        if (gltf.animations && gltf.animations.length > 0) {
+            zoroMixer = new THREE.AnimationMixer(zoroModel);
+            zoroIdleAction = zoroMixer.clipAction(gltf.animations[0]);
+            zoroIdleAction.play();
+        }
 
         const spot = new THREE.SpotLight(0xffffff, 1, 30, Math.PI / 4, 0.5);
         spot.position.set(zoroPos.x, zoroPos.y + 15, zoroPos.z);
         spot.target = zoroModel;
         scene.add(spot);
 
-        console.log("Zoro successfully loaded at:", zoroModel.position);
+        console.log("Zoro successfully loaded at:", zoroModel.position, "Scale:", scaleFactor);
     }, undefined, (err) => {
         console.error("Error loading Zoro model, using placeholder:", err);
         zoroModel = new THREE.Group();
@@ -147,9 +162,30 @@ function initThreeForest() {
         const dist = camera.position.distanceTo(zoroPos);
         if (dist < 12) {
             if (questActive) {
-                if (meatCollected >= 5) showNarrative("Zoro: Thanks for the meat! You're not so bad after all.", [{ text: "No problem", action: () => { } }]);
+                if (meatCollected >= 5) {
+                    showNarrative("Zoro: Thanks for the meat! You're not so bad after all.", [{ text: "No problem", action: () => { } }]);
+                    playZoroCompletionAnimation();
+                }
                 else showNarrative("Zoro: Where's my food? I need 5 pieces of meat!", [{ text: "Still looking", action: () => { } }]);
             } else startZoroDialogue();
+        }
+    }
+
+    function playZoroCompletionAnimation() {
+        if (!zoroModel) return;
+
+        // If there's a second animation, play it. Otherwise, do a 'dance' with GSAP.
+        if (zoroMixer && zoroMixer._actions.length > 1) {
+            const action = zoroMixer._actions[1];
+            zoroMixer.stopAllAction();
+            action.setLoop(THREE.LoopOnce);
+            action.clampWhenFinished = true;
+            action.play();
+        } else {
+            // Manual T-pose dance (Jump and rotate)
+            const tl = gsap.timeline();
+            tl.to(zoroModel.position, { y: zoroModel.position.y + 1, duration: 0.3, yoyo: true, repeat: 5 })
+                .to(zoroModel.rotation, { y: zoroModel.rotation.y + Math.PI * 2, duration: 0.5 }, 0);
         }
     }
 
@@ -194,7 +230,7 @@ function initThreeForest() {
             const angle = Math.random() * Math.PI * 2, dist = 5 + Math.random() * 25;
             const mx = zoroPos.x + Math.cos(angle) * dist, mz = zoroPos.z + Math.sin(angle) * dist, my = getTerrainHeight(mx, mz);
             loader.load(assets.meatModel, (gltf) => {
-                const meat = gltf.scene; meat.scale.set(0.02, 0.02, 0.02); meat.position.set(mx, my + 0.5, mz);
+                const meat = gltf.scene; meat.scale.set(0.15, 0.15, 0.15); meat.position.set(mx, my + 0.5, mz);
                 meat.traverse(n => { if (n.isMesh) { n.castShadow = true; n.userData.isMeat = true; } });
                 scene.add(meat); meatsArray.push(meat);
             });
@@ -265,6 +301,9 @@ function initThreeForest() {
     function animate() {
         requestAnimationFrame(animate);
         const delta = Math.min(clock.getDelta(), 0.1);
+
+        if (zoroMixer) zoroMixer.update(delta);
+
         let s = running ? 0.6 : 0.3;
         const dir = new THREE.Vector3(); camera.getWorldDirection(dir); dir.y = 0; dir.normalize();
         const side = new THREE.Vector3().crossVectors(camera.up, dir).normalize();

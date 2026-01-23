@@ -34,15 +34,36 @@
     </div>
 
     <div id="game-viewport">
+        <!-- Start Screen -->
+        <div id="start-screen" class="active">
+            <div class="start-bg"></div>
+            <div class="start-content">
+                <h1 class="game-title">SHINOBI RPG</h1>
+                <p class="game-subtitle">THE STORY BEGINS</p>
+                <button id="start-button" class="story-choice-btn">START STORY</button>
+                <p class="mobile-hint">Best played in landscape mode</p>
+            </div>
+        </div>
+
+        <!-- Cinematic: Log Cutting -->
+        <div id="cinematic-stage" class="stage">
+            <div id="log-container">
+                <div id="log"></div>
+                <div id="axe"></div>
+                <p id="cinematic-instruction">Click the log to train</p>
+                <div id="click-counter">0 / 3</div>
+            </div>
+        </div>
+
         <!-- Story stages will be injected here -->
         <div id="eye-blinking-overlay">
             <div class="eyelid top"></div>
             <div class="eyelid bottom"></div>
         </div>
 
-        <div id="story-container" class="blurred">
+        <div id="story-container" class="blurred hidden">
             <!-- Stage 1: Cave Choice -->
-            <div id="cave-stage" class="stage active">
+            <div id="cave-stage" class="stage">
                 <img src="https://i.postimg.cc/3wBzWVMP/image.png" id="cave-bg" alt="Cave background">
                 <div class="cave-exit left" id="exit-left"></div>
                 <div class="cave-exit right" id="exit-right"></div>

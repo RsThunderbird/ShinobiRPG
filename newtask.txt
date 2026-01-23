@@ -1,6 +1,30 @@
-Zoro 3d model dosent load, it actually rendered your fallback so i added new zoro.glb to try to fix it. THE SOUNDS dialogues DO NOT play during the 
-convo with zoro and no notificaiton of quest start, no quest, no meats lying around nothing. Do it in a systematic way. 
+Alright lets get the story down (rough)
+basically after the zoro meat quest, zoro agrees to help user. 
+Now i need your suggestion on what to do next because clearly im new to 3.js world building and idk what to do next. Make me a list of suggestions,
+several ones.
 
-for the cave part, during the bats game the text box dosent disappear the one that says "you walk into left" something realted.
-make that box go away as soon as u enter the cave or u cant finish the bats minigame.
-Make the dialogues and the 3d model work. 
+So the first thing i wanna point out is zoro. zoro.glb is imported as is and he's in his T-form. We need to make it so that zoro is standing
+normally not in his t form. And then the big issue of erratic scale. The size of zoro, the meat everything is erratic. Zoro must be 2 meters tall
+meat should be big enough so we can see them on the ground properly and big. Then if the zoro quest is complete, zoro does an animation 
+in his t form. maybe a little sign or a dance?
+
+
+
+
+
+LATER: 
+
+
+Until then though we need to do the polishing: (well do this later after the above is done)
+The cave part:
+The game now starts before the cave scene with a "Start" button on a black screen. Ofcourse now the main focus of this polish is to make the game
+optimized for mobile.
+So the rotate your screen feature will appear here itself on the start screen. And as soon as start is clicked, force fullscreen mode.
+Now the changes:
+as soon as start is clicked the audio is played:
+The cave.mp3 must start playing as soon as the start button is pressed at 45% volume only.
+Then the dialogue plays: narrator1.mp3
+Then a cinematic plays and this is where it gets super interesting. We need to make a cinematic where the player in first person mode is seen 
+cutting a log. the only user prompt needed is clicks, and the log gets cut after 3 clicks. 
+The dialogue while this happens: narrator2.mp3
+then after this...PAUSE
