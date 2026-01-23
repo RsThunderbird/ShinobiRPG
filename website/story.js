@@ -27,40 +27,42 @@ function init() {
 }
 
 function startForestStage() {
-    // Ensure the main container is visible and not blurred
-    const storyContainer = document.getElementById('story-container');
-    if (storyContainer) {
-        storyContainer.classList.remove('blurred');
-        storyContainer.classList.remove('hidden');
-        storyContainer.style.display = 'block';
-    }
-
-    // Hide the start screen and any cinematic stages
+    // 1. Hide the Start Screen and Cinematic/Blinking stages
     const startScreen = document.getElementById('start-screen');
-    if (startScreen) startScreen.classList.remove('active');
+    if (startScreen) startScreen.style.display = 'none';
 
     const cinematicStage = document.getElementById('cinematic-stage');
-    if (cinematicStage) cinematicStage.classList.remove('active');
+    if (cinematicStage) cinematicStage.style.display = 'none';
 
-    // Deactivate all stages and activate only the forest stage
-    document.querySelectorAll('.stage').forEach(stage => stage.classList.remove('active'));
+    const eyeOverlay = document.getElementById('eye-blinking-overlay');
+    if (eyeOverlay) eyeOverlay.style.display = 'none';
 
+    // 2. Ensure the Story Container is visible and unblurred
+    const storyContainer = document.getElementById('story-container');
+    if (storyContainer) {
+        storyContainer.style.display = 'block';
+        storyContainer.classList.remove('blurred', 'hidden');
+    }
+
+    // 3. Deactivate all other stages and modals
+    document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+
+    // 4. Activate the Forest Stage
     const forestStage = document.getElementById('forest-stage');
     if (forestStage) {
         forestStage.classList.add('active');
     }
 
-    // Show the UI elements like the compass
-    const compassContainer = document.getElementById('compass-container');
-    if (compassContainer) {
-        compassContainer.style.display = 'flex';
-    }
+    // 5. Show Game UI (Compass, etc.)
+    const compass = document.getElementById('compass-container');
+    if (compass) compass.style.display = 'flex';
 
-    // Initialize the Three.js forest
+    // 6. Initialize the Three.js scene from forest.js
     if (typeof initThreeForest === 'function') {
         initThreeForest();
     } else {
-        console.error("initThreeForest not found!");
+        console.error("initThreeForest not found! Check if forest.js is loaded correctly.");
     }
 }
 
