@@ -60,7 +60,8 @@ function initThreeForest() {
         color: 0x0077ff,
         transparent: true,
         opacity: 0.7,
-        shininess: 80
+        shininess: 80,
+        side: THREE.DoubleSide
     });
     const water = new THREE.Mesh(waterGeometry, waterMaterial);
     water.rotation.x = -Math.PI / 2;
@@ -106,27 +107,41 @@ function initThreeForest() {
         scene.add(group);
     }
 
+    let grassModelTemplate = null;
     function createGrass(x, z) {
         const h = getTerrainHeight(x, z);
-        if (h < -0.5) return; // Don't grow grass in water
+        if (h < -0.5) return;
 
-        const group = new THREE.Group();
-        const size = 0.6 + Math.random() * 0.8;
-
-        // Low-poly cross-plane grass
-        const material = new THREE.MeshLambertMaterial({ color: 0x3d8c40, side: THREE.DoubleSide });
-        const geometry = new THREE.PlaneGeometry(size, size);
-
-        const p1 = new THREE.Mesh(geometry, material);
-        const p2 = new THREE.Mesh(geometry, material);
-        p2.rotation.y = Math.PI / 2;
-
-        group.add(p1);
-        group.add(p2);
-        group.position.set(x, h + size / 2, z);
-        group.rotation.y = Math.random() * Math.PI;
-        scene.add(group);
+        if (grassModelTemplate) {
+            const grass = grassModelTemplate.clone();
+            const scale = 0.5 + Math.random() * 0.8;
+            grass.scale.set(scale, scale, scale);
+            grass.position.set(x, h, z);
+            grass.rotation.y = Math.random() * Math.PI;
+            scene.add(grass);
+        } else {
+            const group = new THREE.Group();
+            const size = 0.6 + Math.random() * 0.8;
+            const material = new THREE.MeshLambertMaterial({ color: 0x3d8c40, side: THREE.DoubleSide });
+            const geometry = new THREE.PlaneGeometry(size, size);
+            const p1 = new THREE.Mesh(geometry, material);
+            const p2 = new THREE.Mesh(geometry, material);
+            p2.rotation.y = Math.PI / 2;
+            group.add(p1); group.add(p2);
+            group.position.set(x, h + size / 2, z);
+            group.rotation.y = Math.random() * Math.PI;
+            scene.add(group);
+        }
     }
+
+    loader.load(assets.grassModel, (gltf) => {
+        grassModelTemplate = gltf.scene;
+        // Optionally adjust template scale/rotation
+        for (let i = 0; i < 500; i++) {
+            const x = (Math.random() - 0.5) * 800, z = (Math.random() - 0.5) * 800;
+            createGrass(x, z);
+        }
+    });
 
     for (let i = 0; i < 180; i++) {
         const x = (Math.random() - 0.5) * 800, z = (Math.random() - 0.5) * 800;
@@ -134,11 +149,6 @@ function initThreeForest() {
             if (i < 120) createTree(x, z);
             else createRock(x, z);
         }
-    }
-
-    for (let i = 0; i < 500; i++) {
-        const x = (Math.random() - 0.5) * 800, z = (Math.random() - 0.5) * 800;
-        createGrass(x, z);
     }
 
     // --- Road/Pathway ---
@@ -334,7 +344,8 @@ function initThreeForest() {
             const mx = zoroPos.x + Math.cos(angle) * dist, mz = zoroPos.z + Math.sin(angle) * dist, my = getTerrainHeight(mx, mz);
             loader.load(assets.meatModel, (gltf) => {
                 const meat = gltf.scene; meat.scale.set(0.15, 0.15, 0.15); meat.position.set(mx, my + 0.5, mz);
-                meat.traverse(n => { if (n.isMesh) { n.castShadow = true; n.userData.isMeat = true; } });
+                meat.userData.isMeat = true;
+                meat.traverse(n => { if (n.isMesh) { n.castShadow = true; } });
                 scene.add(meat); meatsArray.push(meat);
             });
         }
@@ -361,20 +372,26 @@ function initThreeForest() {
         const intersects = raycaster.intersectObjects(scene.children, true);
         for (let i = 0; i < intersects.length; i++) {
             let obj = intersects[i].object;
+            // Find the parent meat group
             while (obj.parent && !obj.userData.isMeat) obj = obj.parent;
-            if (obj.userData.isMeat) {
+
+            if (obj.userData.isMeat && obj.visible !== false) {
+                obj.visible = false;
+                obj.userData.isMeat = false;
                 scene.remove(obj); meatCollected++;
                 document.getElementById('meat-count').innerText = meatCollected;
                 showNotification(`Collected Meat (${meatCollected}/5)`);
                 if (meatCollected === 5) {
                     showNotification("QUEST COMPLETE: Talk to Zoro!");
-                    document.getElementById('quest-ui').style.borderLeftColor = "#ffd700";
+                    const questUi = document.getElementById('quest-ui');
+                    if (questUi) questUi.style.borderLeftColor = "#ffd700";
                     const comp = document.createElement('div');
                     comp.style.position = 'fixed'; comp.style.top = '50%'; comp.style.left = '50%';
                     comp.style.transform = 'translate(-50%, -50%)'; comp.style.fontSize = '5rem';
                     comp.style.color = '#ffd700'; comp.style.zIndex = '5000'; comp.innerText = 'COMPLETE';
+                    comp.style.fontFamily = "'Bangers', cursive";
                     document.body.appendChild(comp);
-                    setTimeout(() => comp.remove(), 3000);
+                    setTimeout(() => { if (comp.parentNode) comp.remove(); }, 3000);
                 }
                 break;
             }
@@ -439,16 +456,47 @@ function initThreeForest() {
         if (zoroController) zoroController.update(delta);
         deerControllers.forEach(dc => dc.updateAI(delta));
 
+        const waterLevel = -1.5;
+        const isUnderwater = camera.position.y < waterLevel + 0.5;
+
         let s = running ? 0.6 : 0.3;
+        if (isUnderwater) s *= 0.5; // Slow down in water
+
         const dir = new THREE.Vector3(); camera.getWorldDirection(dir); dir.y = 0; dir.normalize();
         const side = new THREE.Vector3().crossVectors(camera.up, dir).normalize();
         const m = new THREE.Vector3();
         if (moveF) m.add(dir); if (moveB) m.addScaledVector(dir, -1);
         if (moveL) m.add(side); if (moveR) m.addScaledVector(side, -1);
         if (m.length() > 0) camera.position.addScaledVector(m.normalize(), s);
-        velocity.y -= 40 * delta; camera.position.y += velocity.y * delta;
+
+        if (isUnderwater) {
+            // Swimming Physics
+            if (moveF || moveB || moveL || moveR) {
+                // Gentle sway when moving
+                camera.position.y += Math.sin(Date.now() * 0.005) * 0.02;
+            }
+
+            if (moveF && pitch < -0.2) velocity.y -= 5 * delta; // Dive
+            if (moveF && pitch > 0.2) velocity.y += 5 * delta; // Surface
+
+            velocity.y -= 10 * delta; // Minor gravity/sinking
+            velocity.y *= 0.95; // Water resistance
+
+            if (camera.position.y > waterLevel + 0.5) {
+                camera.position.y = waterLevel + 0.5;
+                velocity.y = 0;
+            }
+        } else {
+            velocity.y -= 40 * delta;
+        }
+
+        camera.position.y += velocity.y * delta;
         const ty = getTerrainHeight(camera.position.x, camera.position.z);
-        if (camera.position.y < ty + playerHeight) { camera.position.y = ty + playerHeight; velocity.y = 0; canJump = true; }
+        if (camera.position.y < ty + playerHeight) {
+            camera.position.y = ty + playerHeight;
+            velocity.y = 0;
+            canJump = true;
+        }
         camera.rotation.set(pitch, yaw, 0, 'YXZ');
 
         const dx = zoroPos.x - camera.position.x, dz = zoroPos.z - camera.position.z;

@@ -14,7 +14,8 @@ window.assets = {
     watchtowerModel: 'assets/wt.glb?v=1',
     zoroModel: 'assets/zoro.glb?v=1',
     meatModel: 'assets/meat.glb?v=1',
-    deerModel: 'assets/deer.glb?v=1',
+    deerModel: '../deer.glb',
+    grassModel: '../grass.glb',
     dialogue1: 'assets/dialogue1.mp3?v=1',
     dialogue2: 'assets/dialogue2.mp3?v=1',
     dialogue3: 'assets/dialogue3.mp3?v=1',
@@ -55,9 +56,11 @@ function startForestStage() {
         forestStage.classList.add('active');
     }
 
-    // 5. Show Game UI (Compass, etc.)
+    // 5. Show Game UI (Compass, crosshair, etc.)
     const compass = document.getElementById('compass-container');
     if (compass) compass.style.display = 'flex';
+    const crosshair = document.getElementById('crosshair');
+    if (crosshair) crosshair.style.display = 'block';
 
     // 6. Initialize the Three.js scene from forest.js
     if (typeof initThreeForest === 'function') {
