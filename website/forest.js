@@ -126,7 +126,7 @@ function initThreeForest() {
 
         zoroController = new UniversalController(zoroModel, zoroMixer, getTerrainHeight);
 
-        spawnDeerHerd(10); // Spawn a herd of 10 deer
+        startDeerSpawning();
 
         const spot = new THREE.SpotLight(0xffffff, 1, 30, Math.PI / 4, 0.5);
         spot.position.set(zoroPos.x, zoroPos.y + 15, zoroPos.z);
@@ -374,4 +374,18 @@ function initThreeForest() {
     }, 4000);
 
     document.addEventListener('mousemove', (e) => { if (document.pointerLockElement === renderer.domElement) { yaw -= e.movementX * 0.002; pitch -= e.movementY * 0.002; pitch = Math.max(-1.4, Math.min(1.4, pitch)); } });
+
+    // --- Developer Shortcuts ---
+    window.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'p') {
+            const json = scene.toJSON();
+            const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'konoha_forest.json';
+            a.click();
+            console.log("Forest exported! Import this into threejs.org/editor");
+        }
+    });
 }
