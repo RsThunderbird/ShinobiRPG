@@ -6,8 +6,9 @@ function initThreeForest() {
     let questActive = false;
     let meatCollected = 0;
     const meatsArray = [];
-    const assets = window.assets; // Ensure we use the global assets
-    let zoroMixer;
+    const deerControllers = [];
+    const assets = window.assets;
+    let zoroMixer, zoroController;
     let zoroIdleAction;
 
     const forestMusic = new Howl({
@@ -108,12 +109,24 @@ function initThreeForest() {
         zoroModel.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
         scene.add(zoroModel);
 
-        // Animation mixer setup
+        // Debug: Log all animations found in the model
         if (gltf.animations && gltf.animations.length > 0) {
+            console.log("--- Zoro Animations Found ---");
+            gltf.animations.forEach((clip, index) => {
+                console.log(`${index}: ${clip.name}`);
+            });
+            console.log("-----------------------------");
+
             zoroMixer = new THREE.AnimationMixer(zoroModel);
             zoroIdleAction = zoroMixer.clipAction(gltf.animations[0]);
             zoroIdleAction.play();
+        } else {
+            console.log("Zoro model has NO animations.");
         }
+
+        zoroController = new UniversalController(zoroModel, zoroMixer, getTerrainHeight);
+
+        spawnDeerHerd(10); // Spawn a herd of 10 deer
 
         const spot = new THREE.SpotLight(0xffffff, 1, 30, Math.PI / 4, 0.5);
         spot.position.set(zoroPos.x, zoroPos.y + 15, zoroPos.z);
@@ -298,11 +311,37 @@ function initThreeForest() {
 
     const clock = new THREE.Clock(), cPtr = document.getElementById('compass-pointer'), dTxt = document.getElementById('distance-text');
 
+    function spawnDeerHerd(count) {
+        for (let i = 0; i < count; i++) {
+            const rx = (Math.random() - 0.5) * 600;
+            const rz = (Math.random() - 0.5) * 600;
+            const ry = getTerrainHeight(rx, rz);
+
+            loader.load(assets.deerModel, (gltf) => {
+                const deer = gltf.scene;
+                deer.scale.set(0.005, 0.005, 0.005); // Adjust scale as needed
+                deer.position.set(rx, ry, rz);
+                deer.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+                scene.add(deer);
+
+                let dMixer;
+                if (gltf.animations && gltf.animations.length > 0) {
+                    dMixer = new THREE.AnimationMixer(deer);
+                    dMixer.clipAction(gltf.animations[0]).play(); // Default animation
+                }
+
+                const controller = new DeerAI(deer, dMixer, getTerrainHeight);
+                deerControllers.push(controller);
+            });
+        }
+    }
+
     function animate() {
         requestAnimationFrame(animate);
         const delta = Math.min(clock.getDelta(), 0.1);
 
-        if (zoroMixer) zoroMixer.update(delta);
+        if (zoroController) zoroController.update(delta);
+        deerControllers.forEach(dc => dc.updateAI(delta));
 
         let s = running ? 0.6 : 0.3;
         const dir = new THREE.Vector3(); camera.getWorldDirection(dir); dir.y = 0; dir.normalize();
