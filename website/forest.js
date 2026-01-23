@@ -40,6 +40,8 @@ function initThreeForest() {
     sunLight.shadow.mapSize.height = 512;
     scene.add(sunLight);
 
+    const loader = new THREE.GLTFLoader();
+
     function getTerrainHeight(x, z) {
         // Flat surface to prevent tearing and collision issues
         let h = 0;
@@ -179,7 +181,7 @@ function initThreeForest() {
     const outpostPos = new THREE.Vector3(250, 0, -250);
     outpostPos.y = getTerrainHeight(outpostPos.x, outpostPos.z);
 
-    const loader = new THREE.GLTFLoader();
+
     loader.load(assets.watchtowerModel, (gltf) => {
         const model = gltf.scene;
         model.scale.set(5, 5, 5);
