@@ -41,10 +41,31 @@ function initThreeForest() {
     scene.add(sunLight);
 
     function getTerrainHeight(x, z) {
-        return Math.sin(x * 0.05) * Math.cos(z * 0.05) * 2 +
-            Math.sin(x * 0.02) * 5 +
-            Math.cos(z * 0.02) * 5;
+        // Flat surface to prevent tearing and collision issues
+        let h = 0;
+
+        // Simple River Bed - Straight and clean
+        const riverX = 150;
+        const distToRiver = Math.abs(x - riverX);
+        if (distToRiver < 30) {
+            // Smooth dip for the river
+            h = -5 * Math.cos((distToRiver / 30) * Math.PI * 0.5);
+        }
+        return h;
     }
+
+    // Add Water Plane
+    const waterGeometry = new THREE.PlaneGeometry(1000, 1000);
+    const waterMaterial = new THREE.MeshPhongMaterial({
+        color: 0x0077ff,
+        transparent: true,
+        opacity: 0.7,
+        shininess: 80
+    });
+    const water = new THREE.Mesh(waterGeometry, waterMaterial);
+    water.rotation.x = -Math.PI / 2;
+    water.position.y = -1.5; // Adjusted height for better visibility in flat terrain
+    scene.add(water);
 
     const groundGeometry = new THREE.PlaneGeometry(1000, 1000, 80, 80);
     const posAttr = groundGeometry.attributes.position;
@@ -58,21 +79,94 @@ function initThreeForest() {
     scene.add(ground);
 
     function createTree(x, z) {
+        const h = getTerrainHeight(x, z);
+        if (h < -2) return; // Don't spawn trees in the river
+
         const group = new THREE.Group();
         const scale = 0.8 + Math.random() * 1.5;
         const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3 * scale, 0.5 * scale, 10 * scale, 8), new THREE.MeshLambertMaterial({ color: 0x2d1b0f }));
         trunk.position.y = 5 * scale; trunk.castShadow = true; group.add(trunk);
         const leaves = new THREE.Mesh(new THREE.DodecahedronGeometry(4 * scale, 0), new THREE.MeshLambertMaterial({ color: 0x1a4d1a }));
         leaves.position.y = 10 * scale; leaves.castShadow = true; group.add(leaves);
-        group.position.set(x, getTerrainHeight(x, z), z);
+        group.position.set(x, h, z);
         scene.add(group);
     }
-    for (let i = 0; i < 150; i++) {
-        const x = (Math.random() - 0.5) * 800, z = (Math.random() - 0.5) * 800;
-        if (Math.abs(x) > 40 || Math.abs(z) > 40) createTree(x, z);
+
+    function createRock(x, z) {
+        const h = getTerrainHeight(x, z);
+        if (h < -2) return;
+        const group = new THREE.Group();
+        const scale = 1 + Math.random() * 3;
+        const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(scale, 0), new THREE.MeshLambertMaterial({ color: 0x666666 }));
+        rock.rotation.set(Math.random(), Math.random(), Math.random());
+        rock.scale.set(1, 0.6, 1);
+        rock.castShadow = true; rock.receiveShadow = true;
+        group.position.set(x, h - 0.5, z);
+        group.add(rock);
+        scene.add(group);
     }
 
-    const outpostPos = new THREE.Vector3(200, 0, -200);
+    function createGrass(x, z) {
+        const h = getTerrainHeight(x, z);
+        if (h < -0.5) return; // Don't grow grass in water
+
+        const group = new THREE.Group();
+        const size = 0.6 + Math.random() * 0.8;
+
+        // Low-poly cross-plane grass
+        const material = new THREE.MeshLambertMaterial({ color: 0x3d8c40, side: THREE.DoubleSide });
+        const geometry = new THREE.PlaneGeometry(size, size);
+
+        const p1 = new THREE.Mesh(geometry, material);
+        const p2 = new THREE.Mesh(geometry, material);
+        p2.rotation.y = Math.PI / 2;
+
+        group.add(p1);
+        group.add(p2);
+        group.position.set(x, h + size / 2, z);
+        group.rotation.y = Math.random() * Math.PI;
+        scene.add(group);
+    }
+
+    for (let i = 0; i < 180; i++) {
+        const x = (Math.random() - 0.5) * 800, z = (Math.random() - 0.5) * 800;
+        if (Math.abs(x) > 40 || Math.abs(z) > 40) {
+            if (i < 120) createTree(x, z);
+            else createRock(x, z);
+        }
+    }
+
+    for (let i = 0; i < 500; i++) {
+        const x = (Math.random() - 0.5) * 800, z = (Math.random() - 0.5) * 800;
+        createGrass(x, z);
+    }
+
+    // --- Road/Pathway ---
+    const roadMat = new THREE.MeshLambertMaterial({ color: 0x5a4d33 });
+    const roadSegments = 60;
+    for (let i = 0; i < roadSegments; i++) {
+        const t = i / roadSegments;
+        // Path from player start area towards the watchtower
+        const x = THREE.MathUtils.lerp(-50, 250, t);
+        const z = THREE.MathUtils.lerp(50, -250, t);
+
+        // Add some organic winding to the road
+        const wx = x + Math.sin(t * 6) * 5;
+        const wz = z + Math.cos(t * 6) * 5;
+        const wh = getTerrainHeight(wx, wz);
+
+        // Don't draw road in the middle of the river unless it's a bridge
+        if (wh < -0.5) continue;
+
+        const segment = new THREE.Mesh(new THREE.PlaneGeometry(8, 10), roadMat);
+        segment.position.set(wx, wh + 0.05, wz);
+        segment.rotation.x = -Math.PI / 2;
+        segment.rotation.z = Math.PI / 4 + Math.sin(t * 6) * 0.1;
+        segment.receiveShadow = true;
+        scene.add(segment);
+    }
+
+    const outpostPos = new THREE.Vector3(250, 0, -250);
     outpostPos.y = getTerrainHeight(outpostPos.x, outpostPos.z);
 
     const loader = new THREE.GLTFLoader();
@@ -109,16 +203,12 @@ function initThreeForest() {
         zoroModel.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
         scene.add(zoroModel);
 
-        // Debug: Log all animations found in the model
         if (gltf.animations && gltf.animations.length > 0) {
-            console.log("--- Zoro Animations Found ---");
-            gltf.animations.forEach((clip, index) => {
-                console.log(`${index}: ${clip.name}`);
-            });
-            console.log("-----------------------------");
-
             zoroMixer = new THREE.AnimationMixer(zoroModel);
-            zoroIdleAction = zoroMixer.clipAction(gltf.animations[0]);
+
+            // Play requested idle animation
+            const idleClip = gltf.animations.find(a => a.name === 'pl_zoro_2yaf01_idle_a') || gltf.animations[0];
+            zoroIdleAction = zoroMixer.clipAction(idleClip);
             zoroIdleAction.play();
         } else {
             console.log("Zoro model has NO animations.");
@@ -311,15 +401,22 @@ function initThreeForest() {
 
     const clock = new THREE.Clock(), cPtr = document.getElementById('compass-pointer'), dTxt = document.getElementById('distance-text');
 
-    function spawnDeerHerd(count) {
+    function startDeerSpawning() {
+        const count = 30;
         for (let i = 0; i < count; i++) {
-            const rx = (Math.random() - 0.5) * 600;
-            const rz = (Math.random() - 0.5) * 600;
+            const rx = (Math.random() - 0.5) * 800;
+            const rz = (Math.random() - 0.5) * 800;
             const ry = getTerrainHeight(rx, rz);
 
             loader.load(assets.deerModel, (gltf) => {
                 const deer = gltf.scene;
-                deer.scale.set(0.005, 0.005, 0.005); // Adjust scale as needed
+
+                // Normalize deer height to ~2 meters
+                const box = new THREE.Box3().setFromObject(deer);
+                const size = box.getSize(new THREE.Vector3());
+                const scaleFactor = 2 / (size.y || 1);
+                deer.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
                 deer.position.set(rx, ry, rz);
                 deer.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
                 scene.add(deer);
@@ -327,10 +424,9 @@ function initThreeForest() {
                 let dMixer;
                 if (gltf.animations && gltf.animations.length > 0) {
                     dMixer = new THREE.AnimationMixer(deer);
-                    dMixer.clipAction(gltf.animations[0]).play(); // Default animation
                 }
 
-                const controller = new DeerAI(deer, dMixer, getTerrainHeight);
+                const controller = new DeerAI(deer, dMixer, getTerrainHeight, gltf.animations);
                 deerControllers.push(controller);
             });
         }
