@@ -72,12 +72,19 @@ class UniversalController {
 
 // AI Brain for the Deer
 class DeerAI extends UniversalController {
-    constructor(model, mixer, getTerrainHeight) {
+    constructor(model, mixer, getTerrainHeight, animations = []) {
         super(model, mixer, getTerrainHeight);
         this.target = new THREE.Vector3();
         this.state = 'IDLE'; // IDLE, WANDERING
         this.timer = Math.random() * 5;
         this.speed = 1.5 + Math.random();
+
+        this.animations = animations;
+        this.walkAction = null;
+        if (mixer && animations.length > 0) {
+            const walkClip = animations.find(a => a.name === 'GltfAnimation0') || animations[0];
+            this.walkAction = mixer.clipAction(walkClip);
+        }
     }
 
     updateAI(delta) {
@@ -85,21 +92,26 @@ class DeerAI extends UniversalController {
 
         if (this.state === 'IDLE') {
             this.isWalking = false;
+            if (this.walkAction) this.walkAction.stop();
             if (this.timer <= 0) {
-                // Pick random spot within 20 units
+                // Pick random spot within 40 units
                 this.target.set(
-                    this.model.position.x + (Math.random() - 0.5) * 40,
+                    this.model.position.x + (Math.random() - 0.5) * 80,
                     0,
-                    this.model.position.z + (Math.random() - 0.5) * 40
+                    this.model.position.z + (Math.random() - 0.5) * 80
                 );
                 this.state = 'WANDERING';
-                this.timer = 10 + Math.random() * 10;
+                this.timer = 10 + Math.random() * 15;
             }
         } else if (this.state === 'WANDERING') {
+            this.isWalking = true;
+            if (this.walkAction && !this.walkAction.isRunning()) this.walkAction.play();
+
             const arrived = this.moveTo(this.target, delta);
             if (arrived || this.timer <= 0) {
                 this.state = 'IDLE';
                 this.timer = 2 + Math.random() * 5;
+                if (this.walkAction) this.walkAction.fadeOut(0.5);
             }
         }
 

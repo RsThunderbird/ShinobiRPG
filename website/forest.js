@@ -41,18 +41,17 @@ function initThreeForest() {
     scene.add(sunLight);
 
     function getTerrainHeight(x, z) {
-        let baseHeight = Math.sin(x * 0.05) * Math.cos(z * 0.05) * 2 +
-            Math.sin(x * 0.02) * 5 +
-            Math.cos(z * 0.02) * 5;
+        // Flat surface to prevent tearing and collision issues
+        let h = 0;
 
-        // River bed logic
-        const riverZ = Math.sin(x * 0.02) * 40 + 60;
-        const distToRiver = Math.abs(z - riverZ);
-        if (distToRiver < 25) {
-            const dip = Math.cos((distToRiver / 25) * Math.PI * 0.5) * 10;
-            baseHeight -= dip;
+        // Simple River Bed - Straight and clean
+        const riverX = 150;
+        const distToRiver = Math.abs(x - riverX);
+        if (distToRiver < 30) {
+            // Smooth dip for the river
+            h = -5 * Math.cos((distToRiver / 30) * Math.PI * 0.5);
         }
-        return baseHeight;
+        return h;
     }
 
     // Add Water Plane
@@ -60,12 +59,12 @@ function initThreeForest() {
     const waterMaterial = new THREE.MeshPhongMaterial({
         color: 0x0077ff,
         transparent: true,
-        opacity: 0.6,
-        shininess: 100
+        opacity: 0.7,
+        shininess: 80
     });
     const water = new THREE.Mesh(waterGeometry, waterMaterial);
     water.rotation.x = -Math.PI / 2;
-    water.position.y = -3;
+    water.position.y = -1.5; // Adjusted height for better visibility in flat terrain
     scene.add(water);
 
     const groundGeometry = new THREE.PlaneGeometry(1000, 1000, 80, 80);
@@ -109,12 +108,24 @@ function initThreeForest() {
 
     function createGrass(x, z) {
         const h = getTerrainHeight(x, z);
-        if (h < -1) return;
-        const size = 0.5 + Math.random();
-        const grass = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshLambertMaterial({ color: 0x3d8c40, side: THREE.DoubleSide }));
-        grass.position.set(x, h + size / 2, z);
-        grass.rotation.y = Math.random() * Math.PI;
-        scene.add(grass);
+        if (h < -0.5) return; // Don't grow grass in water
+
+        const group = new THREE.Group();
+        const size = 0.6 + Math.random() * 0.8;
+
+        // Low-poly cross-plane grass
+        const material = new THREE.MeshLambertMaterial({ color: 0x3d8c40, side: THREE.DoubleSide });
+        const geometry = new THREE.PlaneGeometry(size, size);
+
+        const p1 = new THREE.Mesh(geometry, material);
+        const p2 = new THREE.Mesh(geometry, material);
+        p2.rotation.y = Math.PI / 2;
+
+        group.add(p1);
+        group.add(p2);
+        group.position.set(x, h + size / 2, z);
+        group.rotation.y = Math.random() * Math.PI;
+        scene.add(group);
     }
 
     for (let i = 0; i < 180; i++) {
@@ -135,24 +146,27 @@ function initThreeForest() {
     const roadSegments = 60;
     for (let i = 0; i < roadSegments; i++) {
         const t = i / roadSegments;
-        // Path from player start area towards the watchtower and beyond
-        const x = THREE.MathUtils.lerp(-100, 400, t);
-        const z = THREE.MathUtils.lerp(100, -400, t);
+        // Path from player start area towards the watchtower
+        const x = THREE.MathUtils.lerp(-50, 250, t);
+        const z = THREE.MathUtils.lerp(50, -250, t);
 
         // Add some organic winding to the road
-        const wx = x + Math.sin(t * 8) * 10;
-        const wz = z + Math.cos(t * 8) * 10;
+        const wx = x + Math.sin(t * 6) * 5;
+        const wz = z + Math.cos(t * 6) * 5;
         const wh = getTerrainHeight(wx, wz);
 
-        const segment = new THREE.Mesh(new THREE.PlaneGeometry(8, 12), roadMat);
-        segment.position.set(wx, wh + 0.1, wz);
+        // Don't draw road in the middle of the river unless it's a bridge
+        if (wh < -0.5) continue;
+
+        const segment = new THREE.Mesh(new THREE.PlaneGeometry(8, 10), roadMat);
+        segment.position.set(wx, wh + 0.05, wz);
         segment.rotation.x = -Math.PI / 2;
-        segment.rotation.z = Math.PI / 4 + Math.sin(t * 8) * 0.2; // Angle towards watchtower
+        segment.rotation.z = Math.PI / 4 + Math.sin(t * 6) * 0.1;
         segment.receiveShadow = true;
         scene.add(segment);
     }
 
-    const outpostPos = new THREE.Vector3(200, 0, -200);
+    const outpostPos = new THREE.Vector3(250, 0, -250);
     outpostPos.y = getTerrainHeight(outpostPos.x, outpostPos.z);
 
     const loader = new THREE.GLTFLoader();
@@ -410,10 +424,9 @@ function initThreeForest() {
                 let dMixer;
                 if (gltf.animations && gltf.animations.length > 0) {
                     dMixer = new THREE.AnimationMixer(deer);
-                    dMixer.clipAction(gltf.animations[0]).play(); // Default animation
                 }
 
-                const controller = new DeerAI(deer, dMixer, getTerrainHeight);
+                const controller = new DeerAI(deer, dMixer, getTerrainHeight, gltf.animations);
                 deerControllers.push(controller);
             });
         }
