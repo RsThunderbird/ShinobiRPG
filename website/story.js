@@ -23,77 +23,45 @@ window.assets = {
 };
 
 function init() {
-    setupStartScreen();
+    startForestStage();
 }
 
-function setupStartScreen() {
-    const startBtn = document.getElementById('start-button');
-    startBtn.onclick = () => {
-        // Enforce Fullscreen
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen();
-        } else if (document.documentElement.webkitRequestFullscreen) {
-            document.documentElement.webkitRequestFullscreen();
-        }
+function startForestStage() {
+    // Ensure the main container is visible and not blurred
+    const storyContainer = document.getElementById('story-container');
+    if (storyContainer) {
+        storyContainer.classList.remove('blurred');
+        storyContainer.classList.remove('hidden');
+        storyContainer.style.display = 'block';
+    }
 
-        // Start Cave Music (45% Volume)
-        const caveMusic = new Howl({
-            src: [assets.caveAudio],
-            volume: 0.45,
-            loop: true
-        });
-        caveMusic.play();
+    // Hide the start screen and any cinematic stages
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.classList.remove('active');
 
-        // Start Narrator 1
-        new Howl({ src: [assets.narrator1] }).play();
+    const cinematicStage = document.getElementById('cinematic-stage');
+    if (cinematicStage) cinematicStage.classList.remove('active');
 
-        // Hide Start Screen and start Cinematic
-        gsap.to('#start-screen', {
-            opacity: 0,
-            duration: 1,
-            onComplete: () => {
-                document.getElementById('start-screen').classList.remove('active');
-                startLogCinematic();
-            }
-        });
-    };
-}
+    // Deactivate all stages and activate only the forest stage
+    document.querySelectorAll('.stage').forEach(stage => stage.classList.remove('active'));
 
-function startLogCinematic() {
-    const stage = document.getElementById('cinematic-stage');
-    stage.classList.add('active');
+    const forestStage = document.getElementById('forest-stage');
+    if (forestStage) {
+        forestStage.classList.add('active');
+    }
 
-    // Play Narrator 2 during cinematic
-    const n2 = new Howl({ src: [assets.narrator2] });
-    n2.play();
+    // Show the UI elements like the compass
+    const compassContainer = document.getElementById('compass-container');
+    if (compassContainer) {
+        compassContainer.style.display = 'flex';
+    }
 
-    let clicks = 0;
-    const log = document.getElementById('log');
-    const counter = document.getElementById('click-counter');
-
-    log.onclick = () => {
-        clicks++;
-        counter.innerText = `${clicks} / 3`;
-
-        // Visual feedback
-        const axe = document.getElementById('axe');
-        if (axe) gsap.fromTo(axe, { rotate: -45, x: 0 }, { rotate: -10, x: 80, duration: 0.1, yoyo: true, repeat: 1 });
-        gsap.to(log, { x: 5, duration: 0.1, yoyo: true, repeat: 3 });
-
-        if (clicks >= 3) {
-            log.onclick = null;
-            // Transition to the main story
-            gsap.to(stage, {
-                opacity: 0,
-                duration: 2,
-                onComplete: () => {
-                    stage.classList.remove('active');
-                    document.getElementById('story-container').classList.remove('hidden');
-                    startBlinkingAnimation();
-                }
-            });
-        }
-    };
+    // Initialize the Three.js forest
+    if (typeof initThreeForest === 'function') {
+        initThreeForest();
+    } else {
+        console.error("initThreeForest not found!");
+    }
 }
 
 function setupMobileFullScreen() {
@@ -281,13 +249,3 @@ function startVinesMinigame() {
     }
 }
 
-function startForestStage() {
-    document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
-    document.getElementById('forest-stage').classList.add('active');
-    document.getElementById('compass-container').style.display = 'flex';
-    if (typeof initThreeForest === 'function') {
-        initThreeForest();
-    } else {
-        console.error("initThreeForest not found!");
-    }
-}
