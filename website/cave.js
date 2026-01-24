@@ -7,6 +7,15 @@ function initThreeCave() {
     let arrows = [];
     let zoroModel, zoroMixer;
     let isGameOver = false;
+    let flyMode = true; // Default to fly mode for free roam
+    let velocityY = 0;
+
+    // Create a Debug Coord display
+    const debugUI = document.createElement('div');
+    debugUI.style.position = 'fixed'; debugUI.style.bottom = '20px'; debugUI.style.right = '20px';
+    debugUI.style.color = '#00ff00'; debugUI.style.fontFamily = 'monospace'; debugUI.style.fontSize = '14px';
+    debugUI.style.pointerEvents = 'none'; debugUI.id = 'coord-debug';
+    document.body.appendChild(debugUI);
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x050510); // Dark indigo for better depth
@@ -31,6 +40,10 @@ function initThreeCave() {
     torch.castShadow = true;
     camera.add(torch);
     scene.add(camera);
+
+    // Add Grid Helper to see the floor/center
+    const gridHelper = new THREE.GridHelper(200, 20, 0x444444, 0x222222);
+    scene.add(gridHelper);
 
     // Extra "Cave Glow" lights scattered around
     const createGlow = (x, y, z, color) => {
@@ -125,8 +138,8 @@ function initThreeCave() {
     }
 
     // Camera/Movement Logic (Reusing simple FPS logic)
-    camera.position.set(0, 1.8, 0);
-    let moveF = false, moveB = false, moveL = false, moveR = false, yaw = 0, pitch = 0;
+    camera.position.set(0, 10, 20); // Start higher up to see the scene
+    let moveF = false, moveB = false, moveL = false, moveR = false, moveU = false, moveD = false, yaw = 0, pitch = 0;
 
     document.addEventListener('keydown', (e) => {
         if (isGameOver) return;
@@ -135,6 +148,9 @@ function initThreeCave() {
             case 'KeyS': moveB = true; break;
             case 'KeyA': moveL = true; break;
             case 'KeyD': moveR = true; break;
+            case 'Space': moveU = true; break;
+            case 'ShiftLeft': moveD = true; break;
+            case 'KeyF': flyMode = !flyMode; showNotification("Fly Mode: " + (flyMode ? "ON" : "OFF")); break;
             case 'KeyE':
                 const narrativeBox = document.getElementById('narrative-box');
                 if (narrativeBox && narrativeBox.style.display !== 'none') {
@@ -151,6 +167,8 @@ function initThreeCave() {
             case 'KeyS': moveB = false; break;
             case 'KeyA': moveL = false; break;
             case 'KeyD': moveR = false; break;
+            case 'Space': moveU = false; break;
+            case 'ShiftLeft': moveD = false; break;
         }
     });
 
@@ -237,19 +255,36 @@ function initThreeCave() {
         const delta = clock.getDelta();
 
         if (!isGameOver) {
+            const moveSpeed = flyMode ? 30 : 10;
             // Player Movement
             const dir = new THREE.Vector3();
             camera.getWorldDirection(dir);
-            dir.y = 0;
+            if (!flyMode) dir.y = 0;
             dir.normalize();
             const side = new THREE.Vector3().crossVectors(camera.up, dir).normalize();
 
-            if (moveF) camera.position.addScaledVector(dir, 10 * delta);
-            if (moveB) camera.position.addScaledVector(dir, -10 * delta);
-            if (moveL) camera.position.addScaledVector(side, 10 * delta);
-            if (moveR) camera.position.addScaledVector(side, -10 * delta);
+            if (moveF) camera.position.addScaledVector(dir, moveSpeed * delta);
+            if (moveB) camera.position.addScaledVector(dir, -moveSpeed * delta);
+            if (moveL) camera.position.addScaledVector(side, moveSpeed * delta);
+            if (moveR) camera.position.addScaledVector(side, -moveSpeed * delta);
+
+            if (flyMode) {
+                if (moveU) camera.position.y += moveSpeed * delta;
+                if (moveD) camera.position.y -= moveSpeed * delta;
+            } else {
+                // Gravity simulator
+                velocityY -= 20 * delta;
+                camera.position.y += velocityY * delta;
+                if (camera.position.y < 1.8) {
+                    camera.position.y = 1.8;
+                    velocityY = 0;
+                }
+            }
 
             camera.rotation.set(pitch, yaw, 0, 'YXZ');
+
+            // Update Debug UI
+            debugUI.innerText = `POS: ${Math.round(camera.position.x)}, ${Math.round(camera.position.y)}, ${Math.round(camera.position.z)} | FLY: ${flyMode ? 'ON' : 'OFF'} [F] to toggle`;
         }
 
         if (zoroMixer) zoroMixer.update(delta);
