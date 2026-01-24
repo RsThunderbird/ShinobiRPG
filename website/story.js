@@ -19,6 +19,7 @@ window.assets = {
     dialogue1: 'assets/dialogue1.mp3?v=1',
     dialogue2: 'assets/dialogue2.mp3?v=1',
     dialogue3: 'assets/dialogue3.mp3?v=1',
+    scrollModel: '../scroll.glb',
     caveAudio: '../cave.mp3',
     narrator1: '../narrator1.mp3',
     narrator2: '../narrator2.mp3'

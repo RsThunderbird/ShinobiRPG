@@ -6,6 +6,10 @@ function initThreeForest() {
     let questActive = false;
     let meatCollected = 0;
     const meatsArray = [];
+    let scrollQuestActive = false;
+    let scrollCollected = false;
+    let scrollModelObj = null;
+    const scrollPos = new THREE.Vector3(150, -5, 50); // Bottom of the river
     const deerControllers = [];
     const assets = window.assets;
     let zoroMixer, zoroController;
@@ -257,7 +261,18 @@ function initThreeForest() {
             case 'KeyD': moveR = true; break;
             case 'ShiftLeft': running = true; break;
             case 'Space': if (canJump) { velocity.y = 15; canJump = false; } break;
-            case 'KeyE': checkInteraction(); break;
+            case 'KeyE':
+                // Check if narrative box is visible and has buttons
+                const narrativeBox = document.getElementById('narrative-box');
+                if (narrativeBox && narrativeBox.style.display !== 'none') {
+                    const buttons = narrativeBox.querySelectorAll('.story-choice-btn');
+                    if (buttons.length > 0) {
+                        buttons[0].click(); // Click the first button (usually "Next" or "Continue")
+                    }
+                } else {
+                    checkInteraction();
+                }
+                break;
         }
     };
     const onKeyUp = (e) => {
@@ -276,14 +291,64 @@ function initThreeForest() {
         if (!zoroModel) return;
         const dist = camera.position.distanceTo(zoroPos);
         if (dist < 12) {
+            if (scrollQuestActive) {
+                if (scrollCollected) {
+                    showNarrative("Zoro: You found it? The Forbidden Scroll of Teleportation... This might be our way out of here.", [{ text: "What now?", action: () => { } }]);
+                } else {
+                    showNarrative("Zoro: The scroll is at the bottom of the river. Don't drown!", [{ text: "I'm on it", action: () => { } }]);
+                }
+                return;
+            }
+
             if (questActive) {
                 if (meatCollected >= 5) {
-                    showNarrative("Zoro: Thanks for the meat! You're not so bad after all.", [{ text: "No problem", action: () => { } }]);
+                    showNarrative("Zoro: Thanks for the meat! You're not so bad after all.", [
+                        {
+                            text: "No problem", action: () => {
+                                showNarrative("Zoro: While I was resting, I remembered something. There's a legend about a lost scroll hidden at the bottom of this river.", [
+                                    {
+                                        text: "A scroll?", action: () => {
+                                            showNarrative("Zoro: They say it can tear through dimensions. If we find it, maybe we don't need a village to get you home.", [
+                                                { text: "Let's find it!", action: () => startScrollQuest() }
+                                            ]);
+                                        }
+                                    }
+                                ]);
+                            }
+                        }
+                    ]);
                     playZoroCompletionAnimation();
+                    questActive = false; // Meat quest done
                 }
                 else showNarrative("Zoro: Where's my food? I need 5 pieces of meat!", [{ text: "Still looking", action: () => { } }]);
             } else startZoroDialogue();
         }
+    }
+
+    function startScrollQuest() {
+        scrollQuestActive = true;
+        showNotification("NEW QUEST: Find the Forbidden Scroll in the river!");
+
+        loader.load(assets.scrollModel, (gltf) => {
+            scrollModelObj = gltf.scene;
+            scrollModelObj.scale.set(3, 3, 3);
+            scrollModelObj.position.copy(scrollPos);
+            scrollModelObj.userData.isScroll = true;
+
+            // Add a point light to make it visible underwater
+            const scrollLight = new THREE.PointLight(0x00ffff, 2, 20);
+            scrollModelObj.add(scrollLight);
+
+            scrollModelObj.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+            scene.add(scrollModelObj);
+
+            // Notification for UI
+            const questUi = document.getElementById('quest-ui');
+            if (questUi) {
+                document.getElementById('meat-count').parentElement.innerHTML = 'Scroll: <span id="scroll-status">Not Found</span>';
+                questUi.style.borderLeftColor = "#00ffff";
+            }
+        });
     }
 
     function playZoroCompletionAnimation() {
@@ -374,6 +439,23 @@ function initThreeForest() {
         const intersects = raycaster.intersectObjects(scene.children, true);
         for (let i = 0; i < intersects.length; i++) {
             let obj = intersects[i].object;
+
+            // Find parent for scroll
+            let scrollObj = obj;
+            while (scrollObj.parent && !scrollObj.userData.isScroll) scrollObj = scrollObj.parent;
+
+            if (scrollObj.userData.isScroll && scrollObj.visible !== false) {
+                scrollObj.visible = false;
+                scrollCollected = true;
+                showNotification("QUEST COMPLETE: Return to Zoro!");
+                const statusEl = document.getElementById('scroll-status');
+                if (statusEl) {
+                    statusEl.innerText = "FOUND";
+                    statusEl.style.color = "#00ffff";
+                }
+                break;
+            }
+
             // Find the parent meat group
             while (obj.parent && !obj.userData.isMeat) obj = obj.parent;
 
@@ -501,10 +583,15 @@ function initThreeForest() {
         }
         camera.rotation.set(pitch, yaw, 0, 'YXZ');
 
-        const dx = zoroPos.x - camera.position.x, dz = zoroPos.z - camera.position.z;
+        let targetPos = zoroPos;
+        if (scrollQuestActive && !scrollCollected) {
+            targetPos = scrollPos;
+        }
+
+        const dx = targetPos.x - camera.position.x, dz = targetPos.z - camera.position.z;
         const angle = Math.atan2(dx, -dz);
         if (cPtr) cPtr.style.transform = `translate(-50%, -50%) rotate(${angle + yaw}rad)`;
-        if (dTxt) dTxt.innerText = Math.floor(camera.position.distanceTo(zoroPos)) + "m";
+        if (dTxt) dTxt.innerText = Math.floor(camera.position.distanceTo(targetPos)) + "m";
 
         renderer.render(scene, camera);
     }
