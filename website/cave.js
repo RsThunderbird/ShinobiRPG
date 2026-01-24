@@ -31,11 +31,23 @@ function initThreeCave() {
     scene.fog = new THREE.Fog(0x87ceeb, 1, 3000);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
+    renderer.setClearColor(0x87ceeb, 1); // Force blue background at renderer level
+
+    // ENSURE VISIBILITY: Force style onto canvas
+    renderer.domElement.style.position = 'absolute';
+    renderer.domElement.style.top = '0';
+    renderer.domElement.style.left = '0';
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.zIndex = '500'; // Above stages, below UI
+
+    container.innerHTML = ''; // Clear previous canvases
     container.appendChild(renderer.domElement);
-    console.log("CAVE DEBUG: Renderer and Camera initialized");
+    console.log("CAVE DEBUG: Renderer and Camera initialized and appended");
 
     // BRIGHT SUN (Directional Light)
     const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);

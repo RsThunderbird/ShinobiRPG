@@ -78,6 +78,8 @@ function startCaveCombatStage() {
     if (startScreen) startScreen.style.display = 'none';
     const cinematicStage = document.getElementById('cinematic-stage');
     if (cinematicStage) cinematicStage.style.display = 'none';
+    const eyeOverlay = document.getElementById('eye-blinking-overlay');
+    if (eyeOverlay) eyeOverlay.style.display = 'none';
 
     // Show Story Container
     const storyContainer = document.getElementById('story-container');
