@@ -679,3 +679,62 @@ html {
     height: 100%;
     margin-left: -1px;
 }
+
+/* HP Bar Styles */
+#hp-bar-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 250px;
+    height: 30px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 15px;
+    overflow: hidden;
+    z-index: 4000;
+    backdrop-filter: blur(10px);
+}
+
+#hp-bar-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #ff4d4d, #ff8080);
+    transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#hp-text {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+    pointer-events: none;
+}
+
+/* Portal Transition Effect */
+.portal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+}
+
+#cave-three-container {
+    width: 100%;
+    height: 100%;
+    background: #000;
+}

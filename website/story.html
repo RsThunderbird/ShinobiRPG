@@ -104,29 +104,37 @@
                         <div id="jump-btn" class="mobile-btn">JUMP</div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div id="ui-overlay">
-            <div id="crosshair"></div>
-            <div id="compass-container">
-                <div id="compass">
-                    <div id="compass-pointer"></div>
+                <!-- Stage 5: Cave Combat Scene -->
+                <div id="cave-combat-stage" class="stage">
+                    <div id="cave-three-container"></div>
                 </div>
-                <div id="distance-text">200m</div>
             </div>
-            <div id="narrative-box"></div>
-            <div id="notification" class="hidden"></div>
-            <div id="quest-ui" class="hidden">
-                <div class="quest-title">Food for Zoro</div>
-                <div class="quest-count"><span id="meat-count">0</span> / 5 MEAT</div>
+
+            <div id="ui-overlay">
+                <div id="hp-bar-container" class="hidden">
+                    <div id="hp-bar-fill"></div>
+                    <div id="hp-text">100% HP</div>
+                </div>
+                <div id="crosshair"></div>
+                <div id="compass-container">
+                    <div id="compass">
+                        <div id="compass-pointer"></div>
+                    </div>
+                    <div id="distance-text">200m</div>
+                </div>
+                <div id="narrative-box"></div>
+                <div id="notification" class="hidden"></div>
+                <div id="quest-ui" class="hidden">
+                    <div class="quest-title">Food for Zoro</div>
+                    <div class="quest-count"><span id="meat-count">0</span> / 5 MEAT</div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <script src="forest.js"></script>
-    <script src="walk.js"></script>
-    <script src="story.js"></script>
+        <script src="forest.js"></script>
+        <script src="cave.js"></script>
+        <script src="walk.js"></script>
+        <script src="story.js"></script>
 </body>
 
 </html>

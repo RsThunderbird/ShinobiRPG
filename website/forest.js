@@ -293,7 +293,9 @@ function initThreeForest() {
         if (dist < 12) {
             if (scrollQuestActive) {
                 if (scrollCollected) {
-                    showNarrative("Zoro: You found it? The Forbidden Scroll of Teleportation... This might be our way out of here.", [{ text: "What now?", action: () => { } }]);
+                    showNarrative("Zoro: You found it? The Forbidden Scroll of Teleportation... This might be our way out of here.", [
+                        { text: "Use it", action: () => triggerPortalTransition() }
+                    ]);
                 } else {
                     showNarrative("Zoro: The scroll is at the bottom of the river. Don't drown!", [{ text: "I'm on it", action: () => { } }]);
                 }
@@ -331,12 +333,18 @@ function initThreeForest() {
 
         loader.load(assets.scrollModel, (gltf) => {
             scrollModelObj = gltf.scene;
-            scrollModelObj.scale.set(3, 3, 3);
+
+            // Normalize scale to 1 meter
+            const box = new THREE.Box3().setFromObject(scrollModelObj);
+            const size = box.getSize(new THREE.Vector3());
+            const scaleFactor = 1 / (size.y || 1);
+            scrollModelObj.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
             scrollModelObj.position.copy(scrollPos);
             scrollModelObj.userData.isScroll = true;
 
             // Add a point light to make it visible underwater
-            const scrollLight = new THREE.PointLight(0x00ffff, 2, 20);
+            const scrollLight = new THREE.PointLight(0x00ffff, 4, 30);
             scrollModelObj.add(scrollLight);
 
             scrollModelObj.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
@@ -345,8 +353,36 @@ function initThreeForest() {
             // Notification for UI
             const questUi = document.getElementById('quest-ui');
             if (questUi) {
-                document.getElementById('meat-count').parentElement.innerHTML = 'Scroll: <span id="scroll-status">Not Found</span>';
+                const meatLabel = document.getElementById('meat-count').parentElement;
+                if (meatLabel) meatLabel.innerHTML = 'Scroll: <span id="scroll-status">Not Found</span>';
                 questUi.style.borderLeftColor = "#00ffff";
+            }
+        });
+    }
+
+    function triggerPortalTransition() {
+        // Create portal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'portal-overlay';
+        document.body.appendChild(overlay);
+
+        // Zoom camera in
+        gsap.to(camera, { fov: 10, duration: 2, onUpdate: () => camera.updateProjectionMatrix() });
+
+        // Whiteout effect
+        gsap.to(overlay, {
+            opacity: 1,
+            duration: 1.5,
+            delay: 0.5,
+            onComplete: () => {
+                // Stop forest music
+                if (forestMusic) forestMusic.stop();
+
+                // Remove overlay and trigger next stage
+                setTimeout(() => {
+                    overlay.remove();
+                    startCaveCombatStage();
+                }, 500);
             }
         });
     }

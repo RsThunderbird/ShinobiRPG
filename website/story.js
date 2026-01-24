@@ -20,6 +20,8 @@ window.assets = {
     dialogue2: 'assets/dialogue2.mp3?v=1',
     dialogue3: 'assets/dialogue3.mp3?v=1',
     scrollModel: '../scroll.glb',
+    caveModel: '../cave.glb',
+    archerModel: '../archer.glb',
     caveAudio: '../cave.mp3',
     narrator1: '../narrator1.mp3',
     narrator2: '../narrator2.mp3'
@@ -68,6 +70,19 @@ function startForestStage() {
         initThreeForest();
     } else {
         console.error("initThreeForest not found! Check if forest.js is loaded correctly.");
+    }
+}
+
+function startCaveCombatStage() {
+    document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+    document.getElementById('cave-combat-stage').classList.add('active');
+
+    // Show HP Bar
+    const hpBar = document.getElementById('hp-bar-container');
+    if (hpBar) hpBar.classList.remove('hidden');
+
+    if (typeof initThreeCave === 'function') {
+        initThreeCave();
     }
 }
 
@@ -136,7 +151,10 @@ window.showNarrative = showNarrative;
 window.showNotification = showNotification;
 function showNarrative(text, buttons = []) {
     const box = document.getElementById('narrative-box');
-    box.innerHTML = `<p class="narrative-text">${text}</p>`;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const hint = !isMobile ? '<br><span style="font-size: 0.8rem; color: #888; margin-top: 10px; display: block;">(Press E to continue)</span>' : '';
+
+    box.innerHTML = `<p class="narrative-text">${text}${hint}</p>`;
 
     if (buttons.length > 0) {
         const btnContainer = document.createElement('div');
