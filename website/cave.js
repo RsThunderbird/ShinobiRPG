@@ -1,6 +1,14 @@
 function initThreeCave() {
+    console.log("CAVE DEBUG: initThreeCave started");
     const container = document.getElementById('cave-three-container');
+    if (!container) {
+        console.error("CAVE DEBUG: Container 'cave-three-container' NOT FOUND!");
+        return;
+    }
+    console.log("CAVE DEBUG: Container size:", container.clientWidth, "x", container.clientHeight);
+
     const assets = window.assets;
+    console.log("CAVE DEBUG: Assets:", assets);
 
     let playerHP = 100;
     let archers = [];
@@ -15,59 +23,72 @@ function initThreeCave() {
     debugUI.style.position = 'fixed'; debugUI.style.bottom = '20px'; debugUI.style.right = '20px';
     debugUI.style.color = '#00ff00'; debugUI.style.fontFamily = 'monospace'; debugUI.style.fontSize = '14px';
     debugUI.style.pointerEvents = 'none'; debugUI.id = 'coord-debug';
+    debugUI.style.zIndex = '10000';
     document.body.appendChild(debugUI);
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x050510); // Dark indigo for better depth
     scene.fog = new THREE.FogExp2(0x050510, 0.015); // Much thinner fog
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
+    console.log("CAVE DEBUG: Renderer and Camera initialized");
 
     // Stronger Ambient Light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     scene.add(ambientLight);
 
     // Add Hemisphere Light for natural bounce
-    const hemiLight = new THREE.HemisphereLight(0x4040ff, 0x202020, 0.8);
+    const hemiLight = new THREE.HemisphereLight(0x4040ff, 0x202020, 1.0);
     scene.add(hemiLight);
 
     // Stronger Torch light attached to camera
-    const torch = new THREE.PointLight(0xffaa44, 2.5, 50);
+    const torch = new THREE.PointLight(0xffaa44, 3, 100);
     torch.castShadow = true;
     camera.add(torch);
     scene.add(camera);
 
+    // TEST CUBE at origin
+    const testGeo = new THREE.BoxGeometry(5, 5, 5);
+    const testMat = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+    const testCube = new THREE.Mesh(testGeo, testMat);
+    testCube.position.set(0, 5, 0);
+    scene.add(testCube);
+    console.log("CAVE DEBUG: Added Red Test Cube at (0, 5, 0)");
+
     // Add Grid Helper to see the floor/center
-    const gridHelper = new THREE.GridHelper(200, 20, 0x444444, 0x222222);
+    const gridHelper = new THREE.GridHelper(500, 50, 0x00ff00, 0x444444);
     scene.add(gridHelper);
 
     // Extra "Cave Glow" lights scattered around
     const createGlow = (x, y, z, color) => {
-        const light = new THREE.PointLight(color, 2, 40);
+        const light = new THREE.PointLight(color, 5, 60);
         light.position.set(x, y, z);
         scene.add(light);
 
         // Add a small visible "crystal" mesh for the light source
-        const geo = new THREE.IcosahedronGeometry(0.5, 0);
+        const geo = new THREE.SphereGeometry(1, 8, 8);
         const mat = new THREE.MeshBasicMaterial({ color: color });
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.set(x, y, z);
         scene.add(mesh);
+        console.log(`CAVE DEBUG: Created glow light at (${x}, ${y}, ${z})`);
     };
 
-    createGlow(-20, 5, -30, 0x00ff88); // Green glow
-    createGlow(20, 5, -50, 0x0088ff);  // Blue glow
-    createGlow(0, 10, -70, 0xff00ff);  // Purple glow
-    createGlow(-15, 5, -10, 0x00ffff); // Cyan glow
+    createGlow(-40, 5, -30, 0x00ff88); // Green glow
+    createGlow(40, 5, -50, 0x0088ff);  // Blue glow
+    createGlow(0, 10, -100, 0xff00ff); // Purple glow
+    createGlow(-30, 5, -10, 0x00ffff); // Cyan glow
 
     const loader = new THREE.GLTFLoader();
 
     // Load Cave Model
+    console.log("CAVE DEBUG: Loading cave model from:", assets.caveModel);
     loader.load(assets.caveModel, (gltf) => {
+        console.log("CAVE DEBUG: Cave model LOADED successfully!");
         const cave = gltf.scene;
         // Adjust scale for cave
         cave.scale.set(10, 10, 10);
@@ -78,16 +99,22 @@ function initThreeCave() {
         spawnZoro();
         // Spawn Archers
         spawnArchers();
+    }, (xhr) => {
+        console.log(`CAVE DEBUG: Cave loading: ${(xhr.loaded / xhr.total * 100).toFixed(2)}%`);
+    }, (err) => {
+        console.error("CAVE DEBUG: ERROR loading cave model:", err);
     });
 
     function spawnZoro() {
+        console.log("CAVE DEBUG: Loading Zoro model...");
         loader.load(assets.zoroModel, (gltf) => {
+            console.log("CAVE DEBUG: Zoro model LOADED.");
             zoroModel = gltf.scene;
             const box = new THREE.Box3().setFromObject(zoroModel);
             const size = box.getSize(new THREE.Vector3());
             const scaleFactor = 2 / (size.y || 1);
             zoroModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
-            zoroModel.position.set(2, 0, -5);
+            zoroModel.position.set(5, 0, -10);
             scene.add(zoroModel);
 
             if (gltf.animations.length > 0) {
@@ -98,14 +125,15 @@ function initThreeCave() {
     }
 
     function spawnArchers() {
+        console.log("CAVE DEBUG: Spawning archers...");
         const spawnPoints = [
-            { x: -10, y: 0, z: -20 },
-            { x: 10, y: 0, z: -30 },
-            { x: 0, y: 0, z: -45 },
-            { x: -15, y: 0, z: -60 }
+            { x: -20, y: 0, z: -40 },
+            { x: 20, y: 0, z: -60 },
+            { x: 0, y: 0, z: -90 },
+            { x: -30, y: 0, z: -120 }
         ];
 
-        spawnPoints.forEach(pos => {
+        spawnPoints.forEach((pos, index) => {
             loader.load(assets.archerModel, (gltf) => {
                 const archer = gltf.scene;
                 const box = new THREE.Box3().setFromObject(archer);
@@ -115,7 +143,6 @@ function initThreeCave() {
                 archer.position.set(pos.x, pos.y, pos.z);
 
                 const mixer = new THREE.AnimationMixer(archer);
-                // Find shoot animation - assuming name contains 'shoot' or 'attack'
                 const shootClip = gltf.animations.find(a => a.name.toLowerCase().includes('shoot')) || gltf.animations[0];
 
                 // Add a light to each archer so they are visible
@@ -133,6 +160,7 @@ function initThreeCave() {
 
                 scene.add(archer);
                 archers.push(archerObj);
+                console.log(`CAVE DEBUG: Archer #${index} loaded at (${pos.x}, ${pos.y}, ${pos.z})`);
             });
         });
     }
@@ -255,7 +283,7 @@ function initThreeCave() {
         const delta = clock.getDelta();
 
         if (!isGameOver) {
-            const moveSpeed = flyMode ? 30 : 10;
+            const moveSpeed = flyMode ? 50 : 15;
             // Player Movement
             const dir = new THREE.Vector3();
             camera.getWorldDirection(dir);
@@ -273,7 +301,7 @@ function initThreeCave() {
                 if (moveD) camera.position.y -= moveSpeed * delta;
             } else {
                 // Gravity simulator
-                velocityY -= 20 * delta;
+                velocityY -= 30 * delta;
                 camera.position.y += velocityY * delta;
                 if (camera.position.y < 1.8) {
                     camera.position.y = 1.8;
@@ -284,7 +312,7 @@ function initThreeCave() {
             camera.rotation.set(pitch, yaw, 0, 'YXZ');
 
             // Update Debug UI
-            debugUI.innerText = `POS: ${Math.round(camera.position.x)}, ${Math.round(camera.position.y)}, ${Math.round(camera.position.z)} | FLY: ${flyMode ? 'ON' : 'OFF'} [F] to toggle`;
+            debugUI.innerText = `POS: ${Math.round(camera.position.x)}, ${Math.round(camera.position.y)}, ${Math.round(camera.position.z)} | FLY: ${flyMode ? 'ON' : 'OFF'} | SCENE CHILDS: ${scene.children.length}`;
         }
 
         if (zoroMixer) zoroMixer.update(delta);
@@ -296,7 +324,7 @@ function initThreeCave() {
             archer.mixer.update(delta);
 
             const dist = archer.mesh.position.distanceTo(camera.position);
-            if (dist < 40 && now - archer.lastShot > 3000) {
+            if (dist < 60 && now - archer.lastShot > 3500) {
                 // Shoot
                 archer.lastShot = now;
                 archer.shootAction.reset().play();
@@ -311,11 +339,11 @@ function initThreeCave() {
         // Update Arrows
         for (let i = arrows.length - 1; i >= 0; i--) {
             const arrow = arrows[i];
-            arrow.mesh.position.addScaledVector(arrow.dir, 25 * delta);
+            arrow.mesh.position.addScaledVector(arrow.dir, 40 * delta);
 
             // Collision with player
             const distToPlayer = arrow.mesh.position.distanceTo(camera.position);
-            if (distToPlayer < 1.5) {
+            if (distToPlayer < 2.0) {
                 playerHP -= 10;
                 updateHPBar();
                 scene.remove(arrow.mesh);
@@ -335,6 +363,7 @@ function initThreeCave() {
     }
     animate();
 
+    console.log("CAVE DEBUG: Render loop started. Initial position:", camera.position);
     showNotification("THE CAVE ARE FULL OF ARCHERS! FIGHT THROUGH!");
     updateHPBar();
 }
