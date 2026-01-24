@@ -9,11 +9,45 @@ function initThreeForest() {
     let scrollQuestActive = false;
     let scrollCollected = false;
     let scrollModelObj = null;
-    const scrollPos = new THREE.Vector3(150, 40, 50); // High in the sky for maximum visibility
+    const scrollPos = new THREE.Vector3(150, -1, 50); // Shallow water
     const deerControllers = [];
     const assets = window.assets;
     let zoroMixer, zoroController;
     let zoroIdleAction;
+
+    class SimpleDeer {
+        constructor(model, mixer, animations, getTerrainHeight) {
+            this.model = model;
+            this.mixer = mixer;
+            this.getTerrainHeight = getTerrainHeight;
+            this.target = new THREE.Vector3();
+            this.state = 'IDLE';
+            this.timer = Math.random() * 5;
+            this.speed = 1.0 + Math.random();
+            if (mixer && animations.length > 0) mixer.clipAction(animations[0]).play();
+        }
+        update(delta) {
+            if (this.mixer) this.mixer.update(delta);
+            this.timer -= delta;
+            if (this.state === 'IDLE') {
+                if (this.timer <= 0) {
+                    this.target.set(this.model.position.x + (Math.random() - 0.5) * 60, 0, this.model.position.z + (Math.random() - 0.5) * 60);
+                    this.state = 'WALKING'; this.timer = 10 + Math.random() * 10;
+                }
+            } else {
+                const dx = this.target.x - this.model.position.x, dz = this.target.z - this.model.position.z;
+                const dist = Math.sqrt(dx * dx + dz * dz);
+                if (dist > 0.5 && this.timer > 0) {
+                    const angle = Math.atan2(dx, dz);
+                    this.model.rotation.y = THREE.MathUtils.lerp(this.model.rotation.y, angle, 0.05);
+                    const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(this.model.quaternion);
+                    this.model.position.addScaledVector(dir, this.speed * delta);
+                    const ty = this.getTerrainHeight(this.model.position.x, this.model.position.z);
+                    this.model.position.y = THREE.MathUtils.lerp(this.model.position.y, ty, 0.1);
+                } else { this.state = 'IDLE'; this.timer = 2 + Math.random() * 5; }
+            }
+        }
+    }
 
     const forestMusic = new Howl({
         src: [assets.forestMusic],
@@ -113,42 +147,6 @@ function initThreeForest() {
         scene.add(group);
     }
 
-    let grassModelTemplate = null;
-    function createGrass(x, z) {
-        const h = getTerrainHeight(x, z);
-        if (h < -0.5) return;
-
-        if (grassModelTemplate) {
-            const grass = grassModelTemplate.clone();
-            const scale = 0.5 + Math.random() * 0.8;
-            grass.scale.set(scale, scale, scale);
-            grass.position.set(x, h, z);
-            grass.rotation.y = Math.random() * Math.PI;
-            scene.add(grass);
-        } else {
-            const group = new THREE.Group();
-            const size = 0.6 + Math.random() * 0.8;
-            const material = new THREE.MeshLambertMaterial({ color: 0x3d8c40, side: THREE.DoubleSide });
-            const geometry = new THREE.PlaneGeometry(size, size);
-            const p1 = new THREE.Mesh(geometry, material);
-            const p2 = new THREE.Mesh(geometry, material);
-            p2.rotation.y = Math.PI / 2;
-            group.add(p1); group.add(p2);
-            group.position.set(x, h + size / 2, z);
-            group.rotation.y = Math.random() * Math.PI;
-            scene.add(group);
-        }
-    }
-
-    loader.load(assets.grassModel, (gltf) => {
-        grassModelTemplate = gltf.scene;
-        // Optionally adjust template scale/rotation
-        for (let i = 0; i < 500; i++) {
-            const x = (Math.random() - 0.5) * 800, z = (Math.random() - 0.5) * 800;
-            createGrass(x, z);
-        }
-    });
-
     for (let i = 0; i < 180; i++) {
         const x = (Math.random() - 0.5) * 800, z = (Math.random() - 0.5) * 800;
         if (Math.abs(x) > 40 || Math.abs(z) > 40) {
@@ -162,18 +160,12 @@ function initThreeForest() {
     const roadSegments = 60;
     for (let i = 0; i < roadSegments; i++) {
         const t = i / roadSegments;
-        // Path from player start area towards the watchtower
         const x = THREE.MathUtils.lerp(-50, 250, t);
         const z = THREE.MathUtils.lerp(50, -250, t);
-
-        // Add some organic winding to the road
         const wx = x + Math.sin(t * 6) * 5;
         const wz = z + Math.cos(t * 6) * 5;
         const wh = getTerrainHeight(wx, wz);
-
-        // Don't draw road in the middle of the river unless it's a bridge
         if (wh < -0.5) continue;
-
         const segment = new THREE.Mesh(new THREE.PlaneGeometry(8, 10), roadMat);
         segment.position.set(wx, wh + 0.05, wz);
         segment.rotation.x = -Math.PI / 2;
@@ -184,7 +176,6 @@ function initThreeForest() {
 
     const outpostPos = new THREE.Vector3(250, 0, -250);
     outpostPos.y = getTerrainHeight(outpostPos.x, outpostPos.z);
-
 
     loader.load(assets.watchtowerModel, (gltf) => {
         const model = gltf.scene;
@@ -290,7 +281,7 @@ function initThreeForest() {
     function checkInteraction() {
         if (!zoroModel) return;
         const dist = camera.position.distanceTo(zoroPos);
-        if (dist < 12) {
+        if (dist < 7) { // Reduced distance to avoid overlap
             if (scrollQuestActive) {
                 if (scrollCollected) {
                     showNarrative("Zoro: You found it? The Forbidden Scroll of Teleportation... This might be our way out of here.", [
@@ -328,66 +319,30 @@ function initThreeForest() {
     }
 
     function startScrollQuest() {
-        console.log("DEBUG: startScrollQuest called");
         scrollQuestActive = true;
         showNotification("NEW QUEST: Find the Forbidden Scroll in the river!");
 
-        console.log("DEBUG: Attempting to load scroll model from:", assets.scrollModel);
         loader.load(assets.scrollModel, (gltf) => {
-            console.log("DEBUG: Scroll model loaded successfully!");
             scrollModelObj = gltf.scene;
 
-            // Normalize scale to ~10 meters for extreme visibility
+            // Normalize scale to ~1.2 meters
             const box = new THREE.Box3().setFromObject(scrollModelObj);
             const size = box.getSize(new THREE.Vector3());
-            console.log("DEBUG: Scroll model original size:", size);
-
-            const scaleFactor = 10 / (size.y || 1);
+            const scaleFactor = 1.2 / (size.y || 1);
             scrollModelObj.scale.set(scaleFactor, scaleFactor, scaleFactor);
-            console.log("DEBUG: Applied scale factor:", scaleFactor);
 
-            scrollModelObj.position.set(150, 40, 50); // High in the sky above the river
+            scrollModelObj.position.copy(scrollPos);
             scrollModelObj.userData.isScroll = true;
-            console.log("DEBUG: Scroll placed at position:", scrollModelObj.position);
 
-            // RED DEBUG CUBE - If the GLB fails to render, this should show up
-            const debugCube = new THREE.Mesh(
-                new THREE.BoxGeometry(10, 10, 10),
-                new THREE.MeshBasicMaterial({ color: 0xff0000 })
-            );
-            scrollModelObj.add(debugCube);
-
-            // Add a massive pulsing glow
-            const scrollLight = new THREE.PointLight(0x00ffff, 30, 200);
+            const scrollLight = new THREE.PointLight(0x00ffff, 8, 30);
             scrollModelObj.add(scrollLight);
 
             // Add spinning animation
-            gsap.to(scrollModelObj.rotation, { y: Math.PI * 2, duration: 2, repeat: -1, ease: "none" });
+            gsap.to(scrollModelObj.rotation, { y: Math.PI * 2, duration: 4, repeat: -1, ease: "none" });
+            gsap.to(scrollLight, { intensity: 15, duration: 1, yoyo: true, repeat: -1 });
 
-            // Light heart-beat pulse
-            gsap.to(scrollLight, { intensity: 50, duration: 1, yoyo: true, repeat: -1 });
-
-            // Add a massive vertical beacon of light
-            const beaconGeo = new THREE.CylinderGeometry(2, 2, 2000, 8, 1, true);
-            const beaconMat = new THREE.MeshBasicMaterial({
-                color: 0x00ffff,
-                transparent: true,
-                opacity: 0.8,
-                side: THREE.DoubleSide
-            });
-            const beacon = new THREE.Mesh(beaconGeo, beaconMat);
-            beacon.position.y = 1000;
-            scrollModelObj.add(beacon);
-
-            scrollModelObj.traverse(n => {
-                if (n.isMesh) {
-                    n.castShadow = true;
-                    n.receiveShadow = true;
-                    console.log("DEBUG: Scroll Mesh detected:", n.name);
-                }
-            });
+            scrollModelObj.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
             scene.add(scrollModelObj);
-            console.log("DEBUG: Scroll model added to scene.");
 
             // Notification for UI
             const questUi = document.getElementById('quest-ui');
@@ -396,10 +351,6 @@ function initThreeForest() {
                 if (meatLabel) meatLabel.innerHTML = 'Scroll: <span id="scroll-status">Not Found</span>';
                 questUi.style.borderLeftColor = "#00ffff";
             }
-        }, (xhr) => {
-            if (xhr.total > 0) console.log("DEBUG: Loading scroll:", (xhr.loaded / xhr.total * 100) + "%");
-        }, (error) => {
-            console.error("DEBUG: ERROR loading scroll model:", error);
         });
     }
 
@@ -576,7 +527,7 @@ function initThreeForest() {
         let ltX, ltY, loId = null;
         window.addEventListener('touchstart', (e) => { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (t.clientX > window.innerWidth / 2) { loId = t.identifier; ltX = t.clientX; ltY = t.clientY; } } });
         window.addEventListener('touchmove', (e) => { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (t.identifier === loId) { yaw -= (t.clientX - ltX) * 0.005; pitch -= (t.clientY - ltY) * 0.005; pitch = Math.max(-1.4, Math.min(1.4, pitch)); ltX = t.clientX; ltY = t.clientY; } } });
-        window.addEventListener('touchend', (e) => { for (let i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === loId) loId = null; if (camera.position.distanceTo(zoroPos) < 15) checkInteraction(); });
+        window.addEventListener('touchend', (e) => { for (let i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === loId) loId = null; if (camera.position.distanceTo(zoroPos) < 7) checkInteraction(); });
     }
 
     const clock = new THREE.Clock(), cPtr = document.getElementById('compass-pointer'), dTxt = document.getElementById('distance-text');
@@ -606,7 +557,7 @@ function initThreeForest() {
                     dMixer = new THREE.AnimationMixer(deer);
                 }
 
-                const controller = new DeerAI(deer, dMixer, getTerrainHeight, gltf.animations);
+                const controller = new SimpleDeer(deer, dMixer, gltf.animations, getTerrainHeight);
                 deerControllers.push(controller);
             });
         }
@@ -617,7 +568,7 @@ function initThreeForest() {
         const delta = Math.min(clock.getDelta(), 0.1);
 
         if (zoroController) zoroController.update(delta);
-        deerControllers.forEach(dc => dc.updateAI(delta));
+        deerControllers.forEach(dc => dc.update(delta));
 
         const waterLevel = -1.5;
         const isUnderwater = camera.position.y < waterLevel + 0.5;

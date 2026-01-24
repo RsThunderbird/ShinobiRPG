@@ -15,7 +15,6 @@ window.assets = {
     zoroModel: 'assets/zoro.glb?v=1',
     meatModel: 'assets/meat.glb?v=1',
     deerModel: 'assets/deer.glb?v=1',
-    grassModel: 'assets/grass.glb?v=1',
     dialogue1: 'assets/dialogue1.mp3?v=1',
     dialogue2: 'assets/dialogue2.mp3?v=1',
     dialogue3: 'assets/dialogue3.mp3?v=1',
