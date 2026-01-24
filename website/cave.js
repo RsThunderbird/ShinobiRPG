@@ -9,8 +9,8 @@ function initThreeCave() {
     let isGameOver = false;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020202);
-    scene.fog = new THREE.FogExp2(0x020202, 0.03); // Reduced fog for better visibility
+    scene.background = new THREE.Color(0x050510); // Dark indigo for better depth
+    scene.fog = new THREE.FogExp2(0x050510, 0.015); // Much thinner fog
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -18,14 +18,38 @@ function initThreeCave() {
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Slightly higher ambient
+    // Stronger Ambient Light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
 
-    // Torch light attached to camera
-    const torch = new THREE.PointLight(0xffcc66, 1.5, 30); // Warm torch color
+    // Add Hemisphere Light for natural bounce
+    const hemiLight = new THREE.HemisphereLight(0x4040ff, 0x202020, 0.8);
+    scene.add(hemiLight);
+
+    // Stronger Torch light attached to camera
+    const torch = new THREE.PointLight(0xffaa44, 2.5, 50);
     torch.castShadow = true;
     camera.add(torch);
-    scene.add(camera); // Must add camera to scene for child light to work
+    scene.add(camera);
+
+    // Extra "Cave Glow" lights scattered around
+    const createGlow = (x, y, z, color) => {
+        const light = new THREE.PointLight(color, 2, 40);
+        light.position.set(x, y, z);
+        scene.add(light);
+
+        // Add a small visible "crystal" mesh for the light source
+        const geo = new THREE.IcosahedronGeometry(0.5, 0);
+        const mat = new THREE.MeshBasicMaterial({ color: color });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, y, z);
+        scene.add(mesh);
+    };
+
+    createGlow(-20, 5, -30, 0x00ff88); // Green glow
+    createGlow(20, 5, -50, 0x0088ff);  // Blue glow
+    createGlow(0, 10, -70, 0xff00ff);  // Purple glow
+    createGlow(-15, 5, -10, 0x00ffff); // Cyan glow
 
     const loader = new THREE.GLTFLoader();
 
@@ -80,6 +104,10 @@ function initThreeCave() {
                 const mixer = new THREE.AnimationMixer(archer);
                 // Find shoot animation - assuming name contains 'shoot' or 'attack'
                 const shootClip = gltf.animations.find(a => a.name.toLowerCase().includes('shoot')) || gltf.animations[0];
+
+                // Add a light to each archer so they are visible
+                const archerLight = new THREE.PointLight(0xff4444, 2, 20);
+                archer.add(archerLight);
 
                 const archerObj = {
                     mesh: archer,
