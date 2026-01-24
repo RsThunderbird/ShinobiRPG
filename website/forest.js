@@ -9,7 +9,7 @@ function initThreeForest() {
     let scrollQuestActive = false;
     let scrollCollected = false;
     let scrollModelObj = null;
-    const scrollPos = new THREE.Vector3(150, -1, 50); // Shallow water
+    const scrollPos = new THREE.Vector3(150, -2.5, 50); // Lowered more into the river bed
     const deerControllers = [];
     const assets = window.assets;
     let zoroMixer, zoroController;
@@ -39,7 +39,8 @@ function initThreeForest() {
                 const dist = Math.sqrt(dx * dx + dz * dz);
                 if (dist > 0.5 && this.timer > 0) {
                     const angle = Math.atan2(dx, dz);
-                    this.model.rotation.y = THREE.MathUtils.lerp(this.model.rotation.y, angle, 0.05);
+                    // Fixed: Face the movement direction
+                    this.model.lookAt(this.target.x, this.model.position.y, this.target.z);
                     const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(this.model.quaternion);
                     this.model.position.addScaledVector(dir, this.speed * delta);
                     const ty = this.getTerrainHeight(this.model.position.x, this.model.position.z);
@@ -281,7 +282,7 @@ function initThreeForest() {
     function checkInteraction() {
         if (!zoroModel) return;
         const dist = camera.position.distanceTo(zoroPos);
-        if (dist < 7) { // Reduced distance to avoid overlap
+        if (dist < 4) { // Reduced even more to prevent accidental triggers
             if (scrollQuestActive) {
                 if (scrollCollected) {
                     showNarrative("Zoro: You found it? The Forbidden Scroll of Teleportation... This might be our way out of here.", [
@@ -325,10 +326,10 @@ function initThreeForest() {
         loader.load(assets.scrollModel, (gltf) => {
             scrollModelObj = gltf.scene;
 
-            // Normalize scale to ~1.2 meters
+            // Normalize scale to ~0.96 meters (Reduced by 20% from 1.2m)
             const box = new THREE.Box3().setFromObject(scrollModelObj);
             const size = box.getSize(new THREE.Vector3());
-            const scaleFactor = 1.2 / (size.y || 1);
+            const scaleFactor = 0.96 / (size.y || 1);
             scrollModelObj.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
             scrollModelObj.position.copy(scrollPos);
@@ -527,7 +528,7 @@ function initThreeForest() {
         let ltX, ltY, loId = null;
         window.addEventListener('touchstart', (e) => { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (t.clientX > window.innerWidth / 2) { loId = t.identifier; ltX = t.clientX; ltY = t.clientY; } } });
         window.addEventListener('touchmove', (e) => { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (t.identifier === loId) { yaw -= (t.clientX - ltX) * 0.005; pitch -= (t.clientY - ltY) * 0.005; pitch = Math.max(-1.4, Math.min(1.4, pitch)); ltX = t.clientX; ltY = t.clientY; } } });
-        window.addEventListener('touchend', (e) => { for (let i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === loId) loId = null; if (camera.position.distanceTo(zoroPos) < 7) checkInteraction(); });
+        window.addEventListener('touchend', (e) => { for (let i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === loId) loId = null; if (camera.position.distanceTo(zoroPos) < 4) checkInteraction(); });
     }
 
     const clock = new THREE.Clock(), cPtr = document.getElementById('compass-pointer'), dTxt = document.getElementById('distance-text');

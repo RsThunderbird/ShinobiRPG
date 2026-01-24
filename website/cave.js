@@ -9,8 +9,8 @@ function initThreeCave() {
     let isGameOver = false;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050505);
-    scene.fog = new THREE.FogExp2(0x050505, 0.05);
+    scene.background = new THREE.Color(0x020202);
+    scene.fog = new THREE.FogExp2(0x020202, 0.03); // Reduced fog for better visibility
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -18,8 +18,14 @@ function initThreeCave() {
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Slightly higher ambient
     scene.add(ambientLight);
+
+    // Torch light attached to camera
+    const torch = new THREE.PointLight(0xffcc66, 1.5, 30); // Warm torch color
+    torch.castShadow = true;
+    camera.add(torch);
+    scene.add(camera); // Must add camera to scene for child light to work
 
     const loader = new THREE.GLTFLoader();
 

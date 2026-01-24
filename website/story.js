@@ -27,7 +27,7 @@ window.assets = {
 };
 
 function init() {
-    startForestStage();
+    startCaveCombatStage();
 }
 
 function startForestStage() {
