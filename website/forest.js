@@ -9,7 +9,7 @@ function initThreeForest() {
     let scrollQuestActive = false;
     let scrollCollected = false;
     let scrollModelObj = null;
-    const scrollPos = new THREE.Vector3(150, -3.5, 50); // Slightly above river bottom (-5) to avoid clipping
+    const scrollPos = new THREE.Vector3(150, 40, 50); // High in the sky for maximum visibility
     const deerControllers = [];
     const assets = window.assets;
     let zoroMixer, zoroController;
@@ -328,45 +328,66 @@ function initThreeForest() {
     }
 
     function startScrollQuest() {
+        console.log("DEBUG: startScrollQuest called");
         scrollQuestActive = true;
         showNotification("NEW QUEST: Find the Forbidden Scroll in the river!");
 
+        console.log("DEBUG: Attempting to load scroll model from:", assets.scrollModel);
         loader.load(assets.scrollModel, (gltf) => {
+            console.log("DEBUG: Scroll model loaded successfully!");
             scrollModelObj = gltf.scene;
 
-            // Normalize scale to ~4 meters - Village world is huge!
+            // Normalize scale to ~10 meters for extreme visibility
             const box = new THREE.Box3().setFromObject(scrollModelObj);
             const size = box.getSize(new THREE.Vector3());
-            const scaleFactor = 4 / (size.y || 1);
+            console.log("DEBUG: Scroll model original size:", size);
+
+            const scaleFactor = 10 / (size.y || 1);
             scrollModelObj.scale.set(scaleFactor, scaleFactor, scaleFactor);
+            console.log("DEBUG: Applied scale factor:", scaleFactor);
 
-            scrollModelObj.position.copy(scrollPos);
+            scrollModelObj.position.set(150, 40, 50); // High in the sky above the river
             scrollModelObj.userData.isScroll = true;
+            console.log("DEBUG: Scroll placed at position:", scrollModelObj.position);
 
-            // Add a massive pulsing glow to make it visible underwater
-            const scrollLight = new THREE.PointLight(0x00ffff, 15, 60);
+            // RED DEBUG CUBE - If the GLB fails to render, this should show up
+            const debugCube = new THREE.Mesh(
+                new THREE.BoxGeometry(10, 10, 10),
+                new THREE.MeshBasicMaterial({ color: 0xff0000 })
+            );
+            scrollModelObj.add(debugCube);
+
+            // Add a massive pulsing glow
+            const scrollLight = new THREE.PointLight(0x00ffff, 30, 200);
             scrollModelObj.add(scrollLight);
 
             // Add spinning animation
-            gsap.to(scrollModelObj.rotation, { y: Math.PI * 2, duration: 4, repeat: -1, ease: "none" });
+            gsap.to(scrollModelObj.rotation, { y: Math.PI * 2, duration: 2, repeat: -1, ease: "none" });
 
             // Light heart-beat pulse
-            gsap.to(scrollLight, { intensity: 30, duration: 1.5, yoyo: true, repeat: -1 });
+            gsap.to(scrollLight, { intensity: 50, duration: 1, yoyo: true, repeat: -1 });
 
-            // Add a vertical beacon of light
-            const beaconGeo = new THREE.CylinderGeometry(0.2, 0.2, 200, 8, 1, true);
+            // Add a massive vertical beacon of light
+            const beaconGeo = new THREE.CylinderGeometry(2, 2, 2000, 8, 1, true);
             const beaconMat = new THREE.MeshBasicMaterial({
                 color: 0x00ffff,
                 transparent: true,
-                opacity: 0.3,
+                opacity: 0.8,
                 side: THREE.DoubleSide
             });
             const beacon = new THREE.Mesh(beaconGeo, beaconMat);
-            beacon.position.y = 100; // Center it
+            beacon.position.y = 1000;
             scrollModelObj.add(beacon);
 
-            scrollModelObj.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+            scrollModelObj.traverse(n => {
+                if (n.isMesh) {
+                    n.castShadow = true;
+                    n.receiveShadow = true;
+                    console.log("DEBUG: Scroll Mesh detected:", n.name);
+                }
+            });
             scene.add(scrollModelObj);
+            console.log("DEBUG: Scroll model added to scene.");
 
             // Notification for UI
             const questUi = document.getElementById('quest-ui');
@@ -375,6 +396,10 @@ function initThreeForest() {
                 if (meatLabel) meatLabel.innerHTML = 'Scroll: <span id="scroll-status">Not Found</span>';
                 questUi.style.borderLeftColor = "#00ffff";
             }
+        }, (xhr) => {
+            if (xhr.total > 0) console.log("DEBUG: Loading scroll:", (xhr.loaded / xhr.total * 100) + "%");
+        }, (error) => {
+            console.error("DEBUG: ERROR loading scroll model:", error);
         });
     }
 
