@@ -49,82 +49,62 @@ function initThreeCave() {
     const hemiLight = new THREE.HemisphereLight(0x4040ff, 0x202020, 0.5);
     scene.add(hemiLight);
 
-    // Ground Plane (Catch falling player and shadows)
-    const floorGeo = new THREE.PlaneGeometry(5000, 5000);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -0.5;
-    floor.receiveShadow = true;
-    scene.add(floor);
-
-    // Stronger Torch light attached to camera
+    // Stronger Torch light attached to camera (Essential for cave)
     const torch = new THREE.PointLight(0xffaa44, 2.5, 40);
     torch.castShadow = true;
     camera.add(torch);
     scene.add(camera);
 
-    // Extra "Cave Glow" lights scattered around
-    const createGlow = (x, y, z, color) => {
-        const light = new THREE.PointLight(color, 4, 50);
-        light.position.set(x, y, z);
-        scene.add(light);
-
-        // Add a small visible "crystal" mesh for the light source
-        const geo = new THREE.IcosahedronGeometry(0.8, 0);
-        const mat = new THREE.MeshBasicMaterial({ color: color });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(x, y, z);
-        scene.add(mesh);
-        console.log(`CAVE DEBUG: Created glow light at (${x}, ${y}, ${z})`);
-    };
-
-    createGlow(-40, 5, -30, 0x00ff88); // Green glow
-    createGlow(40, 5, -80, 0x0088ff);  // Blue glow
-    createGlow(0, 8, -120, 0xff00ff); // Purple glow
-    createGlow(-30, 5, -10, 0x00ffff); // Cyan glow
 
     const loader = new THREE.GLTFLoader();
 
     // Load Cave Model
-    console.log("CAVE DEBUG: Loading cave model from:", assets.caveModel);
     loader.load(assets.caveModel, (gltf) => {
-        console.log("CAVE DEBUG: Cave model LOADED successfully!");
         const cave = gltf.scene;
-        // Make it MASSIVE
-        cave.scale.set(20, 20, 20);
+
+        // Auto-center and Scale the cave
+        const box = new THREE.Box3().setFromObject(cave);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+
+        // Move cave so the "start" is at origin
+        cave.position.sub(center);
+        cave.position.y -= size.y / 2; // Sit on floor
+
+        // Scale it up significantly to be a playable tunnel
+        const scaleFactor = 40;
+        cave.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
         cave.traverse(n => {
             if (n.isMesh) {
                 n.receiveShadow = true;
                 n.castShadow = true;
-                // Ensure visibility from both sides
                 n.material.side = THREE.DoubleSide;
             }
         });
         scene.add(cave);
 
-        // Spawn Zoro nearby
-        spawnZoro();
-        // Spawn Archers
-        spawnArchers();
-    }, (xhr) => {
-        console.log(`CAVE DEBUG: Cave loading: ${(xhr.loaded / xhr.total * 100).toFixed(2)}%`);
-    }, (err) => {
-        console.error("CAVE DEBUG: ERROR loading cave model:", err);
+        console.log("CAVE DEBUG: Cave scale:", scaleFactor, "Size:", size);
+
+        // Position elements along the cave tunnel
+        spawnZoro(new THREE.Vector3(5, 0, -20));
+        spawnArchers([
+            { x: -10, y: 0, z: -50 },
+            { x: 10, y: 0, z: -100 },
+            { x: -5, y: 0, z: -150 },
+            { x: 5, y: 0, z: -200 }
+        ]);
     });
 
-    function spawnZoro() {
-        console.log("CAVE DEBUG: Loading Zoro model...");
+    function spawnZoro(pos) {
         loader.load(assets.zoroModel, (gltf) => {
-            console.log("CAVE DEBUG: Zoro model LOADED.");
             zoroModel = gltf.scene;
             const box = new THREE.Box3().setFromObject(zoroModel);
             const size = box.getSize(new THREE.Vector3());
-            const scaleFactor = 2 / (size.y || 1);
-            zoroModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
-            zoroModel.position.set(5, 0, -10);
+            const s = 2 / (size.y || 1);
+            zoroModel.scale.set(s, s, s);
+            zoroModel.position.copy(pos);
             scene.add(zoroModel);
-
             if (gltf.animations.length > 0) {
                 zoroMixer = new THREE.AnimationMixer(zoroModel);
                 zoroMixer.clipAction(gltf.animations[0]).play();
@@ -132,50 +112,32 @@ function initThreeCave() {
         });
     }
 
-    function spawnArchers() {
-        console.log("CAVE DEBUG: Spawning archers...");
-        const spawnPoints = [
-            { x: -20, y: 0, z: -40 },
-            { x: 20, y: 0, z: -60 },
-            { x: 0, y: 0, z: -90 },
-            { x: -30, y: 0, z: -120 }
-        ];
-
-        spawnPoints.forEach((pos, index) => {
+    function spawnArchers(points) {
+        points.forEach((pos, index) => {
             loader.load(assets.archerModel, (gltf) => {
                 const archer = gltf.scene;
-                const box = new THREE.Box3().setFromObject(archer);
-                const size = box.getSize(new THREE.Vector3());
-                const scaleFactor = 2 / (size.y || 1);
-                archer.scale.set(scaleFactor, scaleFactor, scaleFactor);
-                archer.position.set(pos.x, pos.y, pos.z);
+                const s = 2 / (new THREE.Box3().setFromObject(archer).getSize(new THREE.Vector3()).y || 1);
+                archer.scale.set(s, s, s);
+                archer.position.copy(pos);
 
                 const mixer = new THREE.AnimationMixer(archer);
                 const shootClip = gltf.animations.find(a => a.name.toLowerCase().includes('shoot')) || gltf.animations[0];
+                archer.add(new THREE.PointLight(0xff4444, 2, 20));
 
-                // Add a light to each archer so they are visible
-                const archerLight = new THREE.PointLight(0xff4444, 2, 20);
-                archer.add(archerLight);
-
-                const archerObj = {
-                    mesh: archer,
-                    mixer: mixer,
+                archers.push({
+                    mesh: archer, mixer: mixer,
                     shootAction: mixer.clipAction(shootClip),
-                    lastShot: 0,
-                    hp: 30,
-                    isDead: false
-                };
-
+                    lastShot: 0, hp: 30, isDead: false
+                });
                 scene.add(archer);
-                archers.push(archerObj);
-                console.log(`CAVE DEBUG: Archer #${index} loaded at (${pos.x}, ${pos.y}, ${pos.z})`);
             });
         });
     }
 
     // Camera/Movement Logic 
-    camera.position.set(0, 1.8, 10);
+    camera.position.set(0, 1.8, 5); // Spawn looking down the tunnel
     let moveF = false, moveB = false, moveL = false, moveR = false, moveU = false, moveD = false, yaw = 0, pitch = 0;
+    flyMode = true; // Fly mode ON to let user find geometry if auto-center is weird
 
     document.addEventListener('keydown', (e) => {
         if (isGameOver) return;
