@@ -15,27 +15,19 @@ function initThreeCave() {
     let arrows = [];
     let zoroModel, zoroMixer;
     let isGameOver = false;
-    let flyMode = true; // Default to fly mode for free roam
+    let flyMode = false;
     let velocityY = 0;
 
-    // Create a Debug Coord display
-    const debugUI = document.createElement('div');
-    debugUI.style.position = 'fixed'; debugUI.style.bottom = '20px'; debugUI.style.right = '20px';
-    debugUI.style.color = '#00ff00'; debugUI.style.fontFamily = 'monospace'; debugUI.style.fontSize = '14px';
-    debugUI.style.pointerEvents = 'none'; debugUI.id = 'coord-debug';
-    debugUI.style.zIndex = '10000';
-    document.body.appendChild(debugUI);
-
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87ceeb); // Sky Blue
-    scene.fog = new THREE.Fog(0x87ceeb, 1, 3000);
+    scene.background = new THREE.Color(0x020205);
+    scene.fog = new THREE.FogExp2(0x020205, 0.02);
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.setClearColor(0x87ceeb, 1); // Force blue background at renderer level
+    renderer.setClearColor(0x000000, 1);
 
     // ENSURE VISIBILITY: Force style onto canvas
     renderer.domElement.style.position = 'absolute';
@@ -49,22 +41,12 @@ function initThreeCave() {
     container.appendChild(renderer.domElement);
     console.log("CAVE DEBUG: Renderer and Camera initialized and appended");
 
-    // BRIGHT SUN (Directional Light)
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    sunLight.position.set(500, 1000, 500);
-    sunLight.castShadow = true;
-    sunLight.shadow.camera.left = -1000;
-    sunLight.shadow.camera.right = 1000;
-    sunLight.shadow.camera.top = 1000;
-    sunLight.shadow.camera.bottom = -1000;
-    scene.add(sunLight);
-
-    // Stronger Ambient Light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+    // Warm Ambient Light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
-    // Add Hemisphere Light for natural bounce
-    const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x3d2b1f, 1.0);
+    // Subtle Hemisphere Light
+    const hemiLight = new THREE.HemisphereLight(0x4040ff, 0x202020, 0.5);
     scene.add(hemiLight);
 
     // Ground Plane (Catch falling player and shadows)
@@ -77,31 +59,19 @@ function initThreeCave() {
     scene.add(floor);
 
     // Stronger Torch light attached to camera
-    const torch = new THREE.PointLight(0xffaa44, 3, 100);
+    const torch = new THREE.PointLight(0xffaa44, 2.5, 40);
     torch.castShadow = true;
     camera.add(torch);
     scene.add(camera);
 
-    // TEST CUBE at origin
-    const testGeo = new THREE.BoxGeometry(5, 5, 5);
-    const testMat = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-    const testCube = new THREE.Mesh(testGeo, testMat);
-    testCube.position.set(0, 5, 0);
-    scene.add(testCube);
-    console.log("CAVE DEBUG: Added Red Test Cube at (0, 5, 0)");
-
-    // Add Grid Helper to see the floor/center
-    const gridHelper = new THREE.GridHelper(500, 50, 0x00ff00, 0x444444);
-    scene.add(gridHelper);
-
     // Extra "Cave Glow" lights scattered around
     const createGlow = (x, y, z, color) => {
-        const light = new THREE.PointLight(color, 5, 60);
+        const light = new THREE.PointLight(color, 4, 50);
         light.position.set(x, y, z);
         scene.add(light);
 
         // Add a small visible "crystal" mesh for the light source
-        const geo = new THREE.SphereGeometry(1, 8, 8);
+        const geo = new THREE.IcosahedronGeometry(0.8, 0);
         const mat = new THREE.MeshBasicMaterial({ color: color });
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.set(x, y, z);
@@ -110,8 +80,8 @@ function initThreeCave() {
     };
 
     createGlow(-40, 5, -30, 0x00ff88); // Green glow
-    createGlow(40, 5, -50, 0x0088ff);  // Blue glow
-    createGlow(0, 10, -100, 0xff00ff); // Purple glow
+    createGlow(40, 5, -80, 0x0088ff);  // Blue glow
+    createGlow(0, 8, -120, 0xff00ff); // Purple glow
     createGlow(-30, 5, -10, 0x00ffff); // Cyan glow
 
     const loader = new THREE.GLTFLoader();
@@ -122,7 +92,7 @@ function initThreeCave() {
         console.log("CAVE DEBUG: Cave model LOADED successfully!");
         const cave = gltf.scene;
         // Make it MASSIVE
-        cave.scale.set(50, 50, 50);
+        cave.scale.set(20, 20, 20);
         cave.traverse(n => {
             if (n.isMesh) {
                 n.receiveShadow = true;
@@ -203,9 +173,8 @@ function initThreeCave() {
         });
     }
 
-    // Camera/Movement Logic (Reusing simple FPS logic)
-    camera.position.set(20, 100, 50); // Massive birds-eye view for debugging
-    camera.lookAt(0, 0, 0);
+    // Camera/Movement Logic 
+    camera.position.set(0, 1.8, 10);
     let moveF = false, moveB = false, moveL = false, moveR = false, moveU = false, moveD = false, yaw = 0, pitch = 0;
 
     document.addEventListener('keydown', (e) => {
@@ -350,8 +319,8 @@ function initThreeCave() {
 
             camera.rotation.set(pitch, yaw, 0, 'YXZ');
 
-            // Update Debug UI
-            debugUI.innerText = `POS: ${Math.round(camera.position.x)}, ${Math.round(camera.position.y)}, ${Math.round(camera.position.z)} | FLY: ${flyMode ? 'ON' : 'OFF'} | SCENE CHILDS: ${scene.children.length}`;
+            // Update Debug UI 
+            // Removed for gameplay
         }
 
         if (zoroMixer) zoroMixer.update(delta);
