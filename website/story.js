@@ -73,8 +73,27 @@ function startForestStage() {
 }
 
 function startCaveCombatStage() {
+    // Hide overlays
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.style.display = 'none';
+    const cinematicStage = document.getElementById('cinematic-stage');
+    if (cinematicStage) cinematicStage.style.display = 'none';
+
+    // Show Story Container
+    const storyContainer = document.getElementById('story-container');
+    if (storyContainer) {
+        storyContainer.style.display = 'block';
+        storyContainer.classList.remove('blurred', 'hidden');
+    }
+
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
     document.getElementById('cave-combat-stage').classList.add('active');
+
+    // Show HUD
+    const compass = document.getElementById('compass-container');
+    if (compass) compass.style.display = 'flex';
+    const crosshair = document.getElementById('crosshair');
+    if (crosshair) crosshair.style.display = 'block';
 
     // Show HP Bar
     const hpBar = document.getElementById('hp-bar-container');
