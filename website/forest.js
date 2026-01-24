@@ -9,7 +9,7 @@ function initThreeForest() {
     let scrollQuestActive = false;
     let scrollCollected = false;
     let scrollModelObj = null;
-    const scrollPos = new THREE.Vector3(150, -5, 50); // Bottom of the river
+    const scrollPos = new THREE.Vector3(150, -3.5, 50); // Slightly above river bottom (-5) to avoid clipping
     const deerControllers = [];
     const assets = window.assets;
     let zoroMixer, zoroController;
@@ -334,18 +334,36 @@ function initThreeForest() {
         loader.load(assets.scrollModel, (gltf) => {
             scrollModelObj = gltf.scene;
 
-            // Normalize scale to 1 meter
+            // Normalize scale to ~4 meters - Village world is huge!
             const box = new THREE.Box3().setFromObject(scrollModelObj);
             const size = box.getSize(new THREE.Vector3());
-            const scaleFactor = 1 / (size.y || 1);
+            const scaleFactor = 4 / (size.y || 1);
             scrollModelObj.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
             scrollModelObj.position.copy(scrollPos);
             scrollModelObj.userData.isScroll = true;
 
-            // Add a point light to make it visible underwater
-            const scrollLight = new THREE.PointLight(0x00ffff, 4, 30);
+            // Add a massive pulsing glow to make it visible underwater
+            const scrollLight = new THREE.PointLight(0x00ffff, 15, 60);
             scrollModelObj.add(scrollLight);
+
+            // Add spinning animation
+            gsap.to(scrollModelObj.rotation, { y: Math.PI * 2, duration: 4, repeat: -1, ease: "none" });
+
+            // Light heart-beat pulse
+            gsap.to(scrollLight, { intensity: 30, duration: 1.5, yoyo: true, repeat: -1 });
+
+            // Add a vertical beacon of light
+            const beaconGeo = new THREE.CylinderGeometry(0.2, 0.2, 200, 8, 1, true);
+            const beaconMat = new THREE.MeshBasicMaterial({
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const beacon = new THREE.Mesh(beaconGeo, beaconMat);
+            beacon.position.y = 100; // Center it
+            scrollModelObj.add(beacon);
 
             scrollModelObj.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
             scene.add(scrollModelObj);
