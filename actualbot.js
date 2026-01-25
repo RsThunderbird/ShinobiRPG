@@ -425,7 +425,7 @@ webApp.get('/api/bank-data', (req, res) => {
     if (!userId) return res.status(400).json({ error: 'Missing userId' });
 
     // Path to players.json - ensuring we look in the right place relative to actualbot.js
-    const playersPath = path.join(__dirname, 'data', 'players.json');
+    const playersPath = path.join(__dirname, 'menma', 'data', 'players.json');
 
     try {
         if (!fs.existsSync(playersPath)) {

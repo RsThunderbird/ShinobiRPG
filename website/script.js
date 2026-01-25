@@ -63,7 +63,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // 3. UI Update Logic
-    const storedUser = localStorage.getItem('user_data');
+    let storedUser = localStorage.getItem('user_data');
+    if (storedUser) {
+        try {
+            const user = JSON.parse(storedUser);
+            // Validate user object
+            if (!user.id || !user.username) {
+                console.warn("System: Invalid user data found, clearing session.");
+                localStorage.removeItem('user_data');
+                storedUser = null;
+            } else {
+                // Ensure avatar is valid
+                if (user.avatar && user.avatar.includes('undefined')) {
+                    user.avatar = 'https://cdn.discordapp.com/embed/avatars/0.png';
+                }
+            }
+        } catch (e) {
+            console.error("System: Corrupt user data, clearing.");
+            localStorage.removeItem('user_data');
+            storedUser = null;
+        }
+    }
+
     if (storedUser) {
         const user = JSON.parse(storedUser);
 
