@@ -27,8 +27,9 @@ window.assets = {
 };
 
 function init() {
-    // startForestStage(); 
-    // Jumping directly to Genjutsu as requested for TESTING
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.classList.add('active');
+
     const startBtn = document.getElementById('start-button');
     if (startBtn) {
         startBtn.onclick = () => {
@@ -86,7 +87,8 @@ function startGenjutsuStage() {
     const cinematicStage = document.getElementById('cinematic-stage');
     if (cinematicStage) cinematicStage.style.display = 'none';
     const eyeOverlay = document.getElementById('eye-blinking-overlay');
-    if (eyeOverlay) eyeOverlay.style.display = 'none';
+    if (eyeOverlay) eyeOverlay.style.display = 'block';
+    gsap.set(".eyelid", { height: "50%" }); // Force close them initially
 
     // Show Story Container
     const storyContainer = document.getElementById('story-container');
