@@ -34,7 +34,8 @@ function initThreeGenjutsu() {
     scene.add(atmosphereLight);
 
     // --- Assets ---
-    const loader = new THREE.GLTFLoader();
+    const loader = new THREE.FBXLoader();
+    loader.setResourcePath('assets/textures/');
     let blackhole;
 
     // --- Eyelid Elements ---
@@ -42,8 +43,8 @@ function initThreeGenjutsu() {
     const eyelidsBottom = document.querySelector('.eyelid.bottom');
 
     // Load Blackhole
-    loader.load('assets/blackhole.glb', (gltf) => {
-        blackhole = gltf.scene;
+    loader.load('assets/blackhole.fbx', (object) => {
+        blackhole = object;
         // Initial state: Tiny and high up
         blackhole.position.set(0, 500, -800);
         blackhole.scale.set(0.1, 0.1, 0.1);
@@ -53,11 +54,11 @@ function initThreeGenjutsu() {
         blackhole.rotation.z = Math.PI / 8;
 
         scene.add(blackhole);
-        console.log("[GENJUTSU] Blackhole loaded.");
+        console.log("[GENJUTSU] Blackhole loaded (FBX).");
 
         startCinematic();
     }, undefined, (err) => {
-        console.error("[GENJUTSU] Failed to load blackhole:", err);
+        console.error("[GENJUTSU] Failed to load blackhole FBX:", err);
     });
 
     // --- Terrain (Endless Dark Path) ---
