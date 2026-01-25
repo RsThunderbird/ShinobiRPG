@@ -70,23 +70,37 @@ function initThreeGenjutsu() {
     let spinTween = gsap.to(sharingan.rotation, { z: Math.PI * 2, duration: 40, repeat: -1, ease: "none" });
 
     // --- PRIMARY OBJECT: THE BLACKHOLE FBX ---
-    // Moving it EXTREMELY HIGH to prevent clipping through the narrow path/archers
+    // Moving it EXPONENTIALLY HIGH (Y: 20000, Z: -25000) to truly put it in space
     const fbxLoader = new THREE.FBXLoader();
     fbxLoader.setResourcePath('assets/textures/');
     let blackhole;
+    let bhOrbitAngle = 0;
 
     fbxLoader.load('assets/blackhole.fbx', (object) => {
         blackhole = object;
-        // Positioned 5000 units high and 8000 units back to avoid any clipping with the path
-        blackhole.position.set(0, 5000, -8000);
-        blackhole.scale.set(0.1, 0.1, 0.1); // Small initially
+        // Positioned way up in the "heavens"
+        blackhole.position.set(0, 20000, -25000);
+        blackhole.scale.set(0.2, 0.2, 0.2);
 
-        // Tilt for "Scary Beautiful" look
+        // Tilt
         blackhole.rotation.x = Math.PI / 4;
-        blackhole.rotation.z = Math.PI / 6;
+
+        // --- PRESERVE COLORS & DISABLE RED TINT ---
+        blackhole.traverse((child) => {
+            if (child.isMesh) {
+                // Disable fog so it doesn't turn red/dark from the scene fog
+                if (child.material) {
+                    child.material.fog = false;
+                    // If it's too dark, we can boost its emissive or color
+                    if (child.material.emissive) {
+                        child.material.emissiveIntensity = 0.5;
+                    }
+                }
+            }
+        });
 
         scene.add(blackhole);
-        console.log("[GENJUTSU] Blackhole loaded.");
+        console.log("[GENJUTSU] Blackhole loaded with fog disabled.");
     });
 
     // --- Archers ---
@@ -167,7 +181,7 @@ function initThreeGenjutsu() {
             const progress = Math.abs(camera.position.z) / pathLength;
             if (progress > 0.3) {
                 // Slowly look up towards the heavens
-                pitch = Math.max(pitch, (progress - 0.3) * Math.PI / 4);
+                pitch = Math.max(pitch, (progress - 0.3) * Math.PI / 3);
             }
         }
 
@@ -179,8 +193,14 @@ function initThreeGenjutsu() {
 
         camera.rotation.set(pitch, yaw, Math.sin(time * 0.5) * 0.15 + driftX, 'YXZ');
 
-        // Spin the blackhole if loaded
+        // --- BLACKHOLE CIRCULAR MOVEMENT ---
         if (blackhole) {
+            bhOrbitAngle += 0.002;
+            // Subtle circular path in the sky
+            const orbitRadius = 1000;
+            blackhole.position.x = Math.cos(bhOrbitAngle) * orbitRadius;
+            blackhole.position.y = 20000 + Math.sin(bhOrbitAngle) * orbitRadius;
+
             blackhole.rotation.y += 0.005;
             blackhole.rotation.z += 0.002;
         }
