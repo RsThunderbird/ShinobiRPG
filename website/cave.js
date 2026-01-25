@@ -58,43 +58,36 @@ function initThreeCave() {
 
     const loader = new THREE.GLTFLoader();
 
-    // Load Cave Model
-    loader.load(assets.caveModel, (gltf) => {
-        const cave = gltf.scene;
+    // Create Procedural Cave Tunnel
+    const tunnelWidth = 60;
+    const tunnelHeight = 40;
+    const tunnelDepth = 600;
 
-        // Auto-center and Scale the cave
-        const box = new THREE.Box3().setFromObject(cave);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
+    const tunnelGeometry = new THREE.BoxGeometry(tunnelWidth, tunnelHeight, tunnelDepth);
+    // Center is (0,0,0). Translate so floor is at y=0.
+    // Z center at -150 to cover plenty of distance.
+    tunnelGeometry.translate(0, tunnelHeight / 2, -150);
 
-        // Move cave so the "start" is at origin
-        cave.position.sub(center);
-        cave.position.y -= size.y / 2; // Sit on floor
-
-        // Scale it up significantly to be a playable tunnel
-        const scaleFactor = 40;
-        cave.scale.set(scaleFactor, scaleFactor, scaleFactor);
-
-        cave.traverse(n => {
-            if (n.isMesh) {
-                n.receiveShadow = true;
-                n.castShadow = true;
-                n.material.side = THREE.DoubleSide;
-            }
-        });
-        scene.add(cave);
-
-        console.log("CAVE DEBUG: Cave scale:", scaleFactor, "Size:", size);
-
-        // Position elements along the cave tunnel
-        spawnZoro(new THREE.Vector3(5, 0, -20));
-        spawnArchers([
-            { x: -10, y: 0, z: -50 },
-            { x: 10, y: 0, z: -100 },
-            { x: -5, y: 0, z: -150 },
-            { x: 5, y: 0, z: -200 }
-        ]);
+    const tunnelMaterial = new THREE.MeshStandardMaterial({
+        color: 0x2e2e2e, // Dark stony color
+        roughness: 0.9,
+        side: THREE.BackSide // Important: Render the inside of the box
     });
+
+    const caveTunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
+    caveTunnel.receiveShadow = true;
+    scene.add(caveTunnel);
+
+    console.log("CAVE DEBUG: Procedural tunnel generated");
+
+    // Position elements along the cave tunnel
+    spawnZoro(new THREE.Vector3(5, 0, -20));
+    spawnArchers([
+        { x: -10, y: 0, z: -50 },
+        { x: 10, y: 0, z: -100 },
+        { x: -5, y: 0, z: -150 },
+        { x: 5, y: 0, z: -200 }
+    ]);
 
     function spawnZoro(pos) {
         loader.load(assets.zoroModel, (gltf) => {
