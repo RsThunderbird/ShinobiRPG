@@ -66,6 +66,11 @@
                             <span class="btn-icon"></span>
                             <span class="btn-text">Royal Bank</span>
                         </a>
+                        <!-- Admin Panel Button (ONLY for Owner) -->
+                        <button id="admin-btn" class="glass-btn admin-btn hidden">
+                            <span class="btn-icon"></span>
+                            <span class="btn-text">Admin Panel</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -77,6 +82,32 @@
             <p>&copy; 2026 ShinobiRPG. Built for the legends.</p>
         </div>
     </footer>
+
+    <!-- Admin Panel Modal -->
+    <div id="admin-panel" class="admin-panel-modal hidden">
+        <div class="admin-content">
+            <div class="admin-header">
+                <h2>Admin Control Center</h2>
+                <button id="close-admin" class="close-btn">&times;</button>
+            </div>
+            <div class="admin-search">
+                <input type="text" id="admin-search-input" placeholder="Enter Discord ID...">
+                <button id="admin-search-btn">Search</button>
+            </div>
+            <div id="admin-results" class="admin-results-container">
+                <div class="data-section">
+                    <h3>User Data</h3>
+                    <textarea id="user-json-edit" spellcheck="false"></textarea>
+                    <button id="save-user-data" class="save-btn">Save User Data</button>
+                </div>
+                <div class="data-section">
+                    <h3>Player Data</h3>
+                    <textarea id="player-json-edit" spellcheck="false"></textarea>
+                    <button id="save-player-data" class="save-btn">Save Player Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

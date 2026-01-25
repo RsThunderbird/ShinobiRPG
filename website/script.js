@@ -8,6 +8,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsTrigger = document.getElementById('settings-trigger');
     const settingsBar = document.getElementById('settings-bar');
     const clearCacheBtn = document.getElementById('clear-cache-btn');
+    const adminBtn = document.getElementById('admin-btn');
+    const adminPanel = document.getElementById('admin-panel');
+    const closeAdmin = document.getElementById('close-admin');
+    const adminSearchBtn = document.getElementById('admin-search-btn');
+    const adminSearchInput = document.getElementById('admin-search-input');
+    const userJsonEdit = document.getElementById('user-json-edit');
+    const playerJsonEdit = document.getElementById('player-json-edit');
+    const saveUserDataBtn = document.getElementById('save-user-data');
+    const savePlayerDataBtn = document.getElementById('save-player-data');
+
+    const OWNER_ID = '835408109899219004';
 
     // 1. Handle Login Callback from URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -102,6 +113,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Show Bank
         if (bankBtn) bankBtn.classList.remove('hidden');
+
+        // Show Admin Panel Button for Owner
+        if (user.id === OWNER_ID) {
+            if (adminBtn) adminBtn.classList.remove('hidden');
+        }
     } else {
         // Ensure default state
         if (loginBtn) loginBtn.classList.remove('hidden');
@@ -131,6 +147,99 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.reload();
             }
         });
+    }
+
+    // 5. Admin Panel Logic
+    if (adminBtn && adminPanel && closeAdmin) {
+        adminBtn.addEventListener('click', () => {
+            adminPanel.classList.remove('hidden');
+        });
+
+        closeAdmin.addEventListener('click', () => {
+            adminPanel.classList.add('hidden');
+        });
+    }
+
+    if (adminSearchBtn && adminSearchInput) {
+        adminSearchBtn.addEventListener('click', async () => {
+            const targetId = adminSearchInput.value.trim();
+            if (!targetId) return alert('Please enter a Discord ID.');
+
+            const storedUser = JSON.parse(localStorage.getItem('user_data'));
+            if (!storedUser || storedUser.id !== OWNER_ID) return;
+
+            try {
+                adminSearchBtn.innerText = 'Searching...';
+                adminSearchBtn.disabled = true;
+
+                const response = await fetch(`/api/admin/get-data?targetId=${targetId}&adminId=${storedUser.id}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    userJsonEdit.value = result.userData ? JSON.stringify(result.userData, null, 4) : 'No user data found.';
+                    playerJsonEdit.value = result.playerData ? JSON.stringify(result.playerData, null, 4) : 'No player data found.';
+                } else {
+                    alert(result.error || 'Failed to fetch data.');
+                }
+            } catch (error) {
+                console.error('Admin Search Error:', error);
+                alert('An error occurred while searching.');
+            } finally {
+                adminSearchBtn.innerText = 'Search';
+                adminSearchBtn.disabled = false;
+            }
+        });
+    }
+
+    const saveAdminData = async (type) => {
+        const targetId = adminSearchInput.value.trim();
+        if (!targetId) return alert('No target ID selected.');
+
+        const textarea = type === 'user' ? userJsonEdit : playerJsonEdit;
+        let data;
+        try {
+            data = JSON.parse(textarea.value);
+        } catch (e) {
+            return alert(`Invalid JSON in ${type} data field.`);
+        }
+
+        const storedUser = JSON.parse(localStorage.getItem('user_data'));
+        const btn = type === 'user' ? saveUserDataBtn : savePlayerDataBtn;
+
+        try {
+            btn.innerText = 'Saving...';
+            btn.disabled = true;
+
+            const response = await fetch('/api/admin/update-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-id': storedUser.id
+                },
+                body: JSON.stringify({ targetId, type, data })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert(`${type.toUpperCase()} data updated successfully!`);
+            } else {
+                alert(result.error || 'Update failed.');
+            }
+        } catch (error) {
+            console.error('Admin Update Error:', error);
+            alert('An error occurred while saving.');
+        } finally {
+            btn.innerText = `Save ${type === 'user' ? 'User' : 'Player'} Data`;
+            btn.disabled = false;
+        }
+    };
+
+    if (saveUserDataBtn) {
+        saveUserDataBtn.addEventListener('click', () => saveAdminData('user'));
+    }
+
+    if (savePlayerDataBtn) {
+        savePlayerDataBtn.addEventListener('click', () => saveAdminData('player'));
     }
 
     // Animation for hero text

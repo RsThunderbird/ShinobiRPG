@@ -459,6 +459,83 @@ webApp.get('/api/bank-data', (req, res) => {
     }
 });
 
+// =========================================
+// ADMIN API (Owner Only)
+// =========================================
+const OWNER_ID = '835408109899219004';
+
+// Middleware-like check for admin
+const isAdmin = (req) => {
+    const adminId = req.headers['x-admin-id'] || req.query.adminId;
+    return adminId === OWNER_ID;
+};
+
+// GET User/Player Data
+webApp.get('/api/admin/get-data', (req, res) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: 'Unauthorized. Admin only.' });
+
+    const targetId = req.query.targetId;
+    if (!targetId) return res.status(400).json({ error: 'Missing targetId' });
+
+    const playersPath = path.join(__dirname, 'menma', 'data', 'players.json');
+    const usersPath = path.join(__dirname, 'menma', 'data', 'users.json');
+
+    try {
+        let response = { success: true, userData: null, playerData: null };
+
+        if (fs.existsSync(usersPath)) {
+            const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+            response.userData = users[targetId] || null;
+        }
+
+        if (fs.existsSync(playersPath)) {
+            const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+            response.playerData = players[targetId] || null;
+        }
+
+        if (!response.userData && !response.playerData) {
+            return res.status(404).json({ error: 'User/Player not found in data files.' });
+        }
+
+        res.json(response);
+    } catch (e) {
+        console.error("Admin API Get Error", e);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// UPDATE User/Player Data
+webApp.post('/api/admin/update-data', (req, res) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: 'Unauthorized. Admin only.' });
+
+    const { targetId, type, data } = req.body; // type: 'user' or 'player'
+    if (!targetId || !type || !data) return res.status(400).json({ error: 'Missing parameters' });
+
+    const fileName = type === 'user' ? 'users.json' : 'players.json';
+    const filePath = path.join(__dirname, 'menma', 'data', fileName);
+
+    try {
+        if (!fs.existsSync(filePath)) return res.status(404).json({ error: `File ${fileName} not found` });
+
+        const allData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+
+        // Update only if exists or create new? The prompt says "search bar and... mess with it".
+        // Usually, mess with it implies editing existing data.
+        if (!allData[targetId]) {
+            allData[targetId] = {}; // Initialize if doesn't exist?
+        }
+
+        // Deep merge or replace? Let's go with replace for now as the admin will send the whole object.
+        allData[targetId] = data;
+
+        fs.writeFileSync(filePath, JSON.stringify(allData, null, 2));
+        res.json({ success: true, message: `${type} data updated successfully.` });
+    } catch (e) {
+        console.error("Admin API Update Error", e);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 webApp.listen(WEB_PORT, () => {
     console.log(`🌍 Production Web Server running on port ${WEB_PORT}`);
 });
