@@ -5,14 +5,14 @@ function initThreeGenjutsu() {
     container.innerHTML = '';
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
-    scene.fog = new THREE.FogExp2(0x330000, 0.05);
+    scene.background = null; // Transparent background to show "real sky" if applicable
 
-    // MEGA FAR PLANE for cosmic objects
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 1000000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Renderer with Alpha support
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0); // Clear to fully transparent
     container.appendChild(renderer.domElement);
 
     const crosshair = document.getElementById('crosshair');
@@ -22,10 +22,10 @@ function initThreeGenjutsu() {
         renderer.domElement.requestPointerLock();
     });
 
-    const ambientLight = new THREE.AmbientLight(0xff0000, 0.3);
+    const ambientLight = new THREE.AmbientLight(0xff0000, 0.2);
     scene.add(ambientLight);
 
-    const spotLight = new THREE.SpotLight(0xff0000, 1.5);
+    const spotLight = new THREE.SpotLight(0xff0000, 1.0);
     spotLight.position.set(0, 50, 0);
     scene.add(spotLight);
 
@@ -33,13 +33,17 @@ function initThreeGenjutsu() {
     const eyelidsBottom = document.querySelector('.eyelid.bottom');
     const storyContainer = document.getElementById('story-container');
 
+    // Initial Eye Opening
     gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 4, ease: 'power1.inOut' });
     gsap.to(storyContainer, { filter: 'blur(0px)', duration: 5 });
 
     setTimeout(() => {
-        showNotification("Where... am I?");
+        if (typeof showNarrative === 'function') {
+            showNarrative("Where the heck am i..?");
+        }
     }, 2000);
 
+    // --- Terrain: Dark Path ---
     const pathWidth = 8;
     const pathLength = 600;
     const groundGeo = new THREE.PlaneGeometry(pathWidth, pathLength, 1, 100);
@@ -49,63 +53,7 @@ function initThreeGenjutsu() {
     ground.position.z = -pathLength / 2;
     scene.add(ground);
 
-    const sharinganTexture = new THREE.TextureLoader().load('assets/sky.png');
-    const sharinganGeo = new THREE.CircleGeometry(150, 64);
-    const sharinganMat = new THREE.MeshBasicMaterial({
-        map: sharinganTexture,
-        transparent: true,
-        opacity: 0.9,
-        side: THREE.DoubleSide,
-        fog: false // Sharingan doesn't fog either
-    });
-    const sharingan = new THREE.Mesh(sharinganGeo, sharinganMat);
-    sharingan.position.set(200, 400, -800);
-    sharingan.lookAt(0, 0, 0);
-    scene.add(sharingan);
-
-    let spinTween = gsap.to(sharingan.rotation, { z: Math.PI * 2, duration: 40, repeat: -1, ease: "none" });
-
-    // --- BLACKHOLE: TRUE COSMIC SCALE ---
-    const fbxLoader = new THREE.FBXLoader();
-    fbxLoader.setResourcePath('assets/textures/');
-    let blackhole;
-    let bhOrbitAngle = 0;
-
-    fbxLoader.load('assets/blackhole.fbx', (object) => {
-        blackhole = object;
-
-        // YEETED TO EXTREME Y AND Z
-        blackhole.position.set(0, 150000, -250000);
-        blackhole.scale.set(0.2, 0.2, 0.2);
-
-        // Reset and apply a single stable tilt
-        blackhole.rotation.set(Math.PI / 4, 0, 0);
-
-        // STUBBORN COLOR FIX: BasicMaterial ignores all scene lighting and fog
-        blackhole.traverse((child) => {
-            if (child.isMesh) {
-                const fixMat = (m) => {
-                    return new THREE.MeshBasicMaterial({
-                        map: m.map,
-                        color: 0xffffff,
-                        fog: false, // MANDATORY: Ignore scene fog
-                        transparent: true,
-                        opacity: m.opacity || 1
-                    });
-                };
-
-                if (Array.isArray(child.material)) {
-                    child.material = child.material.map(fixMat);
-                } else {
-                    child.material = fixMat(child.material);
-                }
-            }
-        });
-
-        scene.add(blackhole);
-        console.log("[GENJUTSU] Blackhole stable and fog-proofed.");
-    });
-
+    // --- SECONDARY OBJECTS (Archers) ---
     const gltfLoader = new THREE.GLTFLoader();
     for (let i = 0; i < 30; i++) {
         gltfLoader.load(assets.archerModel, (gltf) => {
@@ -121,9 +69,45 @@ function initThreeGenjutsu() {
         });
     }
 
+    // --- PRIMARY OBJECT: THE BLACKHOLE (STABLE VERSION) ---
+    const fbxLoader = new THREE.FBXLoader();
+    fbxLoader.setResourcePath('assets/textures/');
+    let blackhole;
+    let bhOrbitAngle = 0;
+
+    fbxLoader.load('assets/blackhole.fbx', (object) => {
+        blackhole = object;
+        // Start very high and scaled down
+        blackhole.position.set(0, 40000, -80000);
+        blackhole.scale.set(0.1, 0.1, 0.1);
+        blackhole.rotation.set(Math.PI / 4, 0, 0);
+
+        // MATERIAL FIX: Force original colors and disable shading interaction
+        blackhole.traverse((child) => {
+            if (child.isMesh) {
+                const fixMat = (m) => {
+                    return new THREE.MeshBasicMaterial({
+                        map: m.map,
+                        color: 0xffffff,
+                        fog: false,
+                        transparent: true,
+                        opacity: m.opacity || 1
+                    });
+                };
+                if (Array.isArray(child.material)) {
+                    child.material = child.material.map(fixMat);
+                } else {
+                    child.material = fixMat(child.material);
+                }
+            }
+        });
+        scene.add(blackhole);
+    });
+
+    // --- MOVEMENT LOGIC (MANUAL START) ---
     let moveF = false;
     let cameraShake = new THREE.Vector3();
-    const baseSpeed = 0.222;
+    const baseSpeed = 0.25;
     const playerHeight = 2.2;
     let yaw = 0, pitch = 0;
 
@@ -135,7 +119,7 @@ function initThreeGenjutsu() {
     document.addEventListener('keyup', onKeyUp);
 
     document.addEventListener('mousemove', (e) => {
-        if (document.pointerLockElement === renderer.domElement) {
+        if (document.pointerLockElement === renderer.domElement && !finished) {
             yaw -= e.movementX * 0.002;
             pitch -= e.movementY * 0.002;
             pitch = Math.max(-1.4, Math.min(1.4, pitch));
@@ -143,85 +127,118 @@ function initThreeGenjutsu() {
     });
 
     let finished = false;
+    let cutsceneStarted = false;
 
     function animate() {
-        if (finished) return;
         requestAnimationFrame(animate);
 
         const time = Date.now() * 0.001;
 
-        // 1. Stable Camera Shake
+        // Always apply subtle shake and drift for dizziness
         cameraShake.set(Math.sin(time * 6) * 0.08, Math.cos(time * 5) * 0.08, Math.sin(time * 4) * 0.04);
+        const driftX = Math.sin(time * 0.4) * 0.08;
 
-        // 2. Slow Drunken Drift
-        const driftX = Math.sin(time * 0.4) * 0.12;
+        if (!cutsceneStarted) {
+            if (moveF) {
+                camera.position.z -= baseSpeed;
+                camera.position.x += driftX;
+            }
+            camera.position.x *= 0.98;
 
-        if (moveF) {
-            camera.position.z -= baseSpeed;
-            camera.position.x += driftX;
-
-            // Auto lookup logic
-            const progress = Math.abs(camera.position.z) / pathLength;
-            if (progress > 0.25) {
-                pitch = Math.max(pitch, (progress - 0.25) * Math.PI / 2.5);
+            // Trigger Cutscene at a certain point
+            if (camera.position.z <= -pathLength + 100) {
+                startLookUpCutscene();
             }
         }
 
-        camera.position.x *= 0.98;
         const actualPos = camera.position.clone();
         camera.position.add(cameraShake);
         camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.1;
-        camera.rotation.set(pitch, yaw, Math.sin(time * 0.5) * 0.15 + driftX, 'YXZ');
 
-        // --- STABLE ORBITAL MOVEMENT ---
-        if (blackhole) {
-            bhOrbitAngle += 0.001; // Extremely slow
-            const orbitRad = 15000;
-            // Circular movement in the heavens
-            blackhole.position.x = Math.cos(bhOrbitAngle) * orbitRad;
-            blackhole.position.y = 150000 + Math.sin(bhOrbitAngle) * orbitRad;
-
-            // Slow, single-axis rotation
-            blackhole.rotation.y += 0.002;
+        // If cutscene is active, rotation is handled by GSAP
+        if (!cutsceneStarted) {
+            camera.rotation.set(pitch, yaw, Math.sin(time * 0.5) * 0.1 + driftX, 'YXZ');
         }
 
-        if (camera.position.z <= -pathLength + 30) {
-            triggerGenjutsuEnd();
+        // --- BLACKHOLE STABLE MOVEMENT ---
+        if (blackhole) {
+            bhOrbitAngle += 0.001;
+            const orbitRad = 10000;
+            blackhole.position.x = Math.cos(bhOrbitAngle) * orbitRad;
+            blackhole.position.y = 40000 + Math.sin(bhOrbitAngle) * orbitRad;
+            blackhole.rotation.y += 0.002;
         }
 
         renderer.render(scene, camera);
         camera.position.copy(actualPos);
     }
 
-    function triggerGenjutsuEnd() {
-        if (finished) return;
-        finished = true;
+    function startLookUpCutscene() {
+        if (cutsceneStarted) return;
+        cutsceneStarted = true;
+        moveF = false; // Stop movement
 
-        // Dialogue change
-        showNotification("USER: What's happening?!");
+        console.log("[GENJUTSU] Triggering lookup cutscene.");
 
-        // FORCE LOOK UP
-        gsap.to(camera.rotation, { x: Math.PI / 2.5, duration: 3, ease: "power2.inOut" });
+        // 1. Force Camera to Look Up
+        gsap.to(camera.rotation, {
+            x: Math.PI / 2.5,
+            y: 0,
+            z: 0,
+            duration: 3,
+            ease: "power2.inOut",
+            onComplete: () => {
+                triggerBlinkAndZoom();
+            }
+        });
+    }
 
-        spinTween.kill();
-        spinTween = gsap.to(sharingan.rotation, { z: Math.PI * 2, duration: 1.5, repeat: -1, ease: "none" });
+    function triggerBlinkAndZoom() {
+        // 2. The Blink
+        gsap.to([eyelidsTop, eyelidsBottom], {
+            height: '50%',
+            duration: 0.4,
+            ease: "power2.in",
+            onComplete: () => {
 
-        if (blackhole) {
-            // Expansion sequence
-            gsap.to(blackhole.scale, { x: 80, y: 80, z: 80, duration: 6, ease: "power2.in" });
-            gsap.to(blackhole.position, {
-                y: 10000, // Zooms closer
-                z: camera.position.z - 15000,
-                duration: 6,
-                ease: "power2.in"
-            });
-        }
+                // 3. Move/Scale Blackhole EXTREMELY CLOSER while eyes closed
+                if (blackhole) {
+                    blackhole.scale.set(60, 60, 60);
+                    blackhole.position.set(0, 5000, camera.position.z - 10000);
+                }
 
-        gsap.to(sharingan.position, { z: camera.position.z - 15, y: camera.position.y, duration: 6, ease: "power2.in" });
+                setTimeout(() => {
+                    // 4. Snap EYES OPEN
+                    gsap.to([eyelidsTop, eyelidsBottom], {
+                        height: '0%',
+                        duration: 0.15,
+                        ease: "expo.out"
+                    });
 
-        setTimeout(() => {
-            gsap.to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 1.5, ease: "power3.inOut", onComplete: () => { playFinalCinematic(); } });
-        }, 4500);
+                    // Dramatic impact shake
+                    gsap.to(camera.position, {
+                        x: "+=5",
+                        y: "+=2",
+                        duration: 0.05,
+                        repeat: 10,
+                        yoyo: true
+                    });
+
+                    // 5. Play final sequence after the shock
+                    setTimeout(() => {
+                        gsap.to([eyelidsTop, eyelidsBottom], {
+                            height: '50%',
+                            duration: 1.5,
+                            ease: "power3.inOut",
+                            onComplete: () => {
+                                finished = true;
+                                playFinalCinematic();
+                            }
+                        });
+                    }, 4000);
+                }, 800);
+            }
+        });
     }
 
     function playFinalCinematic() {
@@ -245,7 +262,13 @@ function initThreeGenjutsu() {
         banner.innerHTML = `<div class="banner-content"><h1>PREPARE FOR THE UPCOMING EVENT</h1><h2 class="akatsuki-text">AKATSUKI</h2></div>`;
         document.body.appendChild(banner);
         gsap.from(".banner-content", { y: 50, opacity: 0, duration: 2, ease: "power3.out" });
-        setTimeout(() => { showNarrative("The genjutsu fades... but the darkness remains.", [{ text: "Return to Menu", action: () => window.location.href = 'index.html' }]); }, 5000);
+        setTimeout(() => {
+            if (typeof showNarrative === 'function') {
+                showNarrative("The genjutsu fades... but the darkness remains.", [
+                    { text: "Return to Menu", action: () => window.location.href = 'index.html' }
+                ]);
+            }
+        }, 5000);
     }
 
     animate();
