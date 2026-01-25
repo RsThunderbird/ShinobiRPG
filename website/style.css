@@ -235,6 +235,7 @@ body {
 #intro-animation-overlay {
     display: none;
 }
+
 /* User Profile in Header */
 .user-profile {
     display: flex;
@@ -245,23 +246,27 @@ body {
     border-radius: 30px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 .user-avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
     border: 1px solid #7289da;
 }
+
 .user-name {
     font-weight: 500;
     font-size: 0.9rem;
     color: #eee;
 }
+
 .settings-icon {
     cursor: pointer;
     font-size: 1.2rem;
     color: #888;
     transition: 0.3s;
 }
+
 .settings-icon:hover {
     color: #fff;
     transform: rotate(90deg);
@@ -281,7 +286,7 @@ body {
     gap: 10px;
     width: 200px;
     backdrop-filter: blur(10px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     transform-origin: top right;
     transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0;
@@ -289,11 +294,13 @@ body {
     pointer-events: none;
     z-index: 1001;
 }
+
 .settings-bar.active {
     opacity: 1;
     transform: scale(1);
     pointer-events: all;
 }
+
 .setting-item {
     background: transparent;
     border: none;
@@ -306,13 +313,16 @@ body {
     transition: 0.2s;
     font-size: 0.9rem;
 }
+
 .setting-item:hover {
     background: rgba(255, 255, 255, 0.1);
     color: #fff;
 }
+
 .setting-item.danger {
     color: #ff4757;
 }
+
 .setting-item.danger:hover {
     background: rgba(255, 71, 87, 0.1);
 }
@@ -332,6 +342,7 @@ body {
     align-items: center;
     gap: 8px;
 }
+
 .discord-login-btn:hover {
     background: #4752c4;
     box-shadow: 0 0 15px rgba(88, 101, 242, 0.4);
@@ -342,9 +353,12 @@ body {
     border-color: #cd6133;
     box-shadow: 0 0 20px rgba(205, 97, 51, 0.3);
 }
+
 .bank-btn:hover {
     border-color: #ffd700;
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
 }
-.hidden { display: none !important; }
 
+.hidden {
+    display: none !important;
+}

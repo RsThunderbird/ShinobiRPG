@@ -334,9 +334,18 @@ webApp.get('/', (req, res) => {
 
 // OAuth Login
 webApp.get('/login/discord', (req, res) => {
-    if (!CLIENT_ID || !REDIRECT_URI) return res.send("Missing Config");
-    console.log(`initiating login with redirect_uri: ${REDIRECT_URI}`);
-    const url = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
+    // Prefer environment variable, fallback to request host for local dev if needed (though usually needs to match EXACTLY)
+    const effectiveRedirectUri = process.env.REDIRECT_URI || REDIRECT_URI;
+
+    if (!CLIENT_ID || !effectiveRedirectUri) {
+        console.error("Missing CLIENT_ID or REDIRECT_URI");
+        return res.send("Server Configuration Error: Missing OAuth Config");
+    }
+
+    console.log(`[OAuth] Initiating login. ClientID: ${CLIENT_ID.substring(0, 4)}...`);
+    console.log(`[OAuth] Using Redirect URI: ${effectiveRedirectUri}`);
+
+    const url = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(effectiveRedirectUri)}&response_type=code&scope=identify`;
     res.redirect(url);
 });
 
@@ -345,7 +354,8 @@ webApp.get('/oauth/callback', async (req, res) => {
     const { code } = req.query;
     if (!code) return res.status(400).send('No authorization code provided.');
 
-    console.log(`Exchanging code for token with redirect_uri: ${REDIRECT_URI}`);
+    const effectiveRedirectUri = process.env.REDIRECT_URI || REDIRECT_URI;
+    console.log(`[OAuth] Exchanging code. Using Redirect URI: ${effectiveRedirectUri}`);
 
     try {
         const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
@@ -356,7 +366,7 @@ webApp.get('/oauth/callback', async (req, res) => {
                 client_secret: WEB_CLIENT_SECRET,
                 grant_type: 'authorization_code',
                 code: code,
-                redirect_uri: REDIRECT_URI,
+                redirect_uri: effectiveRedirectUri,
             }),
         });
 
