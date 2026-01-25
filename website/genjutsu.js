@@ -5,16 +5,16 @@ function initThreeGenjutsu() {
     container.innerHTML = '';
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000); // Absolute darkness
-    scene.fog = new THREE.FogExp2(0x110000, 0.03); // Faint red fog in distance
+    scene.background = new THREE.Color(0x000000); // Pitch black
+    scene.fog = new THREE.FogExp2(0x330000, 0.05);
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
 
-    // --- Cursor & HUD ---
+    // Cursor Lock and Crosshair
     const crosshair = document.getElementById('crosshair');
     if (crosshair) crosshair.style.display = 'block';
 
@@ -22,93 +22,87 @@ function initThreeGenjutsu() {
         renderer.domElement.requestPointerLock();
     });
 
-    const ambientLight = new THREE.AmbientLight(0xff0000, 0.15);
+    const ambientLight = new THREE.AmbientLight(0xff0000, 0.3);
     scene.add(ambientLight);
 
-    const redLight = new THREE.PointLight(0xff0000, 2, 50);
-    redLight.position.set(0, 5, 0);
-    scene.add(redLight);
+    const spotLight = new THREE.SpotLight(0xff0000, 1.5);
+    spotLight.position.set(0, 50, 0);
+    scene.add(spotLight);
 
-    // Initial eye opening sequence
+    // Initial eye opening animation
     const eyelidsTop = document.querySelector('.eyelid.top');
     const eyelidsBottom = document.querySelector('.eyelid.bottom');
     const storyContainer = document.getElementById('story-container');
 
     gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 4, ease: 'power2.out' });
-    gsap.to(storyContainer, { filter: 'blur(0px)', duration: 4 });
+    gsap.to(storyContainer, { filter: 'blur(0px)', duration: 5 });
 
     setTimeout(() => {
-        showNotification("TSUKUYOMI: You cannot escape.");
+        showNotification("Where... am I?");
     }, 2000);
 
-    // --- Terrain: Narrow Red Path ---
-    const pathWidth = 5;
-    const pathLength = 1000;
-    const groundGeo = new THREE.PlaneGeometry(pathWidth, pathLength, 1, 50);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x110000 });
+    // --- Terrain: Narrow Path ---
+    const pathWidth = 8;
+    const pathLength = 600;
+    const groundGeo = new THREE.PlaneGeometry(pathWidth, pathLength, 1, 100);
+    const groundMat = new THREE.MeshLambertMaterial({ color: 0x050000 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
-    ground.position.z = -pathLength / 2 + 50;
+    ground.position.z = -pathLength / 2;
     scene.add(ground);
 
-    // --- COSMIC SHARINGAN (sky.png) ---
-    const sharinganMap = new THREE.TextureLoader().load('assets/sky.png');
-    const sharinganMaterial = new THREE.SpriteMaterial({
-        map: sharinganMap,
+    // --- Sharingan in the sky (sky.png) ---
+    const sharinganTexture = new THREE.TextureLoader().load('assets/sky.png');
+    const sharinganGeo = new THREE.CircleGeometry(150, 64);
+    const sharinganMat = new THREE.MeshBasicMaterial({
+        map: sharinganTexture,
         transparent: true,
-        opacity: 1.0,
-        color: 0xff0000 // Ensure red tint
+        opacity: 0.9,
+        side: THREE.DoubleSide
     });
-    const sharingan = new THREE.Sprite(sharinganMaterial);
-    sharingan.position.set(0, 500, -1500); // Cosmic distance
-    sharingan.scale.set(800, 800, 1);
+    const sharingan = new THREE.Mesh(sharinganGeo, sharinganMat);
+    sharingan.position.set(0, 200, -500);
+    sharingan.lookAt(0, 0, 0);
     scene.add(sharingan);
 
-    // Animation variables
-    let spinSpeed = 0.002;
-    let approaching = false;
+    // Initial slow spin
+    let spinTween = gsap.to(sharingan.rotation, { z: Math.PI * 2, duration: 40, repeat: -1, ease: "none" });
 
-    // --- Archer Ambush (Red Glows) ---
+    // --- Archers ---
     const loader = new THREE.GLTFLoader();
-    for (let i = 0; i < 50; i++) {
+    const archers = [];
+    for (let i = 0; i < 30; i++) {
         loader.load(assets.archerModel, (gltf) => {
             const archer = gltf.scene;
-            archer.scale.set(2, 2, 2);
+            archer.scale.set(1.5, 1.5, 1.5);
             const side = i % 2 === 0 ? 1 : -1;
-            archer.position.set(side * 10, 0, -i * 20);
-            archer.lookAt(0, 1.5, archer.position.z + 10);
+            archer.position.set(side * 5, 0, -i * 20);
+            archer.lookAt(0, 1, archer.position.z + 10);
             scene.add(archer);
+            archers.push(archer);
 
-            const pLight = new THREE.PointLight(0xff0000, 0.5, 10);
-            pLight.position.set(0, 3, 0);
-            archer.add(pLight);
+            const redLight = new THREE.PointLight(0xff0000, 0.5, 10);
+            redLight.position.set(0, 2, 0);
+            archer.add(redLight);
         });
     }
 
-    // --- Finale Point: Distant Green Glow ---
-    const exitLight = new THREE.PointLight(0x00ff00, 10, 100);
-    exitLight.position.set(0, 5, -pathLength + 50);
-    scene.add(exitLight);
-
-    // --- Movement Physics ---
+    // --- Movement Stats ---
     let moveF = false;
     let cameraShake = new THREE.Vector3();
-    let driftAngle = 0;
-
-    const baseSpeed = 0.12;
-    const testSpeed = 2.5; // Massive speed boost for testing
-    let activeSpeed = baseSpeed;
-
-    // ENABLE TEST SPEED BY DEFAULT FOR THE USER
-    activeSpeed = testSpeed;
-
-    const playerHeight = 2.4;
+    const baseSpeed = 0.08;
+    const testSpeed = 1.5; // Speedy for testing
+    const playerHeight = 2.2;
     let yaw = 0, pitch = 0;
 
-    camera.position.set(0, playerHeight, 50);
+    camera.position.set(0, playerHeight, 0);
 
-    const onKeyDown = (e) => { if (e.code === 'KeyW') moveF = true; };
-    const onKeyUp = (e) => { if (e.code === 'KeyW') moveF = false; };
+    const onKeyDown = (e) => {
+        if (e.code === 'KeyW') moveF = true;
+    };
+    const onKeyUp = (e) => {
+        if (e.code === 'KeyW') moveF = false;
+    };
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
@@ -127,37 +121,35 @@ function initThreeGenjutsu() {
         requestAnimationFrame(animate);
 
         const time = Date.now() * 0.001;
+        const currentSpeed = baseSpeed;
+        // Use this speed for testing:
+        // const currentSpeed = testSpeed; 
 
-        // 1. Nauseatic Camera Shake
+        // 1. Camera Shake
         cameraShake.set(
-            Math.sin(time * 8) * 0.12,
-            Math.cos(time * 7) * 0.12,
-            Math.sin(time * 6) * 0.06
+            Math.sin(time * 6) * 0.08,
+            Math.cos(time * 5) * 0.08,
+            Math.sin(time * 4) * 0.04
         );
 
-        // 2. Heavy "Drunk" Drift
-        driftAngle += Math.sin(time * 0.5) * 0.04;
-        const driftX = Math.sin(driftAngle) * 0.2;
+        // 2. Drunk Drift
+        const driftX = Math.sin(time * 0.4) * 0.12;
 
         if (moveF) {
-            camera.position.z -= activeSpeed;
+            camera.position.z -= currentSpeed;
             camera.position.x += driftX;
         }
 
-        camera.position.x *= 0.97; // Fight to stay on path
+        camera.position.x *= 0.98;
 
         const actualPos = camera.position.clone();
         camera.position.add(cameraShake);
-        camera.position.y = playerHeight + Math.sin(time * 1.8) * 0.2;
+        camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.1;
 
-        // Nauseous Tilt
-        camera.rotation.set(pitch, yaw, Math.sin(time * 0.8) * 0.25 + (driftX * 1.5), 'YXZ');
+        camera.rotation.set(pitch, yaw, Math.sin(time * 0.5) * 0.15 + driftX, 'YXZ');
 
-        // Spin the Sharingan
-        sharingan.material.rotation += spinSpeed;
-
-        // --- Finale Trigger ---
-        if (camera.position.z <= -pathLength + 100) {
+        // --- End Detection ---
+        if (camera.position.z <= -pathLength + 30) {
             triggerGenjutsuEnd();
         }
 
@@ -169,40 +161,29 @@ function initThreeGenjutsu() {
         if (finished) return;
         finished = true;
 
-        showNotification("ITACHI: It's too late.");
+        showNotification("ITACHI: Look into my eyes...");
 
-        // 1. Force Look Up at Cosmic Sharingan
-        gsap.to(camera.rotation, {
-            x: 0.7,
-            y: 0,
-            z: 0,
-            duration: 2.5,
-            ease: "power2.inOut"
-        });
+        // Face the sharingan
+        gsap.to(camera.rotation, { x: Math.PI / 6, duration: 2 });
 
-        // 2. Sharingan Accelerates Spin and Approaches
-        approaching = true;
-        const timeline = gsap.timeline();
+        // Faster spin
+        spinTween.kill();
+        spinTween = gsap.to(sharingan.rotation, { z: Math.PI * 2, duration: 2, repeat: -1, ease: "none" });
 
-        timeline.to({ speed: spinSpeed }, {
-            speed: 0.2,
-            duration: 4,
-            onUpdate: function () { spinSpeed = this.targets()[0].speed; }
-        });
-
+        // Sharingan approaches
         gsap.to(sharingan.position, {
-            z: camera.position.z - 30,
+            z: camera.position.z - 20,
             y: camera.position.y,
             duration: 5,
-            ease: "expo.in"
+            ease: "power2.in"
         });
 
-        // 3. Vision Goes Dark and Video Plays
+        // Closing eyes
         setTimeout(() => {
             gsap.to([eyelidsTop, eyelidsBottom], {
                 height: '50%',
-                duration: 1.5,
-                ease: "power4.in",
+                duration: 2,
+                ease: "power2.inOut",
                 onComplete: () => {
                     playFinalCinematic();
                 }
@@ -211,6 +192,7 @@ function initThreeGenjutsu() {
     }
 
     function playFinalCinematic() {
+        // Create a black overlay for the video to sit on
         const videoContainer = document.createElement('div');
         videoContainer.className = 'cinematic-video-container';
         document.body.appendChild(videoContainer);
@@ -223,8 +205,12 @@ function initThreeGenjutsu() {
         videoContainer.appendChild(video);
 
         video.onended = () => {
-            videoContainer.remove();
-            showAkatsukiBanner();
+            gsap.to(videoContainer, {
+                opacity: 0, duration: 1, onComplete: () => {
+                    videoContainer.remove();
+                    showAkatsukiBanner();
+                }
+            });
         };
     }
 
@@ -240,17 +226,18 @@ function initThreeGenjutsu() {
         document.body.appendChild(banner);
 
         gsap.from(".banner-content", {
-            y: 100,
+            y: 50,
             opacity: 0,
-            duration: 3,
-            ease: "power4.out"
+            duration: 2,
+            ease: "power3.out"
         });
 
+        // Show narrative after a delay
         setTimeout(() => {
-            showNarrative("The genjutsu fades... but Akatsuki's shadows remain.", [
-                { text: "WAKE UP", action: () => window.location.href = 'index.html' }
+            showNarrative("The genjutsu fades... but the darkness remains.", [
+                { text: "Return to Menu", action: () => window.location.href = 'index.html' }
             ]);
-        }, 6000);
+        }, 5000);
     }
 
     animate();
