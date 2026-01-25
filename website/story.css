@@ -736,7 +736,7 @@ html {
 #genjutsu-three-container {
     width: 100%;
     height: 100%;
-    background: #000;
+    background: transparent;
 }
 
 .cinematic-video-container {
@@ -801,3 +801,6 @@ html {
         letter-spacing: 10px;
     }
 }
+ # g e n j u t s u - s t a g e   {   b a c k g r o u n d :   t r a n s p a r e n t   ! i m p o r t a n t ;   } 
+ # g e n j u t s u - t h r e e - c o n t a i n e r   {   b a c k g r o u n d :   t r a n s p a r e n t   ! i m p o r t a n t ;   }  
+ 
