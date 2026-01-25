@@ -54,14 +54,12 @@ function initThreeGenjutsu() {
     ground.position.z = -pathLength / 2 + 50;
     scene.add(ground);
 
-    // --- SHARINGAN Eye (Correct Asset & Rotation) ---
-    const sharinganTex = new THREE.TextureLoader();
-    sharinganTex.setCrossOrigin('anonymous');
-    const sharinganMap = sharinganTex.load('https://i.postimg.cc/HWPkbSff/image.png');
+    // --- SHARINGAN Eye (Local Asset) ---
+    const sharinganTex = new THREE.TextureLoader().load('assets/sharingan.png');
 
     const sharinganGeo = new THREE.CircleGeometry(200, 64);
     const sharinganMat = new THREE.MeshBasicMaterial({
-        map: sharinganMap,
+        map: sharinganTex,
         transparent: true,
         opacity: 0,
         side: THREE.DoubleSide
