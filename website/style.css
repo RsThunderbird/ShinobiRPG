@@ -235,3 +235,116 @@ body {
 #intro-animation-overlay {
     display: none;
 }
+/* User Profile in Header */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 5px 15px 5px 5px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #7289da;
+}
+.user-name {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #eee;
+}
+.settings-icon {
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: #888;
+    transition: 0.3s;
+}
+.settings-icon:hover {
+    color: #fff;
+    transform: rotate(90deg);
+}
+
+/* Settings Dropdown/Bar */
+.settings-bar {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    background: rgba(15, 15, 15, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 200px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transform-origin: top right;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    transform: scale(0.9);
+    pointer-events: none;
+    z-index: 1001;
+}
+.settings-bar.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: all;
+}
+.setting-item {
+    background: transparent;
+    border: none;
+    color: #ccc;
+    padding: 8px 12px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 5px;
+    font-family: var(--font-body);
+    transition: 0.2s;
+    font-size: 0.9rem;
+}
+.setting-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+.setting-item.danger {
+    color: #ff4757;
+}
+.setting-item.danger:hover {
+    background: rgba(255, 71, 87, 0.1);
+}
+
+/* Discord Login Button */
+.discord-login-btn {
+    background: #5865F2;
+    border: 1px solid #5865F2;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.discord-login-btn:hover {
+    background: #4752c4;
+    box-shadow: 0 0 15px rgba(88, 101, 242, 0.4);
+}
+
+/* Gwent & Bank Buttons - Specific Colors */
+.gwent-btn:hover {
+    border-color: #cd6133;
+    box-shadow: 0 0 20px rgba(205, 97, 51, 0.3);
+}
+.bank-btn:hover {
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+.hidden { display: none !important; }
+

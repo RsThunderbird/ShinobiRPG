@@ -19,10 +19,26 @@
     <header class="main-header">
         <nav class="main-nav">
             <a href="index.html" class="logo">ShinobiRPG</a>
-            <div class="header-links">
-                <a href="https://shinobirpg.online" class="external-link">Official Site</a>
+
+            <div class="header-actions">
+                <!-- Login Button (Visible when NOT logged in) -->
+                <a href="/login/discord" id="login-btn" class="discord-login-btn">
+                    <span>Login with Discord</span>
+                </a>
+
+                <!-- User Profile (Visible when LOGGED IN) -->
+                <div id="user-profile" class="user-profile hidden">
+                    <img src="" alt="Avatar" id="user-avatar" class="user-avatar">
+                    <span id="user-name" class="user-name">Shinobi</span>
+                    <div id="settings-trigger" class="settings-icon">⚙️</div>
+                </div>
             </div>
         </nav>
+
+        <!-- Settings Dropdown -->
+        <div id="settings-bar" class="settings-bar">
+            <button id="clear-cache-btn" class="setting-item danger">Clear Cache</button>
+        </div>
     </header>
 
     <main id="app-content">
@@ -30,17 +46,25 @@
             <div class="glass-container">
                 <div class="hero-content">
                     <h1 class="glitch-text" data-text="SHINOBI RPG">Shinobi RPG</h1>
-                    <p class="subtitle">Naruto Based Discord RPG bot.
-                    </p>
+                    <p class="subtitle">Naruto Based Discord RPG bot.</p>
 
                     <div class="cta-buttons">
                         <a href="event/index.html" class="glass-btn event-btn">
-                            <span class="btn-icon"></span>
+                            <span class="btn-icon">🔴</span>
                             <span class="btn-text">Live Events</span>
                         </a>
                         <a href="story.html" class="glass-btn story-btn">
-                            <span class="btn-icon"></span>
+                            <span class="btn-icon">📜</span>
                             <span class="btn-text">Start Story</span>
+                        </a>
+                        <a href="gwent/index.html" class="glass-btn gwent-btn">
+                            <span class="btn-icon">🃏</span>
+                            <span class="btn-text">Play Gwent</span>
+                        </a>
+                        <!-- Bank Button (Only visible if logged in) -->
+                        <a href="bank.html" id="bank-btn" class="glass-btn bank-btn hidden">
+                            <span class="btn-icon">🏦</span>
+                            <span class="btn-text">Royal Bank</span>
                         </a>
                     </div>
                 </div>

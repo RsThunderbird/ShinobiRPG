@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShinobiRPG - Bank</title>
+    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Specific Bank Styles to match the premium dark/gold aesthetic */
+        .bank-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding-top: 80px;
+        }
+
+        .bank-card {
+            background: rgba(10, 10, 12, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 215, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bank-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #ffd700, transparent);
+        }
+
+        .bank-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, #fff, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .balance-item {
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .balance-item:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .balance-label {
+            display: block;
+            font-size: 0.9rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .balance-value {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .currency-symbol {
+            color: #ffd700;
+            margin-right: 5px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.8rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #fff;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #ffd700;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="main-header">
+        <nav class="main-nav">
+            <a href="index.html" class="logo">ShinobiRPG</a>
+        </nav>
+    </header>
+
+    <main class="bank-container">
+        <div class="bank-card">
+            <h1 class="bank-title">Royal Treasury</h1>
+
+            <div id="loading" class="loading-spinner"></div>
+
+            <div id="content" style="display: none;">
+                <div class="balance-item">
+                    <span class="balance-label">Ryo Balance</span>
+                    <span class="balance-value"><span class="currency-symbol">$</span><span
+                            id="money-val">0</span></span>
+                </div>
+
+                <div class="balance-item">
+                    <span class="balance-label">Shinobi Stones</span>
+                    <span class="balance-value"><span class="currency-symbol">💎</span><span id="ss-val">0</span></span>
+                </div>
+            </div>
+
+            <a href="index.html" class="back-btn">Return to Hub</a>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const userStr = localStorage.getItem('user_data');
+            if (!userStr) {
+                // Not logged in, redirect
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            const userId = user.id;
+
+            try {
+                const response = await fetch(`/api/bank-data?userId=${userId}`);
+                const data = await response.json();
+
+                if (data.success !== false) { // Basic update
+                    document.getElementById('money-val').innerText = parseInt(data.money).toLocaleString();
+                    document.getElementById('ss-val').innerText = parseInt(data.ss).toLocaleString();
+
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('content').style.display = 'block';
+                } else {
+                    alert('Could not fetch bank data: ' + (data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Connection to the Treasury failed.');
+            }
+        });
+    </script>
+</body>
+
+</html>
