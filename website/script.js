@@ -173,6 +173,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 adminSearchBtn.disabled = true;
 
                 const response = await fetch(`/api/admin/get-data?targetId=${targetId}&adminId=${storedUser.id}`);
+
+                // Check if response is JSON
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const errorText = await response.text();
+                    console.error('Non-JSON response:', errorText);
+                    throw new Error('Server returned non-JSON response. Ensure Cloudflare proxy functions are deployed.');
+                }
+
                 const result = await response.json();
 
                 if (result.success) {
@@ -218,6 +227,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ targetId, type, data })
             });
+
+            // Check if response is JSON
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const errorText = await response.text();
+                console.error('Non-JSON response:', errorText);
+                throw new Error('Server returned non-JSON response.');
+            }
 
             const result = await response.json();
             if (result.success) {

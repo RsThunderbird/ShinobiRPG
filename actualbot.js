@@ -517,19 +517,16 @@ webApp.post('/api/admin/update-data', (req, res) => {
     try {
         if (!fs.existsSync(filePath)) return res.status(404).json({ error: `File ${fileName} not found` });
 
+        // READ ENTIRE FILE: We read the full JSON to memory
         const allData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
-        // Update only if exists or create new? The prompt says "search bar and... mess with it".
-        // Usually, mess with it implies editing existing data.
-        if (!allData[targetId]) {
-            allData[targetId] = {}; // Initialize if doesn't exist?
-        }
-
-        // Deep merge or replace? Let's go with replace for now as the admin will send the whole object.
+        // UPDATE ONLY THE SPECIFIC USER: This ensures we don't wipe other hundreds of users.
+        // We only modify the entry for the targetId.
         allData[targetId] = data;
 
+        // WRITE BACK: Save the updated full JSON object.
         fs.writeFileSync(filePath, JSON.stringify(allData, null, 2));
-        res.json({ success: true, message: `${type} data updated successfully.` });
+        res.json({ success: true, message: `${type} data updated successfully for ${targetId}.` });
     } catch (e) {
         console.error("Admin API Update Error", e);
         res.status(500).json({ error: 'Server error' });
