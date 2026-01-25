@@ -7,14 +7,13 @@ function initThreeGenjutsu() {
     // --- SETUP SCENE (CLEAR & TRANSPARENT) ---
     const scene = new THREE.Scene();
     scene.background = null;
-    // NO FOG - REMOVING ALL TINTING
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 1000000);
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
-        alpha: true // CRITICAL: Allows the sky behind the canvas to show through
+        alpha: true
     });
-    renderer.setClearColor(0x000000, 0); // Sets clear color to black with 0 opacity (transparent)
+    renderer.setClearColor(0x000000, 0);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
@@ -26,11 +25,16 @@ function initThreeGenjutsu() {
         renderer.domElement.requestPointerLock();
     });
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    // --- ENHANCED LIGHTING (Fix Pitch Black Environment) ---
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Brighter ambient
     scene.add(ambientLight);
-    const spotLight = new THREE.SpotLight(0xffffff, 1.0);
-    spotLight.position.set(0, 50, 0);
+
+    // Add a light that follows the camera to illuminate the path
+    const playerLight = new THREE.PointLight(0xff0000, 1.5, 50);
+    scene.add(playerLight);
+
+    const spotLight = new THREE.SpotLight(0xffffff, 1.2);
+    spotLight.position.set(0, 100, 0);
     scene.add(spotLight);
 
     // Initial eye opening animation
@@ -48,14 +52,47 @@ function initThreeGenjutsu() {
     }, 2000);
 
     // --- Terrain ---
-    const pathWidth = 8;
-    const pathLength = 600;
+    const pathWidth = 12; // Slightly wider
+    const pathLength = 800; // Longer path
     const groundGeo = new THREE.PlaneGeometry(pathWidth, pathLength, 1, 100);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x050000 });
+    // Dark but slightly visible red/obsidian ground
+    const groundMat = new THREE.MeshStandardMaterial({
+        color: 0x110000,
+        roughness: 0.8,
+        metalness: 0.2,
+        emissive: 0x050000
+    });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     ground.position.z = -pathLength / 2;
+    ground.receiveShadow = true;
     scene.add(ground);
+
+    // Red markers to guide the way
+    for (let i = 0; i < 40; i++) {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 2), new THREE.MeshBasicMaterial({ color: 0x440000 }));
+        m.position.set(0, 0.05, -i * 20);
+        scene.add(m);
+    }
+
+    // --- Archers ---
+    const gltfLoader = new THREE.GLTFLoader();
+    for (let i = 0; i < 30; i++) {
+        gltfLoader.load(assets.archerModel, (gltf) => {
+            const archer = gltf.scene;
+            archer.scale.set(1.5, 1.5, 1.5);
+            const side = i % 2 === 0 ? 1 : -1;
+            archer.position.set(side * 6, 0, -i * 25);
+            archer.lookAt(0, 1, archer.position.z + 10);
+            archer.traverse(n => { if (n.isMesh) n.castShadow = true; });
+            scene.add(archer);
+
+            // Give archers a faint red glow
+            const aling = new THREE.PointLight(0xff0000, 0.3, 10);
+            aling.position.set(0, 2, 0);
+            archer.add(aling);
+        });
+    }
 
     // --- FBX BLACKHOLE ---
     const fbxLoader = new THREE.FBXLoader();
@@ -65,34 +102,26 @@ function initThreeGenjutsu() {
 
     fbxLoader.load('assets/blackhole.fbx', (object) => {
         blackhole = object;
-        // Positioned in the "vacuum" far above
-        blackhole.position.set(0, 60000, -80000);
-        blackhole.scale.set(0.1, 0.1, 0.1);
+        blackhole.position.set(0, 80000, -150000);
+        blackhole.scale.set(0.15, 0.15, 0.15);
         blackhole.rotation.set(Math.PI / 4, 0, 0);
 
-        // MATERIAL CLEANUP
         blackhole.traverse((child) => {
             if (child.isMesh) {
-                // HIDE ANY INTERIOR SKY BOXES/SPHERES IN THE MODEL
                 if (child.name.toLowerCase().includes('sky') || child.name.toLowerCase().includes('dome') || child.scale.x > 1000) {
                     child.visible = false;
                     return;
                 }
-
-                const fixMat = (m) => {
-                    return new THREE.MeshBasicMaterial({
-                        map: m.map,
-                        color: 0xffffff,
-                        fog: false, // ENSURE IT IGNORES ANY GLOBAL FOG (even though we removed it)
-                        transparent: true,
-                        opacity: m.opacity || 1
-                    });
-                };
-                if (Array.isArray(child.material)) {
-                    child.material = child.material.map(fixMat);
-                } else {
-                    child.material = fixMat(child.material);
-                }
+                const oldMat = child.material;
+                const matArray = Array.isArray(oldMat) ? oldMat : [oldMat];
+                const fixedMats = matArray.map(m => new THREE.MeshBasicMaterial({
+                    map: m.map,
+                    color: 0xffffff,
+                    fog: false,
+                    transparent: true,
+                    opacity: m.opacity || 1
+                }));
+                child.material = Array.isArray(oldMat) ? fixedMats : fixedMats[0];
             }
         });
         scene.add(blackhole);
@@ -101,7 +130,7 @@ function initThreeGenjutsu() {
     // --- Cinematic Flow ---
     let moveF = false;
     let cameraShake = new THREE.Vector3();
-    const baseSpeed = 0.222;
+    const baseSpeed = 0.25;
     const playerHeight = 2.2;
     let yaw = 0, pitch = 0;
 
@@ -110,12 +139,28 @@ function initThreeGenjutsu() {
 
     camera.position.set(0, playerHeight, 0);
 
+    // --- KEYBOARD LISTENERS ---
     const onKeyDown = (e) => {
         if (e.code === 'KeyW' && !cutsceneStarted) moveF = true;
+
+        // FIX: Press E to continue dialogue
+        if (e.code === 'KeyE') {
+            const narrativeBox = document.getElementById('narrative-box');
+            if (narrativeBox && narrativeBox.style.display !== 'none') {
+                const buttons = narrativeBox.querySelectorAll('.story-choice-btn');
+                if (buttons.length > 0) {
+                    buttons[0].click();
+                } else {
+                    narrativeBox.style.display = 'none';
+                }
+            }
+        }
     };
+
     const onKeyUp = (e) => {
         if (e.code === 'KeyW') moveF = false;
     };
+
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
@@ -142,7 +187,7 @@ function initThreeGenjutsu() {
             camera.position.x *= 0.98;
 
             // REACHED THE POINT -> TRIGGER CUTSCENE
-            if (camera.position.z <= -pathLength + 100) {
+            if (camera.position.z <= -pathLength + 150) {
                 triggerCutscene();
             }
         }
@@ -151,15 +196,17 @@ function initThreeGenjutsu() {
         camera.position.add(cameraShake);
         camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.1;
 
+        playerLight.position.copy(camera.position);
+
         if (!cutsceneStarted) {
             camera.rotation.set(pitch, yaw, Math.sin(time * 0.5) * 0.15 + driftX, 'YXZ');
         }
 
         if (blackhole) {
             bhOrbitAngle += 0.001;
-            const orbitRad = 10000;
+            const orbitRad = 15000;
             blackhole.position.x = Math.cos(bhOrbitAngle) * orbitRad;
-            blackhole.position.y = 60000 + Math.sin(bhOrbitAngle) * orbitRad;
+            blackhole.position.y = 80000 + Math.sin(bhOrbitAngle) * orbitRad;
             blackhole.rotation.y += 0.002;
         }
 
@@ -172,7 +219,7 @@ function initThreeGenjutsu() {
         cutsceneStarted = true;
         moveF = false;
 
-        console.log("[GENJUTSU] Starting forced lookup cutscene.");
+        console.log("[GENJUTSU] Triggering lookup cutscene.");
 
         // 1. Forced Lookup Animation
         gsap.to(camera.rotation, {
@@ -188,33 +235,28 @@ function initThreeGenjutsu() {
     }
 
     function blinkAndEpicZoom() {
-        // 2. The Blink (Close Eyes)
         gsap.to([eyelidsTop, eyelidsBottom], {
             height: '50%',
             duration: 0.4,
             ease: "power2.in",
             onComplete: () => {
 
-                // 3. ZOOM BLACKHOLE EXTREMELY CLOSER while eyes are shut
                 if (blackhole) {
-                    blackhole.scale.set(65, 65, 65);
-                    blackhole.position.set(0, 15000, camera.position.z - 15000);
+                    blackhole.scale.set(70, 70, 70);
+                    blackhole.position.set(0, 15000, camera.position.z - 25000);
                 }
 
                 setTimeout(() => {
-                    // 4. Snap Eyes Open (BOOM MOMENT)
                     gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 0.15, ease: "expo.out" });
 
-                    // Violent impact shake
                     gsap.to(camera.position, {
-                        x: "+=8",
-                        y: "+=3",
+                        x: "+=10",
+                        y: "+=4",
                         duration: 0.05,
-                        repeat: 12,
+                        repeat: 15,
                         yoyo: true
                     });
 
-                    // Hold the horror for a moment, then fade out
                     setTimeout(() => {
                         gsap.to([eyelidsTop, eyelidsBottom], {
                             height: '50%',
