@@ -733,8 +733,71 @@ html {
     mix-blend-mode: overlay;
 }
 
-#cave-three-container {
+#genjutsu-three-container {
     width: 100%;
     height: 100%;
     background: #000;
+}
+.cinematic-video-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+.cinematic-video-small {
+    width: 60%;
+    max-width: 800px;
+    height: auto;
+    box-shadow: 0 0 50px rgba(255, 0, 0, 0.4);
+    border: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+.akatsuki-banner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10001;
+    text-align: center;
+    width: 100%;
+    pointer-events: none;
+}
+
+.akatsuki-banner .banner-content {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 40px;
+    border-top: 2px solid #ff0000;
+    border-bottom: 2px solid #ff0000;
+}
+
+.akatsuki-banner h1 {
+    font-size: 1.2rem;
+    letter-spacing: 5px;
+    color: #888;
+    margin-bottom: 20px;
+}
+
+.akatsuki-banner .akatsuki-text {
+    font-size: 6rem;
+    letter-spacing: 20px;
+    color: #ff0000;
+    text-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    margin: 0;
+}
+
+@media screen and (max-width: 768px) {
+    .akatsuki-banner .akatsuki-text {
+        font-size: 3rem;
+        letter-spacing: 10px;
+    }
 }
