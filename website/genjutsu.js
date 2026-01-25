@@ -8,8 +8,8 @@ function initThreeGenjutsu() {
     scene.background = new THREE.Color(0x000000);
     scene.fog = new THREE.FogExp2(0x330000, 0.05);
 
-    // MAX FAR PLANE for the cosmic scale
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500000);
+    // MEGA FAR PLANE for cosmic objects
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 1000000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -33,7 +33,7 @@ function initThreeGenjutsu() {
     const eyelidsBottom = document.querySelector('.eyelid.bottom');
     const storyContainer = document.getElementById('story-container');
 
-    gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 4, ease: 'power2.out' });
+    gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 4, ease: 'power1.inOut' });
     gsap.to(storyContainer, { filter: 'blur(0px)', duration: 5 });
 
     setTimeout(() => {
@@ -55,16 +55,17 @@ function initThreeGenjutsu() {
         map: sharinganTexture,
         transparent: true,
         opacity: 0.9,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
+        fog: false // Sharingan doesn't fog either
     });
     const sharingan = new THREE.Mesh(sharinganGeo, sharinganMat);
-    sharingan.position.set(0, 200, -500);
+    sharingan.position.set(200, 400, -800);
     sharingan.lookAt(0, 0, 0);
     scene.add(sharingan);
 
     let spinTween = gsap.to(sharingan.rotation, { z: Math.PI * 2, duration: 40, repeat: -1, ease: "none" });
 
-    // --- BLACKHOLE: THE COSMIC SCALE FIX ---
+    // --- BLACKHOLE: TRUE COSMIC SCALE ---
     const fbxLoader = new THREE.FBXLoader();
     fbxLoader.setResourcePath('assets/textures/');
     let blackhole;
@@ -73,34 +74,39 @@ function initThreeGenjutsu() {
     fbxLoader.load('assets/blackhole.fbx', (object) => {
         blackhole = object;
 
-        // MOVED EXTREMELY HIGH AND FAR TO PREVENT CLIPPING
-        // Y: 80,000, Z: -150,000
-        blackhole.position.set(0, 80000, -150000);
-        blackhole.scale.set(0.01, 0.01, 0.01);
+        // YEETED TO EXTREME Y AND Z
+        blackhole.position.set(0, 150000, -250000);
+        blackhole.scale.set(0.2, 0.2, 0.2);
 
-        blackhole.rotation.x = Math.PI / 4;
+        // Reset and apply a single stable tilt
+        blackhole.rotation.set(Math.PI / 4, 0, 0);
 
-        // FORCE ORIGINAL COLORS (Ignore lights and fog)
+        // STUBBORN COLOR FIX: BasicMaterial ignores all scene lighting and fog
         blackhole.traverse((child) => {
             if (child.isMesh) {
-                const oldMat = child.material;
-                // Replace with Basic Material to show literal texture colors
-                child.material = new THREE.MeshBasicMaterial({
-                    map: oldMat.map,
-                    color: 0xffffff,
-                    fog: false,
-                    transparent: oldMat.transparent,
-                    opacity: oldMat.opacity
-                });
+                const fixMat = (m) => {
+                    return new THREE.MeshBasicMaterial({
+                        map: m.map,
+                        color: 0xffffff,
+                        fog: false, // MANDATORY: Ignore scene fog
+                        transparent: true,
+                        opacity: m.opacity || 1
+                    });
+                };
+
+                if (Array.isArray(child.material)) {
+                    child.material = child.material.map(fixMat);
+                } else {
+                    child.material = fixMat(child.material);
+                }
             }
         });
 
         scene.add(blackhole);
-        console.log("[GENJUTSU] Blackhole loaded at cosmic distance.");
+        console.log("[GENJUTSU] Blackhole stable and fog-proofed.");
     });
 
     const gltfLoader = new THREE.GLTFLoader();
-    const archers = [];
     for (let i = 0; i < 30; i++) {
         gltfLoader.load(assets.archerModel, (gltf) => {
             const archer = gltf.scene;
@@ -109,8 +115,6 @@ function initThreeGenjutsu() {
             archer.position.set(side * 5, 0, -i * 20);
             archer.lookAt(0, 1, archer.position.z + 10);
             scene.add(archer);
-            archers.push(archer);
-
             const redLight = new THREE.PointLight(0xff0000, 0.5, 10);
             redLight.position.set(0, 2, 0);
             archer.add(redLight);
@@ -145,16 +149,21 @@ function initThreeGenjutsu() {
         requestAnimationFrame(animate);
 
         const time = Date.now() * 0.001;
+
+        // 1. Stable Camera Shake
         cameraShake.set(Math.sin(time * 6) * 0.08, Math.cos(time * 5) * 0.08, Math.sin(time * 4) * 0.04);
+
+        // 2. Slow Drunken Drift
         const driftX = Math.sin(time * 0.4) * 0.12;
 
         if (moveF) {
             camera.position.z -= baseSpeed;
             camera.position.x += driftX;
+
+            // Auto lookup logic
             const progress = Math.abs(camera.position.z) / pathLength;
-            if (progress > 0.2) {
-                // Look much higher to see the now-distant blackhole
-                pitch = Math.max(pitch, (progress - 0.2) * Math.PI / 2.5);
+            if (progress > 0.25) {
+                pitch = Math.max(pitch, (progress - 0.25) * Math.PI / 2.5);
             }
         }
 
@@ -164,15 +173,16 @@ function initThreeGenjutsu() {
         camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.1;
         camera.rotation.set(pitch, yaw, Math.sin(time * 0.5) * 0.15 + driftX, 'YXZ');
 
+        // --- STABLE ORBITAL MOVEMENT ---
         if (blackhole) {
-            bhOrbitAngle += 0.0015;
-            // High altitude circular orbit
-            const rad = 25000;
-            blackhole.position.x = Math.cos(bhOrbitAngle) * rad;
-            blackhole.position.z = -150000 + Math.sin(bhOrbitAngle) * rad;
+            bhOrbitAngle += 0.001; // Extremely slow
+            const orbitRad = 15000;
+            // Circular movement in the heavens
+            blackhole.position.x = Math.cos(bhOrbitAngle) * orbitRad;
+            blackhole.position.y = 150000 + Math.sin(bhOrbitAngle) * orbitRad;
 
-            blackhole.rotation.y += 0.005;
-            blackhole.rotation.z += 0.002;
+            // Slow, single-axis rotation
+            blackhole.rotation.y += 0.002;
         }
 
         if (camera.position.z <= -pathLength + 30) {
@@ -186,27 +196,32 @@ function initThreeGenjutsu() {
     function triggerGenjutsuEnd() {
         if (finished) return;
         finished = true;
-        showNotification("ITACHI: Look into my eyes...");
-        gsap.to(camera.rotation, { x: Math.PI / 3, duration: 2 });
+
+        // Dialogue change
+        showNotification("USER: What's happening?!");
+
+        // FORCE LOOK UP
+        gsap.to(camera.rotation, { x: Math.PI / 2.5, duration: 3, ease: "power2.inOut" });
+
         spinTween.kill();
-        spinTween = gsap.to(sharingan.rotation, { z: Math.PI * 2, duration: 2, repeat: -1, ease: "none" });
+        spinTween = gsap.to(sharingan.rotation, { z: Math.PI * 2, duration: 1.5, repeat: -1, ease: "none" });
 
         if (blackhole) {
-            // Massive expand but stay relatively far so it doesn't clip
-            gsap.to(blackhole.scale, { x: 30, y: 30, z: 30, duration: 5, ease: "power2.in" });
+            // Expansion sequence
+            gsap.to(blackhole.scale, { x: 80, y: 80, z: 80, duration: 6, ease: "power2.in" });
             gsap.to(blackhole.position, {
-                y: 5000,
-                z: camera.position.z - 10000, // Move closer but keep safe distance
-                duration: 5,
+                y: 10000, // Zooms closer
+                z: camera.position.z - 15000,
+                duration: 6,
                 ease: "power2.in"
             });
         }
 
-        gsap.to(sharingan.position, { z: camera.position.z - 20, y: camera.position.y, duration: 5, ease: "power2.in" });
+        gsap.to(sharingan.position, { z: camera.position.z - 15, y: camera.position.y, duration: 6, ease: "power2.in" });
 
         setTimeout(() => {
-            gsap.to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 2, ease: "power2.inOut", onComplete: () => { playFinalCinematic(); } });
-        }, 4000);
+            gsap.to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 1.5, ease: "power3.inOut", onComplete: () => { playFinalCinematic(); } });
+        }, 4500);
     }
 
     function playFinalCinematic() {
