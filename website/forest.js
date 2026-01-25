@@ -356,28 +356,30 @@ function initThreeForest() {
     }
 
     function triggerPortalTransition() {
-        // Create portal overlay
-        const overlay = document.createElement('div');
-        overlay.className = 'portal-overlay';
-        document.body.appendChild(overlay);
+        const storyContainer = document.getElementById('story-container');
+        const eyeOverlay = document.getElementById('eye-blinking-overlay');
+        const eyelidsTop = document.querySelector('.eyelid.top');
+        const eyelidsBottom = document.querySelector('.eyelid.bottom');
 
-        // Zoom camera in
-        gsap.to(camera, { fov: 10, duration: 2, onUpdate: () => camera.updateProjectionMatrix() });
+        // 1. Blur vision
+        gsap.to(storyContainer, { filter: 'blur(20px)', duration: 2 });
+        gsap.to(camera, { fov: 30, duration: 2, onUpdate: () => camera.updateProjectionMatrix() });
 
-        // Whiteout effect
-        gsap.to(overlay, {
-            opacity: 1,
+        // 2. Shut eyes
+        if (eyeOverlay) eyeOverlay.style.display = 'block';
+        gsap.to([eyelidsTop, eyelidsBottom], {
+            height: '50%',
             duration: 1.5,
-            delay: 0.5,
+            delay: 1,
+            ease: "power2.inOut",
             onComplete: () => {
                 // Stop forest music
                 if (forestMusic) forestMusic.stop();
 
-                // Remove overlay and trigger next stage
+                // Switch to Genjutsu Stage
                 setTimeout(() => {
-                    overlay.remove();
-                    startCaveCombatStage();
-                }, 500);
+                    startGenjutsuStage();
+                }, 1000);
             }
         });
     }

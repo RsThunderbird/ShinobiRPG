@@ -72,7 +72,7 @@ function startForestStage() {
     }
 }
 
-function startCaveCombatStage() {
+function startGenjutsuStage() {
     // Hide overlays
     const startScreen = document.getElementById('start-screen');
     if (startScreen) startScreen.style.display = 'none';
@@ -89,7 +89,7 @@ function startCaveCombatStage() {
     }
 
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
-    document.getElementById('cave-combat-stage').classList.add('active');
+    document.getElementById('genjutsu-stage').classList.add('active');
 
     // Show HUD
     const compass = document.getElementById('compass-container');
@@ -101,8 +101,8 @@ function startCaveCombatStage() {
     const hpBar = document.getElementById('hp-bar-container');
     if (hpBar) hpBar.classList.remove('hidden');
 
-    if (typeof initThreeCave === 'function') {
-        initThreeCave();
+    if (typeof initThreeGenjutsu === 'function') {
+        initThreeGenjutsu();
     }
 }
 
