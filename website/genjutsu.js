@@ -1,5 +1,5 @@
 /**
- * genjutsu.js - The High-Impact Cinematic
+ * genjutsu.js - The High-Impact Cinematic (3D MODEL EDITION)
  * Fully automated, extremely logged, tight pacing.
  */
 function initThreeGenjutsu() {
@@ -26,9 +26,7 @@ function initThreeGenjutsu() {
 
         // --- AUDIO CHECK ---
         console.log("[GENJUTSU] Step 4: Loading Audio (assets/genjutsubg.mp3).");
-        if (typeof Howl === "undefined") {
-            console.warn("[GENJUTSU] WARNING: Howler library not found. Sound disabled.");
-        } else {
+        if (typeof Howl !== "undefined") {
             const bgMusic = new Howl({
                 src: ['assets/genjutsubg.mp3'],
                 volume: 0.6,
@@ -42,36 +40,37 @@ function initThreeGenjutsu() {
         }
 
         console.log("[GENJUTSU] Step 5: Adding Lights.");
-        const ambientLight = new THREE.AmbientLight(0xff0000, 0.1);
+        const ambientLight = new THREE.AmbientLight(0xff0000, 0.2);
         scene.add(ambientLight);
-        const mainLight = new THREE.PointLight(0xff0000, 2, 80);
+        const mainLight = new THREE.PointLight(0xff0000, 2, 100);
         mainLight.position.set(0, 5, 40);
         scene.add(mainLight);
 
-        // --- SHARINGAN TEXTURE LOAD ---
-        console.log("[GENJUTSU] Step 6: Triggering TextureLoader for assets/sharingan.png.");
-        const textureLoader = new THREE.TextureLoader();
-        const sharinganMap = textureLoader.load(
-            'assets/sharingan.png',
-            () => console.log("[GENJUTSU] SUCCESS: Sharingan texture loaded fully."),
+        // --- SHARINGAN 3D MODEL LOAD ---
+        console.log("[GENJUTSU] Step 6: Triggering GLTFLoader for assets/sharingan.glb.");
+        const modelLoader = new THREE.GLTFLoader();
+        let sharinganModel = null;
+
+        modelLoader.load(
+            'assets/sharingan.glb',
+            (gltf) => {
+                console.log("[GENJUTSU] SUCCESS: Sharingan 3D model loaded.");
+                sharinganModel = gltf.scene;
+
+                // Initial positioning: Huge and distant in the sky
+                sharinganModel.scale.set(50, 50, 50);
+                sharinganModel.position.set(0, 350, -1000);
+
+                // Make it face downwards (tilting towards the camera)
+                sharinganModel.rotation.x = 0.6;
+
+                scene.add(sharinganModel);
+            },
             undefined,
-            (err) => console.error("[GENJUTSU] FAILED: Sharingan texture load error:", err)
+            (err) => console.error("[GENJUTSU] FAILED: Sharingan model load error:", err)
         );
 
-        console.log("[GENJUTSU] Step 7: Creating Sharingan Mesh.");
-        const sharinganGeo = new THREE.CircleGeometry(200, 64);
-        const sharinganMat = new THREE.MeshBasicMaterial({
-            map: sharinganMap,
-            transparent: true,
-            opacity: 0,
-            side: THREE.DoubleSide
-        });
-        const sharingan = new THREE.Mesh(sharinganGeo, sharinganMat);
-        sharingan.position.set(0, 300, -1000);
-        sharingan.lookAt(0, 0, 0);
-        scene.add(sharingan);
-
-        console.log("[GENJUTSU] Step 8: Adding Terrain.");
+        console.log("[GENJUTSU] Step 7: Adding Terrain.");
         const pathLength = 800;
         const groundGeo = new THREE.PlaneGeometry(5, pathLength, 1, 50);
         const groundMat = new THREE.MeshLambertMaterial({ color: 0x050000 });
@@ -80,22 +79,21 @@ function initThreeGenjutsu() {
         ground.position.z = -pathLength / 2 + 50;
         scene.add(ground);
 
-        // --- Archer Mob ---
-        console.log("[GENJUTSU] Step 9: Adding Archers.");
-        const archerLoader = new THREE.GLTFLoader();
-        for (let i = 0; i < 50; i++) {
-            archerLoader.load(window.assets.archerModel, (gltf) => {
+        // --- Archer Crowd ---
+        console.log("[GENJUTSU] Step 8: Adding Archers.");
+        for (let i = 0; i < 40; i++) {
+            modelLoader.load(window.assets.archerModel, (gltf) => {
                 const archer = gltf.scene;
                 const side = i % 2 === 0 ? 1 : -1;
                 archer.position.set(side * 8, 0, -i * 18);
-                archer.scale.set(2, 2, 2);
+                archer.scale.set(1.8, 1.8, 1.8);
                 archer.lookAt(0, 1, archer.position.z + 15);
                 scene.add(archer);
             });
         }
 
         // --- THE TIMELINE (The 30-Second Script) ---
-        console.log("[GENJUTSU] Step 10: Building Cinematic Timeline (Short Pacing).");
+        console.log("[GENJUTSU] Step 9: Building Cinematic Timeline.");
         const eyelidsTop = document.querySelector('.eyelid.top');
         const eyelidsBottom = document.querySelector('.eyelid.bottom');
         const storyContainer = document.getElementById('story-container');
@@ -118,20 +116,17 @@ function initThreeGenjutsu() {
         // 2. The Walk (5-25s)
         tl.to(camera.position, {
             z: -pathLength + 150,
-            duration: 20, // 20s walk
+            duration: 20,
             ease: "none",
             onUpdate: () => {
                 const time = tl.time();
                 camera.position.x = Math.sin(time * 0.8) * 1.5;
-                camera.position.y = playerHeight + Math.sin(time * 1.2) * 0.2;
+                camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.2;
                 camera.rotation.y = Math.sin(time * 0.4) * 0.2;
-                if (time > 8) {
-                    sharingan.material.opacity = Math.min(0.9, sharingan.material.opacity + 0.02);
-                }
             }
         }, 5);
 
-        // 3. The Terror (25-30s)
+        // 3. The Terror (22-26s)
         tl.to(camera.rotation, {
             x: 0.8,
             y: 0,
@@ -142,20 +137,28 @@ function initThreeGenjutsu() {
 
         tl.add(() => showNotification("NO... NOT AGAIN..."), 24);
 
-        // 4. The Dive (Acceleration)
-        tl.to(sharingan.position, {
-            z: camera.position.z - 40,
-            y: playerHeight + 5,
-            duration: 6,
-            ease: "expo.in"
-        }, 25);
+        // 4. The Model Dive (Acceleration)
+        tl.add(() => {
+            if (sharinganModel) {
+                console.log("[GENJUTSU] Action: Model Diving.");
+                gsap.to(sharinganModel.position, {
+                    z: camera.position.z - 40,
+                    y: playerHeight + 5,
+                    duration: 6,
+                    ease: "expo.in"
+                });
 
-        let spinScale = 0.005;
-        tl.to({ val: 0.005 }, {
-            val: 0.6,
-            duration: 6,
-            onUpdate: function () { spinScale = this.targets()[0].val; },
-            ease: "power2.in"
+                // Accelerate spin
+                const spinObj = { val: 0.01 };
+                gsap.to(spinObj, {
+                    val: 0.8,
+                    duration: 6,
+                    onUpdate: function () {
+                        if (sharinganModel) sharinganModel.rotation.y += spinObj.val;
+                    },
+                    ease: "power2.in"
+                });
+            }
         }, 25);
 
         // 5. Blackout
@@ -204,7 +207,9 @@ function initThreeGenjutsu() {
 
         function animate() {
             requestAnimationFrame(animate);
-            sharingan.rotation.z += spinScale;
+            if (sharinganModel && !tl.isActive()) {
+                sharinganModel.rotation.y += 0.01; // Constant slow spin if not in timeline
+            }
             renderer.render(scene, camera);
         }
 
