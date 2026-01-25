@@ -27,7 +27,14 @@ window.assets = {
 };
 
 function init() {
-    startForestStage();
+    // startForestStage(); 
+    // Jumping directly to Genjutsu as requested for TESTING
+    const startBtn = document.getElementById('start-button');
+    if (startBtn) {
+        startBtn.onclick = () => {
+            startGenjutsuStage();
+        };
+    }
 }
 
 function startForestStage() {
