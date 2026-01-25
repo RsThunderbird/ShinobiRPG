@@ -20,7 +20,7 @@ function initThreeGenjutsu() {
 
     // --- Audio ---
     const bgMusic = new Howl({
-        src: ['../genjutsubg.mp3'],
+        src: ['assets/genjutsubg.mp3'],
         volume: 0.6,
         autoplay: true,
         onload: () => {
@@ -55,13 +55,15 @@ function initThreeGenjutsu() {
     scene.add(ground);
 
     // --- SHARINGAN Eye (Correct Asset & Rotation) ---
-    const sharinganTex = new THREE.TextureLoader().load('https://i.postimg.cc/HWPkbSff/image.png');
+    const sharinganTex = new THREE.TextureLoader();
+    sharinganTex.setCrossOrigin('anonymous');
+    const sharinganMap = sharinganTex.load('https://i.postimg.cc/HWPkbSff/image.png');
+
     const sharinganGeo = new THREE.CircleGeometry(200, 64);
     const sharinganMat = new THREE.MeshBasicMaterial({
-        map: sharinganTex,
+        map: sharinganMap,
         transparent: true,
         opacity: 0,
-        color: 0xff0000,
         side: THREE.DoubleSide
     });
     const sharingan = new THREE.Mesh(sharinganGeo, sharinganMat);
