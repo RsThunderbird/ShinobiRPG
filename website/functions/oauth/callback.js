@@ -37,8 +37,8 @@ export async function onRequest(context) {
             return new Response(JSON.stringify(userData), { status: 500 });
         }
 
-        // Redirect to Hub with Data
-        const redirectUrl = new URL('/hub.html', request.url);
+        // Redirect to Index with Data
+        const redirectUrl = new URL('/index.html', request.url);
         redirectUrl.searchParams.set('discord_id', userData.id);
         redirectUrl.searchParams.set('username', userData.username);
         redirectUrl.searchParams.set('avatar', userData.avatar);
