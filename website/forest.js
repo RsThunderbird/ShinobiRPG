@@ -286,13 +286,7 @@ function initThreeForest() {
             if (scrollQuestActive) {
                 if (scrollCollected) {
                     showNarrative("Zoro: You found it? The Forbidden Scroll of Teleportation... This might be our way out of here.", [
-                        {
-                            text: "Continue", action: () => {
-                                // Hide dialogue and start cinematic transition
-                                document.getElementById('narrative-box').style.display = 'none';
-                                triggerDizzinessTransition();
-                            }
-                        }
+                        { text: "Continue", action: () => triggerPortalTransition() }
                     ]);
                 } else {
                     showNarrative("Zoro: The scroll is at the bottom of the river. Don't drown!", [{ text: "I'm on it", action: () => { } }]);
@@ -361,50 +355,39 @@ function initThreeForest() {
         });
     }
 
-    function triggerDizzinessTransition() {
+    function triggerPortalTransition() {
         const storyContainer = document.getElementById('story-container');
         const eyeOverlay = document.getElementById('eye-blinking-overlay');
         const eyelidsTop = document.querySelector('.eyelid.top');
         const eyelidsBottom = document.querySelector('.eyelid.bottom');
 
-        // Hide game UI
-        const compass = document.getElementById('compass-container');
-        if (compass) compass.style.display = 'none';
-        const questUi = document.getElementById('quest-ui');
-        if (questUi) questUi.classList.add('hidden');
-
         showNotification("You start feeling dizzy...");
 
-        // 1. Slow Blur (Takes 6 seconds)
-        gsap.to(storyContainer, { filter: 'blur(30px)', duration: 6 });
-        gsap.to(camera, { fov: 15, duration: 6, onUpdate: () => camera.updateProjectionMatrix() });
+        // 1. Blur vision gradually
+        gsap.to(storyContainer, { filter: 'blur(20px)', duration: 4 });
+        gsap.to(camera, { fov: 30, duration: 4, onUpdate: () => camera.updateProjectionMatrix() });
 
         setTimeout(() => {
             showNotification("Your vision is fading...");
-        }, 3000);
+        }, 1500);
 
-        // 2. Shut Eyes after blur is established
-        setTimeout(() => {
-            if (eyeOverlay) {
-                eyeOverlay.style.display = 'block';
-                // Set to current height if not already set (should be 0)
-                gsap.set([eyelidsTop, eyelidsBottom], { height: '0%' });
+        // 2. Shut eyes
+        if (eyeOverlay) eyeOverlay.style.display = 'block';
+        gsap.to([eyelidsTop, eyelidsBottom], {
+            height: '50%',
+            duration: 2,
+            delay: 2.5,
+            ease: "power2.inOut",
+            onComplete: () => {
+                // Stop forest music
+                if (forestMusic) forestMusic.stop();
+
+                // Switch to Genjutsu Stage
+                setTimeout(() => {
+                    startGenjutsuStage();
+                }, 1000);
             }
-
-            gsap.to([eyelidsTop, eyelidsBottom], {
-                height: '50%',
-                duration: 2.5,
-                ease: "power2.inOut",
-                onComplete: () => {
-                    if (forestMusic) forestMusic.stop();
-
-                    // Teleport to Genjutsu Stage
-                    setTimeout(() => {
-                        startGenjutsuStage();
-                    }, 1000);
-                }
-            });
-        }, 5000);
+        });
     }
 
     function playZoroCompletionAnimation() {
