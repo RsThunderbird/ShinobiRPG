@@ -1,5 +1,6 @@
 /**
- * genjutsu.js - Fully automated cinematic sequence
+ * genjutsu.js - The 2-Minute Cinematic Experience
+ * Fully automated, zero user input, high polish.
  */
 function initThreeGenjutsu() {
     const container = document.getElementById('genjutsu-three-container');
@@ -9,125 +10,169 @@ function initThreeGenjutsu() {
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
-    scene.fog = new THREE.FogExp2(0x220000, 0.05);
+    scene.fog = new THREE.FogExp2(0x1a0000, 0.04);
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 3000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xff0000, 0.3);
+    const ambientLight = new THREE.AmbientLight(0xff0000, 0.1);
     scene.add(ambientLight);
 
-    const spotLight = new THREE.SpotLight(0xff0000, 2);
-    spotLight.position.set(0, 50, 0);
-    scene.add(spotLight);
+    const mainLight = new THREE.PointLight(0xff0000, 2, 100);
+    mainLight.position.set(0, 5, 50);
+    scene.add(mainLight);
 
     const eyelidsTop = document.querySelector('.eyelid.top');
     const eyelidsBottom = document.querySelector('.eyelid.bottom');
     const storyContainer = document.getElementById('story-container');
     const eyeOverlay = document.getElementById('eye-blinking-overlay');
 
-    // Initial setup
     if (eyeOverlay) eyeOverlay.style.display = 'block';
     gsap.set([eyelidsTop, eyelidsBottom], { height: '50%' });
-    gsap.set(storyContainer, { filter: 'blur(20px)' });
+    gsap.set(storyContainer, { filter: 'blur(30px)' });
 
-    // --- Terrain ---
-    const pathWidth = 6;
-    const pathLength = 300; // Signficantly shortened as requested
-    const groundGeo = new THREE.PlaneGeometry(pathWidth, pathLength, 1, 50);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x050000 });
+    // --- Environment Creation ---
+
+    // 1. The Path
+    const pathWidth = 3;
+    const pathLength = 2000; // Much longer for slow walk
+    const groundGeo = new THREE.PlaneGeometry(pathWidth, pathLength, 1, 200);
+    const groundMat = new THREE.MeshLambertMaterial({ color: 0x0a0000 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
-    ground.position.z = -pathLength / 2;
+    ground.position.z = -pathLength / 2 + 100;
     scene.add(ground);
 
-    // --- Sharingan Sky ---
-    const sharinganTexture = new THREE.TextureLoader().load('assets/sky.png');
-    const sharinganGeo = new THREE.CircleGeometry(100, 64);
-    const sharinganMat = new THREE.MeshBasicMaterial({
-        map: sharinganTexture,
+    // 2. The Mysterious Red Blob (Initial Sky Object)
+    const blobTexture = new THREE.TextureLoader().load('https://i.postimg.cc/HWPkbSff/image.png'); // Sharingan but we'll blur it
+    const blobGeo = new THREE.CircleGeometry(400, 64);
+    const blobMat = new THREE.MeshBasicMaterial({
+        map: blobTexture,
         transparent: true,
-        opacity: 1.0,
-        side: THREE.DoubleSide,
-        color: 0xff0000
+        opacity: 0,
+        color: 0xff0000,
+        side: THREE.DoubleSide
     });
-    const sharingan = new THREE.Mesh(sharinganGeo, sharinganMat);
-    sharingan.position.set(0, 150, -500);
+    const sharingan = new THREE.Mesh(blobGeo, blobMat);
+    sharingan.position.set(0, 800, -3000);
     sharingan.lookAt(0, 0, 0);
     scene.add(sharingan);
 
-    // --- Archers ---
+    // 3. Archer Rows (The Spectators)
     const loader = new THREE.GLTFLoader();
-    for (let i = 0; i < 20; i++) {
+    const archerCount = 150;
+    for (let i = 0; i < archerCount; i++) {
         loader.load(assets.archerModel, (gltf) => {
             const archer = gltf.scene;
             const side = i % 2 === 0 ? 1 : -1;
-            archer.position.set(side * 6, 0, -i * 15);
-            archer.scale.set(1.8, 1.8, 1.8);
-            archer.lookAt(0, 1, archer.position.z + 10);
+            const rowPos = -i * 15;
+            archer.position.set(side * (5 + Math.random() * 5), 0, rowPos);
+            archer.scale.set(2, 2, 2);
+            archer.lookAt(0, 1, rowPos + 10);
             scene.add(archer);
+
+            // Add a faint red glow to each archer
+            const glow = new THREE.PointLight(0xff0000, 0.2, 5);
+            glow.position.set(0, 3, 0);
+            archer.add(glow);
         });
     }
 
-    // --- Cinematic Sequence ---
-    const sequence = gsap.timeline({
+    // --- Cinematic Timeline (The Script) ---
+    // Total duration targeted: ~120 seconds
+    const tl = gsap.timeline({
         onComplete: () => {
             playFinalCinematic();
         }
     });
 
-    // 1. Wake up
-    sequence.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 4, ease: 'power2.out' }, 1);
-    sequence.to(storyContainer, { filter: 'blur(0px)', duration: 5 }, 1);
+    const playerHeight = 2.4;
+    camera.position.set(0, playerHeight, 100);
 
-    // 2. Erratic Movement (Drunk Walk)
-    const playerHeight = 2.2;
-    camera.position.set(0, playerHeight, 50);
+    // Stage 1: The Awakening (0s - 15s)
+    tl.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 8, ease: 'power1.inOut' }, 2);
+    tl.to(storyContainer, { filter: 'blur(0px)', duration: 10, ease: 'sine.inOut' }, 2);
+    tl.add(() => showNotification("Where... is everyone?"), 12);
 
-    // Automated Forward Walk
-    sequence.to(camera.position, {
-        z: -pathLength + 50,
-        duration: 20,
-        ease: "none",
+    // Stage 2: Distant Blob Appears (15s - 30s)
+    tl.to(sharingan.material, { opacity: 0.2, duration: 15 }, 15);
+    tl.add(() => showNotification("What is that... in the sky?"), 25);
+
+    // Stage 3: The Long Walk (30s - 80s)
+    // We walk 2000 units slowly
+    tl.to(camera.position, {
+        z: -pathLength + 200,
+        duration: 70, // 70 seconds of walking
+        ease: "sine.inOut",
         onUpdate: () => {
-            const time = sequence.time();
-            // Sway
-            camera.position.x = Math.sin(time * 0.8) * 0.5;
-            camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.15;
+            const time = tl.time();
+            // Nauseous swaying
+            camera.position.x = Math.sin(time * 0.5) * 1.5;
+            camera.position.y = playerHeight + Math.sin(time * 1.2) * 0.3;
 
-            // Random camera look here and there
-            camera.rotation.y = Math.sin(time * 0.5) * 0.2;
-            camera.rotation.x = Math.sin(time * 0.3) * 0.1;
-            camera.rotation.z = Math.sin(time * 0.4) * 0.1;
+            // Drunk camera rotation (looking around in fear)
+            camera.rotation.y = Math.sin(time * 0.4) * 0.4;
+            camera.rotation.x = -0.1 + Math.cos(time * 0.3) * 0.15;
+            camera.rotation.z = Math.sin(time * 0.6) * 0.2;
+
+            // Sharingan slowly brightens and sharpens
+            sharingan.material.opacity = Math.min(0.9, 0.2 + (tl.progress() * 0.7));
         }
-    }, 2);
+    }, 20);
 
-    // 3. Look up at Sharingan
-    sequence.to(camera.rotation, {
-        x: 0.8 * (Math.PI / 180 * 50), // Facing the sky
+    tl.add(() => showNotification("My body... feels like lead."), 40);
+    tl.add(() => showNotification("Please... someone help..."), 60);
+
+    // Stage 4: The Pleading (80s - 100s)
+    // Camera starts moving more erratically as the character panics
+    tl.to(camera.rotation, {
+        duration: 20,
+        onUpdate: () => {
+            const time = tl.time();
+            camera.rotation.y = Math.sin(time * 2) * 0.6; // Rapid looking left/right
+            camera.rotation.x = -0.2 + Math.sin(time * 3) * 0.3; // Looking up/down
+        }
+    }, 80);
+    tl.add(() => showNotification("NO... NOT AGAIN..."), 85);
+
+    // Stage 5: The Sky Eye Reveals (100s - 110s)
+    // Character looks UP at the Sharingan
+    tl.to(camera.rotation, {
+        x: 0.8, // Facing the sky
         y: 0,
         z: 0,
-        duration: 3,
+        duration: 5,
         ease: "power2.inOut"
-    }, "-=5");
+    }, 100);
+    tl.add(() => showNotification("IT'S WATCHING ME."), 105);
 
-    // 4. Sharingan accelerates and approaches
-    sequence.to(sharingan.position, {
-        z: camera.position.z - 30,
-        y: playerHeight,
-        duration: 4,
-        ease: "power2.in"
-    }, "-=4");
+    // Stage 6: The Dive (110s - 120s)
+    // The Sharingan accelerates and comes close
+    tl.to(sharingan.position, {
+        z: camera.position.z - 50,
+        y: playerHeight + 10,
+        duration: 10,
+        ease: "expo.in"
+    }, 110);
 
-    // 5. Terrified Blink (Close eyes)
-    sequence.to([eyelidsTop, eyelidsBottom], {
+    // Sharingan rotation revs up
+    let eyeSpin = 0.005;
+    tl.to({ val: 0.005 }, {
+        val: 0.4,
+        duration: 10,
+        onUpdate: function () { eyeSpin = this.targets()[0].val; },
+        ease: "power3.in"
+    }, 110);
+
+    // Stage 7: The Fear Blink (Final blackout)
+    tl.to([eyelidsTop, eyelidsBottom], {
         height: '50%',
-        duration: 1,
+        duration: 2,
         ease: "power4.in"
-    }, "-=1");
+    }, 118);
 
     function playFinalCinematic() {
         const videoContainer = document.createElement('div');
@@ -138,13 +183,13 @@ function initThreeGenjutsu() {
         video.src = 'assets/itachi_sharingan.mp4';
         video.muted = true;
         video.autoplay = true;
-        video.className = 'cinematic-video-small';
+        video.className = 'cinematic-video-small'; // Reduced size in CSS
         videoContainer.appendChild(video);
 
         video.onended = () => {
             gsap.to(videoContainer, {
                 opacity: 0,
-                duration: 1.5,
+                duration: 2,
                 onComplete: () => {
                     videoContainer.remove();
                     showAkatsukiBanner();
@@ -158,24 +203,24 @@ function initThreeGenjutsu() {
         banner.className = 'akatsuki-banner';
         banner.innerHTML = `
             <div class="banner-content">
-                <h1>PREPARE FOR THE UPCOMING EVENT</h1>
-                <h2 class="akatsuki-text">AKATSUKI</h2>
+                <h1>AN AKATSUKI EVENT IS COMING</h1>
+                <h2 class="akatsuki-text">THE EYE OF MOON</h2>
             </div>
         `;
         document.body.appendChild(banner);
 
-        gsap.from(".banner-content", { y: 100, opacity: 0, duration: 3, ease: "power4.out" });
+        gsap.from(".banner-content", { y: 150, opacity: 0, duration: 5, ease: "power4.out" });
 
         setTimeout(() => {
-            showNarrative("The nightmare is real.", [
+            showNarrative("The genjutsu is eternal.", [
                 { text: "Return to Menu", action: () => window.location.href = 'index.html' }
             ]);
-        }, 8000);
+        }, 10000);
     }
 
     function animate() {
         requestAnimationFrame(animate);
-        sharingan.rotation.z += 0.005 + (sequence.progress() * 0.05);
+        sharingan.rotation.z += eyeSpin;
         renderer.render(scene, camera);
     }
 
