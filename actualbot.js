@@ -4,6 +4,14 @@ const { Client, GatewayIntentBits, Collection, REST, Routes, Events } = require(
 const express = require('express');
 const cors = require('cors');
 
+// Check for node-llama-cpp dependency
+try {
+    require.resolve('node-llama-cpp');
+    console.log("✅ dependency 'node-llama-cpp' found.");
+} catch (e) {
+    console.error("❌ dependency 'node-llama-cpp' not found!");
+}
+
 // Add this block at the very top, before any require('dotenv').config()
 // Support for .env.path file
 const envPathFile = path.join(__dirname, '.env.path');
