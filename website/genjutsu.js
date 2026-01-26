@@ -102,7 +102,7 @@ function initThreeGenjutsu() {
     let moveF = false;
     let currentSpeed = 0;
     let cameraShake = new THREE.Vector3();
-    const baseSpeed = 2.0;
+    const baseSpeed = 0.15; // Slowed down for "walking" feel (was 2.0)
     const playerHeight = 2.2;
     let yaw = 0, pitch = 0;
 
@@ -110,6 +110,7 @@ function initThreeGenjutsu() {
     let lookingUp = false;
     let finished = false;
     let bhSpinSpeed = 0;
+    let distanceWalked = 0; // Track actual distance traveled
 
     camera.position.set(0, playerHeight, 0);
 
@@ -158,8 +159,11 @@ function initThreeGenjutsu() {
             camera.position.x += driftX * (currentSpeed / baseSpeed);
             camera.position.x *= 0.98;
 
-            // REACHED THE POINT -> TRIGGER CUTSCENE (50 meters)
-            if (camera.position.z <= -50) {
+            // Track actual distance walked
+            distanceWalked += currentSpeed;
+
+            // REACHED THE POINT -> TRIGGER CUTSCENE (after walking 50 meters)
+            if (distanceWalked >= 50) {
                 triggerCutscene();
             }
         }
@@ -236,9 +240,10 @@ function initThreeGenjutsu() {
                 setTimeout(() => {
                     // 3. ZOOM BLACKHOLE EXTREMELY CLOSER while eyes are shut
                     if (blackhole) {
-                        // "change its width" -> Massive scale up
-                        // "dont bring it down" -> Keep Y at 40000
-                        blackhole.scale.set(80, 80, 80);
+                        // "change its width" -> Scale up dramatically but not engulfing
+                        // "dont bring it down" -> Keep Y at 40000, far at Z -50000
+                        // Scale 15x instead of 80x so it grows but stays in distance
+                        blackhole.scale.set(15, 15, 15);
                         blackhole.position.set(0, 40000, -50000);
                         bhSpinSpeed = 0.1; // Spin much faster
                     }
