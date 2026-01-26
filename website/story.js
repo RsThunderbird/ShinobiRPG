@@ -176,6 +176,20 @@ function handleChoice(choice) {
     }
 }
 
+document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'e') {
+        const narrativeBox = document.getElementById('narrative-box');
+        if (narrativeBox && narrativeBox.style.display !== 'none') {
+            const button = narrativeBox.querySelector('button');
+            if (button) {
+                button.click();
+            } else {
+                narrativeBox.style.display = 'none';
+            }
+        }
+    }
+});
+
 window.showNarrative = showNarrative;
 window.showNotification = showNotification;
 function showNarrative(text, buttons = []) {

@@ -162,8 +162,8 @@ function initThreeGenjutsu() {
             // Track actual distance walked
             distanceWalked += currentSpeed;
 
-            // REACHED THE POINT -> TRIGGER CUTSCENE (after walking 50 meters)
-            if (distanceWalked >= 50) {
+            // REACHED THE POINT -> TRIGGER CUTSCENE (after walking 10 meters)
+            if (distanceWalked >= 10) {
                 triggerCutscene();
             }
         }
@@ -242,8 +242,8 @@ function initThreeGenjutsu() {
                     if (blackhole) {
                         // "change its width" -> Scale up dramatically but not engulfing
                         // "dont bring it down" -> Keep Y at 40000, far at Z -50000
-                        // Scale 15x instead of 80x so it grows but stays in distance
-                        blackhole.scale.set(15, 15, 15);
+                        // Scale 10x instead of 15x so it grows but stays in distance
+                        blackhole.scale.set(10, 10, 10);
                         blackhole.position.set(0, 40000, -50000);
                         bhSpinSpeed = 0.1; // Spin much faster
                     }
@@ -253,8 +253,8 @@ function initThreeGenjutsu() {
 
                     // Violent impact shake
                     gsap.to(camera.position, {
-                        x: "+=12",
-                        y: "+=5",
+                        x: "+=6",
+                        y: "+=2.5",
                         duration: 0.05,
                         repeat: 15,
                         yoyo: true
