@@ -154,8 +154,8 @@ function initThreeGenjutsu() {
             camera.position.x += driftX * (currentSpeed / baseSpeed);
             camera.position.x *= 0.98;
 
-            // REACHED THE POINT -> TRIGGER CUTSCENE
-            if (camera.position.z <= -10) {
+            // REACHED THE POINT -> TRIGGER CUTSCENE (50 meters)
+            if (camera.position.z <= -50) {
                 triggerCutscene();
             }
         }
@@ -224,9 +224,9 @@ function initThreeGenjutsu() {
                 setTimeout(() => {
                     // 3. ZOOM BLACKHOLE EXTREMELY CLOSER while eyes are shut
                     if (blackhole) {
-                        // Increase size by 100x (0.1 * 100 = 10)
+                        // Increase size by 100x (0.1 * 100 = 10) - keep at original height
                         blackhole.scale.set(10, 10, 10);
-                        blackhole.position.set(0, 5000, camera.position.z - 5000);
+                        blackhole.position.set(0, 40000, -50000); // Stay at original position, just scale up
                         bhSpinSpeed = 0.1; // Spin much faster
                     }
 
