@@ -68,7 +68,7 @@ function initThreeGenjutsu() {
         // Positioned in the "vacuum" but not at zenith
         blackhole.position.set(0, 80000, -50000);
         blackhole.scale.set(0.1, 0.1, 0.1);
-        blackhole.rotation.set(Math.PI / 4, 0, 0);
+        blackhole.rotation.set(Math.PI / 4, -Math.PI / 4, 0);
 
         // MATERIAL CLEANUP
         blackhole.traverse((child) => {
@@ -243,7 +243,7 @@ function initThreeGenjutsu() {
                         // "change its width" -> Scale up dramatically but not engulfing
                         // "dont bring it down" -> Keep Y at 40000, far at Z -50000
                         // Scale 10x instead of 15x so it grows but stays in distance
-                        blackhole.scale.set(1, 10, 1);
+                        blackhole.scale.set(10, 10, 10);
                         blackhole.position.set(0, 80000, -50000);
                         bhSpinSpeed = 0.1; // Spin much faster
                     }
