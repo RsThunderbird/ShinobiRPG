@@ -66,7 +66,7 @@ function initThreeGenjutsu() {
     fbxLoader.load('assets/blackhole.fbx', (object) => {
         blackhole = object;
         // Positioned in the "vacuum" but not at zenith
-        blackhole.position.set(0, 40000, -50000);
+        blackhole.position.set(0, 80000, -50000);
         blackhole.scale.set(0.1, 0.1, 0.1);
         blackhole.rotation.set(Math.PI / 4, 0, 0);
 
@@ -102,7 +102,7 @@ function initThreeGenjutsu() {
     let moveF = false;
     let currentSpeed = 0;
     let cameraShake = new THREE.Vector3();
-    const baseSpeed = 0.15; // Slowed down for "walking" feel (was 2.0)
+    const baseSpeed = 2.0; // Slowed down for "walking" feel (was 2.0)
     const playerHeight = 2.2;
     let yaw = 0, pitch = 0;
 
@@ -243,8 +243,8 @@ function initThreeGenjutsu() {
                         // "change its width" -> Scale up dramatically but not engulfing
                         // "dont bring it down" -> Keep Y at 40000, far at Z -50000
                         // Scale 10x instead of 15x so it grows but stays in distance
-                        blackhole.scale.set(10, 10, 10);
-                        blackhole.position.set(0, 40000, -50000);
+                        blackhole.scale.set(1, 10, 1);
+                        blackhole.position.set(0, 80000, -50000);
                         bhSpinSpeed = 0.1; // Spin much faster
                     }
 
