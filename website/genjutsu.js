@@ -68,7 +68,7 @@ function initThreeGenjutsu() {
         // Positioned in the "vacuum" but not at zenith
         blackhole.position.set(0, 80000, -50000);
         blackhole.scale.set(0.1, 0.1, 0.1);
-        blackhole.rotation.set(Math.PI / 4, -Math.PI / 4, 0);
+        blackhole.rotation.set(0, 0, 0);
 
         // MATERIAL CLEANUP
         blackhole.traverse((child) => {
