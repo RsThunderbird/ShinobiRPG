@@ -107,6 +107,7 @@ function initThreeGenjutsu() {
     let yaw = 0, pitch = 0;
 
     let cutsceneStarted = false;
+    let lookingUp = false;
     let finished = false;
     let bhSpinSpeed = 0;
 
@@ -123,9 +124,12 @@ function initThreeGenjutsu() {
 
     document.addEventListener('mousemove', (e) => {
         if (document.pointerLockElement === renderer.domElement && !cutsceneStarted) {
-            yaw -= e.movementX * 0.002;
+            // LOCK YAW (Force straight line) - Disable mouse X
+            // yaw -= e.movementX * 0.002; 
+
+            // Allow slight pitch look (up/down) but restricted
             pitch -= e.movementY * 0.002;
-            pitch = Math.max(-1.4, Math.min(1.4, pitch));
+            pitch = Math.max(-0.6, Math.min(0.6, pitch));
         }
     });
 
@@ -164,9 +168,13 @@ function initThreeGenjutsu() {
         camera.position.add(cameraShake);
         camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.15;
 
-        if (!cutsceneStarted) {
-            // Rotation also has a drunken sway
-            camera.rotation.set(pitch, yaw, swayZ + driftX, 'YXZ');
+        if (!lookingUp) {
+            // Rotation has a drunken sway (Erratic)
+            // We ignore mouse yaw to force "walking in a straight line"
+            const erraticYaw = Math.sin(time * 2.5) * 0.08 + Math.cos(time * 4.2) * 0.04;
+            const erraticPitch = pitch + Math.sin(time * 3) * 0.03;
+
+            camera.rotation.set(erraticPitch, erraticYaw, swayZ + driftX, 'YXZ');
         }
 
         if (blackhole) {
@@ -186,16 +194,20 @@ function initThreeGenjutsu() {
 
         console.log("[GENJUTSU] Triggering dialogue before lookup.");
 
-        if (typeof showNarrative === 'function') {
-            showNarrative("What's going on??", [
-                { text: "...", action: () => startForcedLookup() }
-            ]);
-        } else {
-            startForcedLookup();
-        }
+        // Pause for effectiveness before looking up
+        setTimeout(() => {
+            if (typeof showNarrative === 'function') {
+                showNarrative("What's going on??", [
+                    { text: "...", action: () => startForcedLookup() }
+                ]);
+            } else {
+                startForcedLookup();
+            }
+        }, 1500);
     }
 
     function startForcedLookup() {
+        lookingUp = true;
         // 1. Forced Lookup Animation
         gsap.to(camera.rotation, {
             x: Math.PI / 3, // Look up at the blackhole
@@ -224,9 +236,10 @@ function initThreeGenjutsu() {
                 setTimeout(() => {
                     // 3. ZOOM BLACKHOLE EXTREMELY CLOSER while eyes are shut
                     if (blackhole) {
-                        // Increase size by 100x (0.1 * 100 = 10) - keep at original height
-                        blackhole.scale.set(10, 10, 10);
-                        blackhole.position.set(0, 40000, -50000); // Stay at original position, just scale up
+                        // "change its width" -> Massive scale up
+                        // "dont bring it down" -> Keep Y at 40000
+                        blackhole.scale.set(80, 80, 80);
+                        blackhole.position.set(0, 40000, -50000);
                         bhSpinSpeed = 0.1; // Spin much faster
                     }
 
