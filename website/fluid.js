@@ -44,7 +44,7 @@ let config = {
     PAUSED: false,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
     TRANSPARENT: false,
-    BLOOM: false,
+    BLOOM: true,
     BLOOM_ITERATIONS: 8,
     BLOOM_RESOLUTION: 256,
     BLOOM_INTENSITY: 0.8,
@@ -57,9 +57,10 @@ let config = {
     FREQ_RANGE: 8,
 }
 
-// Random splat timer removed for cleaner website background
-var _runRandom = false;
+// Random splat timer for testing visibility
+var _runRandom = true;
 var _isSleep = false;
+setInterval(randomSplat, 2000);
 function randomSplat() {
     if (_runRandom == true && _isSleep == false)
         splatStack.push(parseInt(Math.random() * 20) + 5);
@@ -72,9 +73,9 @@ document.addEventListener("visibilitychange", function () {
 function multipleSplats(amount) {
     for (let i = 0; i < amount; i++) {
         const color = config.COLORFUL ? generateColor() : Object.assign({}, config.POINTER_COLOR.getRandom());
-        color.r *= 10.0;
-        color.g *= 10.0;
-        color.b *= 10.0;
+        color.r *= 20.0;
+        color.g *= 20.0;
+        color.b *= 20.0;
         const x = canvas.width * Math.random();
         const y = canvas.height * Math.random();
         const dx = 1000 * (Math.random() - 0.5);
@@ -85,9 +86,9 @@ function multipleSplats(amount) {
 
 function generateColor() {
     let c = HSVtoRGB(Math.random(), 1.0, 1.0);
-    c.r *= 0.15;
-    c.g *= 0.15;
-    c.b *= 0.15;
+    c.r *= 0.8;
+    c.g *= 0.8;
+    c.b *= 0.8;
     return c;
 }
 
@@ -111,6 +112,9 @@ firstPointer.down = true; // Always down for cursor tracking
 pointers.push(firstPointer);
 
 const { gl, ext } = getWebGLContext(canvas);
+console.log('Canvas:', canvas);
+console.log('WebGL Context:', gl);
+console.log('Extensions:', ext);
 
 if (isMobile()) {
     config.DYE_RESOLUTION = 512;
@@ -1466,6 +1470,7 @@ window.addEventListener('mousedown', e => {
 });
 
 window.addEventListener('mousemove', e => {
+    console.log('Mouse move:', e.clientX, e.clientY);
     let pointer = pointers[0];
     // Removed if (!pointer.down) return; for constant cursor tracking
     let posX = scaleByPixelRatio(e.clientX);
