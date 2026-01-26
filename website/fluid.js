@@ -31,16 +31,16 @@ let config = {
     SIM_RESOLUTION: 256,
     DYE_RESOLUTION: 1024,
     CAPTURE_RESOLUTION: 512,
-    DENSITY_DISSIPATION: 0.97,
-    VELOCITY_DISSIPATION: 0.98,
+    DENSITY_DISSIPATION: 0.98,
+    VELOCITY_DISSIPATION: 0.99,
     PRESSURE: 0.8,
     PRESSURE_ITERATIONS: 20,
     CURL: 30,
-    SPLAT_RADIUS: 0.3,
+    SPLAT_RADIUS: 0.2,
     SPLAT_FORCE: 6000,
     SHADING: true,
     COLORFUL: true,
-    COLOR_UPDATE_SPEED: 10,
+    COLOR_UPDATE_SPEED: 5,
     PAUSED: false,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
     TRANSPARENT: false,
@@ -57,10 +57,9 @@ let config = {
     FREQ_RANGE: 8,
 }
 
-// Random splat timer for testing visibility
-var _runRandom = true;
+// Random splat timer removed
+var _runRandom = false;
 var _isSleep = false;
-setInterval(randomSplat, 2000);
 function randomSplat() {
     if (_runRandom == true && _isSleep == false)
         splatStack.push(parseInt(Math.random() * 20) + 5);
@@ -112,9 +111,6 @@ firstPointer.down = true; // Always down for cursor tracking
 pointers.push(firstPointer);
 
 const { gl, ext } = getWebGLContext(canvas);
-console.log('Canvas:', canvas);
-console.log('WebGL Context:', gl);
-console.log('Extensions:', ext);
 
 if (isMobile()) {
     config.DYE_RESOLUTION = 512;
@@ -1470,7 +1466,6 @@ window.addEventListener('mousedown', e => {
 });
 
 window.addEventListener('mousemove', e => {
-    console.log('Mouse move:', e.clientX, e.clientY);
     let pointer = pointers[0];
     // Removed if (!pointer.down) return; for constant cursor tracking
     let posX = scaleByPixelRatio(e.clientX);
