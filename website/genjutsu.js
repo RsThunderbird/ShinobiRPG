@@ -4,17 +4,17 @@ function initThreeGenjutsu() {
 
     container.innerHTML = '';
 
-    // --- SETUP SCENE (CLEAR & TRANSPARENT) ---
+    // --- SETUP SCENE (HELLISH RED) ---
     const scene = new THREE.Scene();
-    scene.background = null;
-    // NO FOG - REMOVING ALL TINTING
+    scene.background = new THREE.Color(0x0a0000); // Almost black red
+    scene.fog = new THREE.FogExp2(0x2a0000, 0.00015);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 1000000);
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
-        alpha: true // CRITICAL: Allows the sky behind the canvas to show through
+        alpha: true
     });
-    renderer.setClearColor(0x000000, 0); // Sets clear color to black with 0 opacity (transparent)
+    renderer.setClearColor(0x0a0000, 1);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
@@ -26,10 +26,10 @@ function initThreeGenjutsu() {
         renderer.domElement.requestPointerLock();
     });
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    // Lights (Reddish Tint)
+    const ambientLight = new THREE.AmbientLight(0xff3333, 0.4);
     scene.add(ambientLight);
-    const spotLight = new THREE.SpotLight(0xffffff, 1.0);
+    const spotLight = new THREE.SpotLight(0xff0000, 1.2);
     spotLight.position.set(0, 50, 0);
     scene.add(spotLight);
 
@@ -47,11 +47,11 @@ function initThreeGenjutsu() {
         }
     }, 2000);
 
-    // --- Terrain ---
+    // --- Terrain (Narrower Feel) ---
     const pathWidth = 8;
     const pathLength = 600;
     const groundGeo = new THREE.PlaneGeometry(pathWidth, pathLength, 1, 100);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x050000 });
+    const groundMat = new THREE.MeshLambertMaterial({ color: 0x110000 }); // Reddish black ground
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     ground.position.z = -pathLength / 2;
@@ -65,8 +65,8 @@ function initThreeGenjutsu() {
 
     fbxLoader.load('assets/blackhole.fbx', (object) => {
         blackhole = object;
-        // Positioned in the "vacuum" far above
-        blackhole.position.set(0, 60000, -80000);
+        // Positioned in the "vacuum" but not at zenith
+        blackhole.position.set(0, 40000, -50000);
         blackhole.scale.set(0.1, 0.1, 0.1);
         blackhole.rotation.set(Math.PI / 4, 0, 0);
 
@@ -100,13 +100,15 @@ function initThreeGenjutsu() {
 
     // --- Cinematic Flow ---
     let moveF = false;
+    let currentSpeed = 0;
     let cameraShake = new THREE.Vector3();
-    const baseSpeed = 0.222;
+    const baseSpeed = 2.0;
     const playerHeight = 2.2;
     let yaw = 0, pitch = 0;
 
     let cutsceneStarted = false;
     let finished = false;
+    let bhSpinSpeed = 0;
 
     camera.position.set(0, playerHeight, 0);
 
@@ -131,36 +133,45 @@ function initThreeGenjutsu() {
         requestAnimationFrame(animate);
 
         const time = Date.now() * 0.001;
-        cameraShake.set(Math.sin(time * 6) * 0.08, Math.cos(time * 5) * 0.08, Math.sin(time * 4) * 0.04);
-        const driftX = Math.sin(time * 0.4) * 0.12;
+        // More violent shake & sway for "drunken" feel
+        cameraShake.set(
+            Math.sin(time * 7) * 0.12,
+            Math.cos(time * 6) * 0.12,
+            Math.sin(time * 5) * 0.08
+        );
+        const driftX = Math.sin(time * 0.5) * 0.15;
+        const swayZ = Math.sin(time * 0.3) * 0.2;
 
         if (!cutsceneStarted) {
+            // "Unresponsive" inertia-based movement
             if (moveF) {
-                camera.position.z -= baseSpeed;
-                camera.position.x += driftX;
+                currentSpeed = THREE.MathUtils.lerp(currentSpeed, baseSpeed, 0.03);
+            } else {
+                currentSpeed = THREE.MathUtils.lerp(currentSpeed, 0, 0.05);
             }
+
+            camera.position.z -= currentSpeed;
+            camera.position.x += driftX * (currentSpeed / baseSpeed);
             camera.position.x *= 0.98;
 
             // REACHED THE POINT -> TRIGGER CUTSCENE
-            if (camera.position.z <= -pathLength + 100) {
+            if (camera.position.z <= -10) {
                 triggerCutscene();
             }
         }
 
         const actualPos = camera.position.clone();
         camera.position.add(cameraShake);
-        camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.1;
+        camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.15;
 
         if (!cutsceneStarted) {
-            camera.rotation.set(pitch, yaw, Math.sin(time * 0.5) * 0.15 + driftX, 'YXZ');
+            // Rotation also has a drunken sway
+            camera.rotation.set(pitch, yaw, swayZ + driftX, 'YXZ');
         }
 
         if (blackhole) {
-            bhOrbitAngle += 0.001;
-            const orbitRad = 10000;
-            blackhole.position.x = Math.cos(bhOrbitAngle) * orbitRad;
-            blackhole.position.y = 60000 + Math.sin(bhOrbitAngle) * orbitRad;
-            blackhole.rotation.y += 0.002;
+            // No orbit, just rotation on its own axis when triggered
+            blackhole.rotation.y += bhSpinSpeed;
         }
 
         renderer.render(scene, camera);
@@ -171,62 +182,89 @@ function initThreeGenjutsu() {
         if (cutsceneStarted) return;
         cutsceneStarted = true;
         moveF = false;
+        currentSpeed = 0;
 
-        console.log("[GENJUTSU] Starting forced lookup cutscene.");
+        console.log("[GENJUTSU] Triggering dialogue before lookup.");
 
+        if (typeof showNarrative === 'function') {
+            showNarrative("What's going on??", [
+                { text: "...", action: () => startForcedLookup() }
+            ]);
+        } else {
+            startForcedLookup();
+        }
+    }
+
+    function startForcedLookup() {
         // 1. Forced Lookup Animation
         gsap.to(camera.rotation, {
-            x: Math.PI / 2.5,
+            x: Math.PI / 3, // Look up at the blackhole
             y: 0,
             z: 0,
             duration: 3,
             ease: "power2.inOut",
             onComplete: () => {
-                blinkAndEpicZoom();
+                // Blackhole starts spinning
+                bhSpinSpeed = 0.02;
+                setTimeout(() => {
+                    blinkAndEpicZoom();
+                }, 2000);
             }
         });
     }
 
     function blinkAndEpicZoom() {
-        // 2. The Blink (Close Eyes)
+        // 2. The Blink (Close Eyes) - 3 seconds closed as requested
         gsap.to([eyelidsTop, eyelidsBottom], {
             height: '50%',
-            duration: 0.4,
-            ease: "power2.in",
+            duration: 0.5,
+            ease: "power2.inOut",
             onComplete: () => {
-
-                // 3. ZOOM BLACKHOLE EXTREMELY CLOSER while eyes are shut
-                if (blackhole) {
-                    blackhole.scale.set(65, 65, 65);
-                    blackhole.position.set(0, 15000, camera.position.z - 15000);
-                }
-
+                // Keep eyes closed for 3 seconds
                 setTimeout(() => {
+                    // 3. ZOOM BLACKHOLE EXTREMELY CLOSER while eyes are shut
+                    if (blackhole) {
+                        // Increase size by 100x (0.1 * 100 = 10)
+                        blackhole.scale.set(10, 10, 10);
+                        blackhole.position.set(0, 5000, camera.position.z - 5000);
+                        bhSpinSpeed = 0.1; // Spin much faster
+                    }
+
                     // 4. Snap Eyes Open (BOOM MOMENT)
                     gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 0.15, ease: "expo.out" });
 
                     // Violent impact shake
                     gsap.to(camera.position, {
-                        x: "+=8",
-                        y: "+=3",
+                        x: "+=12",
+                        y: "+=5",
                         duration: 0.05,
-                        repeat: 12,
+                        repeat: 15,
                         yoyo: true
                     });
 
-                    // Hold the horror for a moment, then fade out
+                    // Dialogue "Oh god..."
                     setTimeout(() => {
-                        gsap.to([eyelidsTop, eyelidsBottom], {
-                            height: '50%',
-                            duration: 2,
-                            ease: "power2.inOut",
-                            onComplete: () => {
-                                finished = true;
-                                playFinalCinematic();
-                            }
-                        });
-                    }, 5000);
-                }, 800);
+                        if (typeof showNarrative === 'function') {
+                            showNarrative("Oh god...", [
+                                { text: "...", action: () => finishGenjutsu() }
+                            ]);
+                        } else {
+                            finishGenjutsu();
+                        }
+                    }, 1500);
+                }, 3000);
+            }
+        });
+    }
+
+    function finishGenjutsu() {
+        gsap.to([eyelidsTop, eyelidsBottom], {
+            height: '50%',
+            duration: 1.5,
+            ease: "power2.inOut",
+            onComplete: () => {
+                finished = true;
+                playFinalCinematic();
             }
         });
     }
