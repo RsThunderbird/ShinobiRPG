@@ -11,7 +11,7 @@ function initThreeGenjutsu() {
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
-        alpha: true
+        alpha: true // CRITICAL: Transparent sky
     });
     renderer.setClearColor(0x000000, 0);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -25,12 +25,12 @@ function initThreeGenjutsu() {
         renderer.domElement.requestPointerLock();
     });
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xff3333, 0.5);
+    // Lights (Dim red for mood)
+    const ambientLight = new THREE.AmbientLight(0x440000, 0.6);
     scene.add(ambientLight);
-    const spotLight = new THREE.SpotLight(0xff0000, 1.5);
-    spotLight.position.set(0, 50, 0);
-    scene.add(spotLight);
+    const pointLight = new THREE.PointLight(0xff0000, 1.2);
+    pointLight.position.set(0, 10, 0);
+    scene.add(pointLight);
 
     // Initial eye opening animation
     const eyelidsTop = document.querySelector('.eyelid.top');
@@ -40,7 +40,7 @@ function initThreeGenjutsu() {
     gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 4, ease: 'power2.inOut' });
     gsap.to(storyContainer, { filter: 'blur(0px)', duration: 5 });
 
-    // Background Music with Fade In
+    // Background Music
     const genjutsuMusic = new Audio('assets/genjutsubg.mp3');
     genjutsuMusic.currentTime = 25;
     genjutsuMusic.volume = 0;
@@ -57,33 +57,61 @@ function initThreeGenjutsu() {
         }
     }, 2000);
 
-    // --- Terrain & Walls ---
-    const pathWidth = 8;
-    const pathLength = 3000;
-    const groundGeo = new THREE.PlaneGeometry(pathWidth, pathLength, 1, 100);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x110000 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.z = -pathLength / 2 + 50;
-    scene.add(ground);
+    // --- BLOOD TRAIL TEXTURE ---
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 4096;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#000000'; // Black path
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Red Walls (Narrow narrow feel)
-    const wallHeight = 150;
-    const wallGeo = new THREE.PlaneGeometry(pathLength, wallHeight);
-    const wallMat = new THREE.MeshLambertMaterial({ color: 0x440000, side: THREE.DoubleSide });
+    // Draw Blood Trail
+    ctx.strokeStyle = '#880000';
+    ctx.lineWidth = 15;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(canvas.width / 2, canvas.height);
+    for (let y = canvas.height; y > 0; y -= 20) {
+        let x = canvas.width / 2 + (Math.random() - 0.5) * 50;
+        ctx.lineTo(x, y);
+        // Blood splatters
+        if (Math.random() > 0.7) {
+            ctx.fillStyle = '#660000';
+            ctx.beginPath();
+            ctx.arc(x + (Math.random() - 0.5) * 30, y, Math.random() * 15, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+    ctx.stroke();
 
-    const leftWall = new THREE.Mesh(wallGeo, wallMat);
-    leftWall.rotation.y = Math.PI / 2;
-    leftWall.position.set(-pathWidth / 2, wallHeight / 2, -pathLength / 2 + 50);
-    scene.add(leftWall);
+    const pathTex = new THREE.CanvasTexture(canvas);
+    pathTex.wrapS = THREE.RepeatWrapping;
+    pathTex.wrapT = THREE.RepeatWrapping;
 
-    const rightWall = new THREE.Mesh(wallGeo, wallMat);
-    rightWall.rotation.y = -Math.PI / 2;
-    rightWall.position.set(pathWidth / 2, wallHeight / 2, -pathLength / 2 + 50);
-    scene.add(rightWall);
+    // --- Path ---
+    const pathWidth = 10;
+    const pathLength = 5000;
+    const pathGeo = new THREE.PlaneGeometry(pathWidth, pathLength);
+    const pathMat = new THREE.MeshLambertMaterial({ map: pathTex });
+    const path = new THREE.Mesh(pathGeo, pathMat);
+    path.rotation.x = -Math.PI / 2;
+    path.position.z = -pathLength / 2 + 50;
+    scene.add(path);
 
-    // Fog for depth
-    scene.fog = new THREE.FogExp2(0x110000, 0.003);
+    // --- ERRATIC RED MOUNTAINS (Small & Spiky) ---
+    const mountainGeo = new THREE.ConeGeometry(3, 15, 4);
+    const mountainMat = new THREE.MeshLambertMaterial({ color: 0x660000 });
+    for (let i = 0; i < 400; i++) {
+        const m = new THREE.Mesh(mountainGeo, mountainMat);
+        let side = Math.random() > 0.5 ? 1 : -1;
+        let x = (pathWidth / 2 + 5 + Math.random() * 40) * side;
+        let z = -Math.random() * pathLength + 50;
+        m.position.set(x, 0, z);
+        m.scale.set(1, Math.random() * 2 + 0.5, 1);
+        m.rotation.y = Math.random() * Math.PI;
+        scene.add(m);
+    }
 
     // --- SHARINGAN ---
     const texLoader = new THREE.TextureLoader();
@@ -94,10 +122,10 @@ function initThreeGenjutsu() {
         transparent: true,
         side: THREE.DoubleSide,
         depthWrite: false,
-        opacity: 0 // Fade in manually
+        opacity: 0
     });
     const sharingan = new THREE.Mesh(sharinganGeo, sharinganMat);
-    sharingan.position.set(0, 300, -50);
+    sharingan.position.set(0, 400, -100);
     sharingan.rotation.x = Math.PI / 2;
     sharingan.visible = false;
     scene.add(sharingan);
@@ -161,7 +189,6 @@ function initThreeGenjutsu() {
 
             distanceWalked += currentSpeed;
 
-            // REACHED 100 METERS
             if (distanceWalked >= 100) {
                 triggerCutscene();
             }
@@ -210,11 +237,10 @@ function initThreeGenjutsu() {
 
     function startForcedLookup() {
         lookingUp = true;
-        sharingan.visible = true;
 
         // Forced Lookup to Zenith
         gsap.to(camera.rotation, {
-            x: Math.PI / 2.1, // Look up at the zenith
+            x: Math.PI / 2.1,
             y: 0,
             z: 0,
             duration: 5,
@@ -224,14 +250,12 @@ function initThreeGenjutsu() {
                 gsap.to(sharinganMat, { opacity: 1, duration: 3 });
             },
             onComplete: () => {
-                // Sharingan starts spinning and growing
-                gsap.to(sharingan.scale, { x: 8, y: 8, z: 1, duration: 12, ease: "sine.inOut" });
-                gsap.to(sharingan.position, { y: 100, z: -20, duration: 12, ease: "power1.in" });
+                gsap.to(sharingan.scale, { x: 10, y: 10, z: 1, duration: 12, ease: "sine.inOut" });
+                gsap.to(sharingan.position, { y: 60, z: -20, duration: 12, ease: "power1.in" });
 
-                // Gradually increase spin
                 sharinganSpinSpeed = 0.005;
                 gsap.to({ val: 0.005 }, {
-                    val: 0.2,
+                    val: 0.25,
                     duration: 10,
                     onUpdate: function () { sharinganSpinSpeed = this.targets()[0].val; }
                 });
@@ -249,19 +273,16 @@ function initThreeGenjutsu() {
             duration: 0.5,
             ease: "power2.inOut",
             onComplete: () => {
-                // Stop music
                 gsap.to(genjutsuMusic, { volume: 0, duration: 1, onComplete: () => genjutsuMusic.pause() });
 
                 setTimeout(() => {
-                    // Open eyes for the boom moment
                     gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 0.15, ease: "expo.out" });
 
-                    // Violent impact shake
                     gsap.to(camera.position, {
-                        x: "+=8",
-                        y: "+=3",
+                        x: "+=12",
+                        y: "+=5",
                         duration: 0.05,
-                        repeat: 20,
+                        repeat: 25,
                         yoyo: true
                     });
 
@@ -291,7 +312,7 @@ function initThreeGenjutsu() {
         document.body.appendChild(videoContainer);
         const video = document.createElement('video');
         video.src = 'assets/itachi_sharingan.mp4';
-        video.muted = false; // Allow sound for the epic ending if needed
+        video.muted = false;
         video.autoplay = true;
         video.className = 'cinematic-video-small';
         videoContainer.appendChild(video);
