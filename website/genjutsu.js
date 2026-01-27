@@ -57,9 +57,9 @@ function initThreeGenjutsu() {
         }
     }, 2000);
 
-    // --- Terrain ---
+    // --- Terrain & Walls ---
     const pathWidth = 8;
-    const pathLength = 2000; // Longer path
+    const pathLength = 3000;
     const groundGeo = new THREE.PlaneGeometry(pathWidth, pathLength, 1, 100);
     const groundMat = new THREE.MeshLambertMaterial({ color: 0x110000 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
@@ -67,20 +67,38 @@ function initThreeGenjutsu() {
     ground.position.z = -pathLength / 2 + 50;
     scene.add(ground);
 
+    // Red Walls (Narrow narrow feel)
+    const wallHeight = 150;
+    const wallGeo = new THREE.PlaneGeometry(pathLength, wallHeight);
+    const wallMat = new THREE.MeshLambertMaterial({ color: 0x440000, side: THREE.DoubleSide });
+
+    const leftWall = new THREE.Mesh(wallGeo, wallMat);
+    leftWall.rotation.y = Math.PI / 2;
+    leftWall.position.set(-pathWidth / 2, wallHeight / 2, -pathLength / 2 + 50);
+    scene.add(leftWall);
+
+    const rightWall = new THREE.Mesh(wallGeo, wallMat);
+    rightWall.rotation.y = -Math.PI / 2;
+    rightWall.position.set(pathWidth / 2, wallHeight / 2, -pathLength / 2 + 50);
+    scene.add(rightWall);
+
+    // Fog for depth
+    scene.fog = new THREE.FogExp2(0x110000, 0.003);
+
     // --- SHARINGAN ---
     const texLoader = new THREE.TextureLoader();
     const sharinganTex = texLoader.load('assets/sharingan.png');
-    const sharinganGeo = new THREE.PlaneGeometry(15, 15);
+    const sharinganGeo = new THREE.PlaneGeometry(60, 60);
     const sharinganMat = new THREE.MeshBasicMaterial({
         map: sharinganTex,
         transparent: true,
         side: THREE.DoubleSide,
-        depthTest: false
+        depthWrite: false,
+        opacity: 0 // Fade in manually
     });
     const sharingan = new THREE.Mesh(sharinganGeo, sharinganMat);
-    sharingan.position.set(0, 80, 0); // Zenith
+    sharingan.position.set(0, 300, -50);
     sharingan.rotation.x = Math.PI / 2;
-    sharingan.scale.set(0.01, 0.01, 0.01);
     sharingan.visible = false;
     scene.add(sharingan);
 
@@ -196,26 +214,31 @@ function initThreeGenjutsu() {
 
         // Forced Lookup to Zenith
         gsap.to(camera.rotation, {
-            x: Math.PI / 2,
+            x: Math.PI / 2.1, // Look up at the zenith
             y: 0,
             z: 0,
-            duration: 4,
+            duration: 5,
             ease: "power2.inOut",
+            onStart: () => {
+                sharingan.visible = true;
+                gsap.to(sharinganMat, { opacity: 1, duration: 3 });
+            },
             onComplete: () => {
                 // Sharingan starts spinning and growing
-                gsap.to(sharingan.scale, { x: 5, y: 5, z: 5, duration: 8, ease: "sine.inOut" });
-                gsap.to(sharingan.position, { y: 20, duration: 8, ease: "sine.inOut" });
+                gsap.to(sharingan.scale, { x: 8, y: 8, z: 1, duration: 12, ease: "sine.inOut" });
+                gsap.to(sharingan.position, { y: 100, z: -20, duration: 12, ease: "power1.in" });
 
                 // Gradually increase spin
-                gsap.to({ val: 0 }, {
-                    val: 0.05,
-                    duration: 6,
+                sharinganSpinSpeed = 0.005;
+                gsap.to({ val: 0.005 }, {
+                    val: 0.2,
+                    duration: 10,
                     onUpdate: function () { sharinganSpinSpeed = this.targets()[0].val; }
                 });
 
                 setTimeout(() => {
                     blinkAndEpicZoom();
-                }, 6000);
+                }, 10000);
             }
         });
     }
