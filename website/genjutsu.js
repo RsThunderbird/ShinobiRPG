@@ -203,8 +203,7 @@ function initThreeGenjutsu() {
         }
 
         if (blackhole) {
-            // No orbit, just rotation on its own axis when triggered
-            blackhole.rotation.y += bhSpinSpeed;
+            // Static variant as requested - no spin
         }
 
         renderer.render(scene, camera);
@@ -241,8 +240,6 @@ function initThreeGenjutsu() {
             duration: 3,
             ease: "power2.inOut",
             onComplete: () => {
-                // Blackhole starts spinning
-                bhSpinSpeed = 0.02;
                 setTimeout(() => {
                     blinkAndEpicZoom();
                 }, 2000);
@@ -263,10 +260,10 @@ function initThreeGenjutsu() {
                     if (blackhole) {
                         // "change its width" -> Scale up dramatically but not engulfing
                         // "dont bring it down" -> Keep Y at 40000, far at Z -50000
-                        // Scale 3x instead of 10x as requested
-                        blackhole.scale.set(3, 3, 3);
+                        // Scale 10x as requested
+                        blackhole.scale.set(10, 10, 10);
                         blackhole.position.set(0, 4000000, 0);
-                        bhSpinSpeed = 0.1; // Spin much faster
+                        // bhSpinSpeed removed - static variant
                     }
 
                     // 4. Snap Eyes Open (BOOM MOMENT)
