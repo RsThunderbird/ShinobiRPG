@@ -4,11 +4,11 @@ function initThreeGenjutsu() {
 
     container.innerHTML = '';
 
-    // --- SETUP SCENE (HELLISH RED) ---
+    // --- SETUP SCENE ---
     const scene = new THREE.Scene();
     scene.background = null;
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 100000000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true
@@ -25,10 +25,10 @@ function initThreeGenjutsu() {
         renderer.domElement.requestPointerLock();
     });
 
-    // Lights (Reddish Tint)
-    const ambientLight = new THREE.AmbientLight(0xff3333, 0.4);
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xff3333, 0.5);
     scene.add(ambientLight);
-    const spotLight = new THREE.SpotLight(0xff0000, 1.2);
+    const spotLight = new THREE.SpotLight(0xff0000, 1.5);
     spotLight.position.set(0, 50, 0);
     scene.add(spotLight);
 
@@ -40,71 +40,63 @@ function initThreeGenjutsu() {
     gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 4, ease: 'power2.inOut' });
     gsap.to(storyContainer, { filter: 'blur(0px)', duration: 5 });
 
+    // Background Music with Fade In
+    const genjutsuMusic = new Audio('assets/genjutsubg.mp3');
+    genjutsuMusic.currentTime = 25;
+    genjutsuMusic.volume = 0;
+    genjutsuMusic.loop = true;
+    genjutsuMusic.play().catch(e => console.log("Audio play failed:", e));
+    gsap.to(genjutsuMusic, { volume: 0.5, duration: 4 });
+
     setTimeout(() => {
         if (typeof showNarrative === 'function') {
             showNarrative("Where the heck am i..?");
         }
+        if (typeof showNotification === 'function') {
+            showNotification("Quest: Reach the end of this narrow path");
+        }
     }, 2000);
 
-    // --- Terrain (Narrower Feel) ---
+    // --- Terrain ---
     const pathWidth = 8;
-    const pathLength = 600;
+    const pathLength = 2000; // Longer path
     const groundGeo = new THREE.PlaneGeometry(pathWidth, pathLength, 1, 100);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x110000 }); // Reddish black ground
+    const groundMat = new THREE.MeshLambertMaterial({ color: 0x110000 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
-    ground.position.z = -pathLength / 2;
+    ground.position.z = -pathLength / 2 + 50;
     scene.add(ground);
 
-    // --- FBX BLACKHOLE ---
-    const fbxLoader = new THREE.FBXLoader();
-    fbxLoader.setResourcePath('assets/textures/');
-    let blackhole;
-    let bhOrbitAngle = 0;
-
-    fbxLoader.load('assets/testbhole.fbx', (object) => {
-        blackhole = object;
-        // Positioned at the zenith (centre of the sky) - 100x higher (4,000,000)
-        blackhole.position.set(0, 4000000, 0);
-        // Initial scale at 10x because it's so high up (4,000,000)
-        blackhole.scale.set(10, 10, 10);
-        blackhole.rotation.set(0, 0, 0);
-
-        // MATERIAL CLEANUP
-        blackhole.traverse((child) => {
-            if (child.isMesh) {
-                const fixMat = (m) => {
-                    return new THREE.MeshBasicMaterial({
-                        map: m.map,
-                        color: 0xffffff,
-                        transparent: true,
-                        opacity: m.opacity || 1,
-                        side: THREE.DoubleSide
-                    });
-                };
-                if (Array.isArray(child.material)) {
-                    child.material = child.material.map(fixMat);
-                } else {
-                    child.material = fixMat(child.material);
-                }
-            }
-        });
-        scene.add(blackhole);
+    // --- SHARINGAN ---
+    const texLoader = new THREE.TextureLoader();
+    const sharinganTex = texLoader.load('assets/sharingan.png');
+    const sharinganGeo = new THREE.PlaneGeometry(15, 15);
+    const sharinganMat = new THREE.MeshBasicMaterial({
+        map: sharinganTex,
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthTest: false
     });
+    const sharingan = new THREE.Mesh(sharinganGeo, sharinganMat);
+    sharingan.position.set(0, 80, 0); // Zenith
+    sharingan.rotation.x = Math.PI / 2;
+    sharingan.scale.set(0.01, 0.01, 0.01);
+    sharingan.visible = false;
+    scene.add(sharingan);
 
     // --- Cinematic Flow ---
     let moveF = false;
     let currentSpeed = 0;
     let cameraShake = new THREE.Vector3();
-    const baseSpeed = 2.0; // Slowed down for "walking" feel (was 2.0)
+    const baseSpeed = 2.0;
     const playerHeight = 2.2;
-    let yaw = 0, pitch = 0;
+    let pitch = 0;
 
     let cutsceneStarted = false;
     let lookingUp = false;
     let finished = false;
-    let bhSpinSpeed = 0;
-    let distanceWalked = 0; // Track actual distance traveled
+    let sharinganSpinSpeed = 0;
+    let distanceWalked = 0;
 
     camera.position.set(0, playerHeight, 0);
 
@@ -119,20 +111,17 @@ function initThreeGenjutsu() {
 
     document.addEventListener('mousemove', (e) => {
         if (document.pointerLockElement === renderer.domElement && !cutsceneStarted) {
-            // LOCK YAW (Force straight line) - Disable mouse X
-            // yaw -= e.movementX * 0.002; 
-
-            // Allow slight pitch look (up/down) but restricted
             pitch -= e.movementY * 0.002;
             pitch = Math.max(-0.6, Math.min(0.6, pitch));
         }
     });
 
     function animate() {
+        if (finished) return;
         requestAnimationFrame(animate);
 
         const time = Date.now() * 0.001;
-        // More violent shake & sway for "drunken" feel
+
         cameraShake.set(
             Math.sin(time * 7) * 0.12,
             Math.cos(time * 6) * 0.12,
@@ -142,7 +131,6 @@ function initThreeGenjutsu() {
         const swayZ = Math.sin(time * 0.3) * 0.2;
 
         if (!cutsceneStarted) {
-            // "Unresponsive" inertia-based movement
             if (moveF) {
                 currentSpeed = THREE.MathUtils.lerp(currentSpeed, baseSpeed, 0.03);
             } else {
@@ -153,11 +141,10 @@ function initThreeGenjutsu() {
             camera.position.x += driftX * (currentSpeed / baseSpeed);
             camera.position.x *= 0.98;
 
-            // Track actual distance walked
             distanceWalked += currentSpeed;
 
-            // REACHED THE POINT -> TRIGGER CUTSCENE (after walking 10 meters)
-            if (distanceWalked >= 10) {
+            // REACHED 100 METERS
+            if (distanceWalked >= 100) {
                 triggerCutscene();
             }
         }
@@ -167,17 +154,13 @@ function initThreeGenjutsu() {
         camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.15;
 
         if (!lookingUp) {
-            // Rotation has a drunken sway (Erratic)
-            // We ignore mouse yaw to force "walking in a straight line"
             const erraticYaw = Math.sin(time * 2.5) * 0.08 + Math.cos(time * 4.2) * 0.04;
             const erraticPitch = pitch + Math.sin(time * 3) * 0.03;
-
             camera.rotation.set(erraticPitch, erraticYaw, swayZ + driftX, 'YXZ');
         }
 
-        if (blackhole) {
-            // No orbit, just rotation on its own axis when triggered
-            blackhole.rotation.y += bhSpinSpeed;
+        if (sharingan && sharingan.visible) {
+            sharingan.rotation.z += sharinganSpinSpeed;
         }
 
         renderer.render(scene, camera);
@@ -190,13 +173,16 @@ function initThreeGenjutsu() {
         moveF = false;
         currentSpeed = 0;
 
-        console.log("[GENJUTSU] Triggering dialogue before lookup.");
-
-        // Pause for effectiveness before looking up
         setTimeout(() => {
             if (typeof showNarrative === 'function') {
-                showNarrative("What's going on??", [
-                    { text: "...", action: () => startForcedLookup() }
+                showNarrative("I feel like im about to..", [
+                    {
+                        text: "...", action: () => {
+                            showNarrative("What's going on?", [
+                                { text: "...", action: () => startForcedLookup() }
+                            ]);
+                        }
+                    }
                 ]);
             } else {
                 startForcedLookup();
@@ -206,65 +192,60 @@ function initThreeGenjutsu() {
 
     function startForcedLookup() {
         lookingUp = true;
-        // 1. Forced Lookup Animation
+        sharingan.visible = true;
+
+        // Forced Lookup to Zenith
         gsap.to(camera.rotation, {
-            x: Math.PI / 2, // Look straight up at the zenith
+            x: Math.PI / 2,
             y: 0,
             z: 0,
-            duration: 3,
+            duration: 4,
             ease: "power2.inOut",
             onComplete: () => {
-                // Blackhole starts spinning
-                bhSpinSpeed = 0.02;
+                // Sharingan starts spinning and growing
+                gsap.to(sharingan.scale, { x: 5, y: 5, z: 5, duration: 8, ease: "sine.inOut" });
+                gsap.to(sharingan.position, { y: 20, duration: 8, ease: "sine.inOut" });
+
+                // Gradually increase spin
+                gsap.to({ val: 0 }, {
+                    val: 0.05,
+                    duration: 6,
+                    onUpdate: function () { sharinganSpinSpeed = this.targets()[0].val; }
+                });
+
                 setTimeout(() => {
                     blinkAndEpicZoom();
-                }, 2000);
+                }, 6000);
             }
         });
     }
 
     function blinkAndEpicZoom() {
-        // 2. The Blink (Close Eyes) - 3 seconds closed as requested
         gsap.to([eyelidsTop, eyelidsBottom], {
             height: '50%',
             duration: 0.5,
             ease: "power2.inOut",
             onComplete: () => {
-                // Keep eyes closed for 3 seconds
-                setTimeout(() => {
-                    // 3. ZOOM BLACKHOLE EXTREMELY CLOSER while eyes are shut
-                    if (blackhole) {
-                        // "change its width" -> Scale up dramatically but not engulfing
-                        // "dont bring it down" -> Keep Y at 40000, far at Z -50000
-                        // Scale 100x as requested - since it's at 4,000,000 height
-                        blackhole.scale.set(100, 100, 100);
-                        blackhole.position.set(0, 4000000, 0);
-                        bhSpinSpeed = 0.1; // Spin much faster
-                    }
+                // Stop music
+                gsap.to(genjutsuMusic, { volume: 0, duration: 1, onComplete: () => genjutsuMusic.pause() });
 
-                    // 4. Snap Eyes Open (BOOM MOMENT)
+                setTimeout(() => {
+                    // Open eyes for the boom moment
                     gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 0.15, ease: "expo.out" });
 
                     // Violent impact shake
                     gsap.to(camera.position, {
-                        x: "+=6",
-                        y: "+=2.5",
+                        x: "+=8",
+                        y: "+=3",
                         duration: 0.05,
-                        repeat: 15,
+                        repeat: 20,
                         yoyo: true
                     });
 
-                    // Dialogue "Oh god..."
                     setTimeout(() => {
-                        if (typeof showNarrative === 'function') {
-                            showNarrative("Oh god...", [
-                                { text: "...", action: () => finishGenjutsu() }
-                            ]);
-                        } else {
-                            finishGenjutsu();
-                        }
-                    }, 1500);
-                }, 3000);
+                        finishGenjutsu();
+                    }, 1000);
+                }, 1500);
             }
         });
     }
@@ -272,7 +253,7 @@ function initThreeGenjutsu() {
     function finishGenjutsu() {
         gsap.to([eyelidsTop, eyelidsBottom], {
             height: '50%',
-            duration: 1.5,
+            duration: 1.0,
             ease: "power2.inOut",
             onComplete: () => {
                 finished = true;
@@ -287,12 +268,18 @@ function initThreeGenjutsu() {
         document.body.appendChild(videoContainer);
         const video = document.createElement('video');
         video.src = 'assets/itachi_sharingan.mp4';
-        video.muted = true;
+        video.muted = false; // Allow sound for the epic ending if needed
         video.autoplay = true;
         video.className = 'cinematic-video-small';
         videoContainer.appendChild(video);
+
         video.onended = () => {
-            gsap.to(videoContainer, { opacity: 0, duration: 1, onComplete: () => { videoContainer.remove(); showAkatsukiBanner(); } });
+            gsap.to(videoContainer, {
+                opacity: 0, duration: 1, onComplete: () => {
+                    videoContainer.remove();
+                    showAkatsukiBanner();
+                }
+            });
         };
     }
 
