@@ -306,6 +306,23 @@ html {
     object-fit: cover;
 }
 
+.post-cinematic-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    animation: pulseGlow 2s infinite alternate;
+}
+
+@keyframes pulseGlow {
+    from {
+        filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.5));
+    }
+
+    to {
+        filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.8));
+    }
+}
+
 #vines-canvas {
     position: absolute;
     top: 0;

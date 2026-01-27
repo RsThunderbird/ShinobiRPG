@@ -62,7 +62,7 @@ function initThreeGenjutsu() {
     canvas.width = 512;
     canvas.height = 4096;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#0a0a0a'; // Darker path
+    ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.strokeStyle = '#990000';
@@ -145,7 +145,7 @@ function initThreeGenjutsu() {
         opacity: 0
     });
     const sharingan = new THREE.Mesh(sharinganGeo, sharinganMat);
-    sharingan.position.set(0, 500, -150);
+    sharingan.position.set(0, 400, -150); // Fixed initial Y to avoid 'yeeting' up
     sharingan.rotation.x = Math.PI / 2;
     sharingan.visible = false;
     scene.add(sharingan);
@@ -154,7 +154,7 @@ function initThreeGenjutsu() {
     let moveF = false;
     let currentSpeed = 0;
     let cameraShake = new THREE.Vector3();
-    const baseSpeed = 2.5;
+    const baseSpeed = 0.6; // Slowed down by ~75% (was 2.5)
     const playerHeight = 2.2;
     let pitch = 0;
 
@@ -165,11 +165,11 @@ function initThreeGenjutsu() {
     let distanceWalked = 0;
 
     const dialogues = [
-        { dist: 50, text: "Where's Zoro?" },
-        { dist: 100, text: "Did i die?" },
-        { dist: 150, text: "This place is giving me creeps." },
-        { dist: 200, text: "I think i just saw a human skull..." },
-        { dist: 250, text: "WHAT WAS THAT?" }
+        { dist: 40, text: "Where's Zoro?" },
+        { dist: 80, text: "Did i die?" },
+        { dist: 120, text: "This place is giving me creeps." },
+        { dist: 160, text: "I think i just saw a human skull..." },
+        { dist: 200, text: "WHAT WAS THAT?" }
     ];
     let nextDialogueIdx = 0;
 
@@ -197,13 +197,14 @@ function initThreeGenjutsu() {
 
         const time = Date.now() * 0.001;
 
+        // More erratic camera shake (increased intensity)
         cameraShake.set(
-            Math.sin(time * 7) * 0.12,
-            Math.cos(time * 6) * 0.12,
-            Math.sin(time * 5) * 0.10
+            Math.sin(time * 8) * 0.22,
+            Math.cos(time * 7) * 0.22,
+            Math.sin(time * 6) * 0.18
         );
-        const driftX = Math.sin(time * 0.5) * 0.18;
-        const swayZ = Math.sin(time * 0.3) * 0.25;
+        const driftX = Math.sin(time * 0.7) * 0.35;
+        const swayZ = Math.sin(time * 0.5) * 0.45;
 
         if (!cutsceneStarted) {
             if (moveF) {
@@ -213,6 +214,7 @@ function initThreeGenjutsu() {
             }
 
             camera.position.z -= currentSpeed;
+            // More erratic straight-line movement drift
             camera.position.x += driftX * (currentSpeed / baseSpeed);
             camera.position.x *= 0.98;
 
@@ -226,7 +228,6 @@ function initThreeGenjutsu() {
                 }
                 nextDialogueIdx++;
 
-                // If it's the last one, trigger cutscene
                 if (nextDialogueIdx === dialogues.length) {
                     setTimeout(() => {
                         triggerCutscene();
@@ -237,18 +238,17 @@ function initThreeGenjutsu() {
 
         const actualPos = camera.position.clone();
         camera.position.add(cameraShake);
-        camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.18;
+        camera.position.y = playerHeight + Math.sin(time * 2.0) * 0.3; // More erratic bobbing
 
         if (!lookingUp) {
-            const erraticYaw = Math.sin(time * 2.5) * 0.08 + Math.cos(time * 4.2) * 0.04;
-            const erraticPitch = pitch + Math.sin(time * 3) * 0.03;
+            const erraticYaw = Math.sin(time * 3.5) * 0.15 + Math.cos(time * 5.2) * 0.08;
+            const erraticPitch = pitch + Math.sin(time * 4) * 0.05;
             camera.rotation.set(erraticPitch, erraticYaw, swayZ + driftX, 'YXZ');
         }
 
         if (sharingan && sharingan.visible) {
             sharingan.rotation.z += sharinganSpinSpeed;
-            // Pulsing effect
-            const pulse = 1 + Math.sin(time * 2) * 0.05;
+            const pulse = 1 + Math.sin(time * 3) * 0.08;
             sharingan.scale.x *= pulse;
             sharingan.scale.y *= pulse;
         }
@@ -288,12 +288,13 @@ function initThreeGenjutsu() {
                 gsap.to(sharinganMat, { opacity: 1, duration: 4 });
             },
             onComplete: () => {
+                // Fixed: Start growing and descending from the already established Y=400
                 gsap.to(sharingan.scale, { x: 12, y: 12, z: 1, duration: 15, ease: "sine.inOut" });
                 gsap.to(sharingan.position, { y: 50, z: -30, duration: 15, ease: "power1.in" });
 
                 sharinganSpinSpeed = 0.005;
                 gsap.to({ val: 0.005 }, {
-                    val: 0.3,
+                    val: 0.35,
                     duration: 12,
                     onUpdate: function () { sharinganSpinSpeed = this.targets()[0].val; }
                 });
@@ -311,16 +312,18 @@ function initThreeGenjutsu() {
             duration: 0.5,
             ease: "power2.inOut",
             onComplete: () => {
+                // Stop music and hide sharingan to prevent clipping issues
                 gsap.to(genjutsuMusic, { volume: 0, duration: 1, onComplete: () => genjutsuMusic.pause() });
+                sharingan.visible = false;
 
                 setTimeout(() => {
                     gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 0.15, ease: "expo.out" });
 
                     gsap.to(camera.position, {
-                        x: "+=15",
-                        y: "+=6",
+                        x: "+=20",
+                        y: "+=8",
                         duration: 0.05,
-                        repeat: 30,
+                        repeat: 40,
                         yoyo: true
                     });
 
@@ -350,34 +353,41 @@ function initThreeGenjutsu() {
         document.body.appendChild(videoContainer);
         const video = document.createElement('video');
         video.src = 'assets/itachi_sharingan.mp4';
-        video.muted = true; // MUST BE MUTED
+        video.muted = true;
         video.autoplay = true;
         video.className = 'cinematic-video-small';
         videoContainer.appendChild(video);
 
         video.onended = () => {
-            gsap.to(videoContainer, {
-                opacity: 0, duration: 1, onComplete: () => {
-                    videoContainer.remove();
-                    showAkatsukiBanner();
-                }
-            });
+            // New: Display post-video image
+            video.remove();
+            const postImg = document.createElement('img');
+            postImg.src = 'https://i.postimg.cc/SN28MYFj/image.png';
+            postImg.className = 'post-cinematic-image';
+            videoContainer.appendChild(postImg);
+
+            setTimeout(() => {
+                gsap.to(videoContainer, {
+                    opacity: 0, duration: 1.5, onComplete: () => {
+                        videoContainer.remove();
+                        // Final eye shut
+                        gsap.to([eyelidsTop, eyelidsBottom], {
+                            height: '50%',
+                            duration: 1,
+                            onComplete: () => showAkatsukiBanner()
+                        });
+                    }
+                });
+            }, 2000);
         };
     }
 
     function showAkatsukiBanner() {
         const banner = document.createElement('div');
         banner.className = 'akatsuki-banner';
-        banner.innerHTML = `<div class="banner-content"><h1>PREPARE FOR THE UPCOMING EVENT</h1><h2 class="akatsuki-text">AKATSUKI</h2></div>`;
+        banner.innerHTML = `<div class="banner-content"><h1>GENJUTSU COMPLETE</h1><h2 class="akatsuki-text">Done! You can now continue on discord.</h2></div>`;
         document.body.appendChild(banner);
         gsap.from(".banner-content", { y: 50, opacity: 0, duration: 2, ease: "power3.out" });
-        setTimeout(() => {
-            if (typeof showNarrative === 'function') {
-                showNarrative("The genjutsu fades... but the darkness remains.", [
-                    { text: "Return to Menu", action: () => window.location.href = 'index.html' }
-                ]);
-            }
-        }, 5000);
     }
 
     animate();
