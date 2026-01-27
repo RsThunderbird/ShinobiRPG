@@ -67,6 +67,7 @@ function initThreeForest() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.innerHTML = ''; // Clear previous stage (Cave/Prestory)
     container.appendChild(renderer.domElement);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
@@ -573,6 +574,7 @@ function initThreeForest() {
     }
 
     function animate() {
+        if (window.currentStage !== 'forest') return;
         requestAnimationFrame(animate);
         const delta = Math.min(clock.getDelta(), 0.1);
 
@@ -643,7 +645,7 @@ function initThreeForest() {
                 showNarrative("Find the Watchtower. A strange warrior is waiting there.", [{ text: "Look around", action: () => { } }]);
             }
         });
-    }, 4000);
+    }, 1500);
 
     document.addEventListener('mousemove', (e) => { if (document.pointerLockElement === renderer.domElement) { yaw -= e.movementX * 0.002; pitch -= e.movementY * 0.002; pitch = Math.max(-1.4, Math.min(1.4, pitch)); } });
 

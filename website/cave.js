@@ -150,6 +150,7 @@ function initThreeCave() {
     }
 
     function animate() {
+        if (window.currentStage !== 'cave') return;
         requestAnimationFrame(animate);
         const delta = 0.016; // approx
 

@@ -192,6 +192,7 @@ function initThreeGenjutsu() {
     });
 
     function animate() {
+        if (window.currentStage !== 'genjutsu') return;
         if (finished) return;
         requestAnimationFrame(animate);
 
@@ -383,7 +384,7 @@ function initThreeGenjutsu() {
     function showAkatsukiBanner() {
         const banner = document.createElement('div');
         banner.className = 'akatsuki-banner';
-        banner.innerHTML = `<div class="banner-content"><h1>GENJUTSU COMPLETE</h1><h2 class="akatsuki-text">Done! You can now continue on discord.</h2></div>`;
+        banner.innerHTML = `<div class="banner-content"><h1> COMPLETE</h1><h2 class="akatsuki-text">Done! You can now continue on discord.</h2></div>`;
         document.body.appendChild(banner);
         gsap.from(".banner-content", { y: 50, opacity: 0, duration: 2, ease: "power3.out" });
     }

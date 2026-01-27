@@ -39,6 +39,7 @@ function init() {
 }
 
 function startPrestoryStage() {
+    window.currentStage = 'prestory';
     // 1. Hide Overlays
     const startScreen = document.getElementById('start-screen');
     if (startScreen) startScreen.style.display = 'none';
@@ -72,6 +73,7 @@ function startPrestoryStage() {
 }
 
 function startForestStage() {
+    window.currentStage = 'forest';
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
 
@@ -99,6 +101,7 @@ function startForestStage() {
 }
 
 function startGenjutsuStage() {
+    window.currentStage = 'genjutsu';
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
     const genjutsuStage = document.getElementById('genjutsu-stage');
     if (genjutsuStage) genjutsuStage.classList.add('active');
@@ -159,6 +162,7 @@ function showNotification(text) {
 }
 
 function startBatsMinigame() {
+    window.currentStage = 'bats';
     document.getElementById('narrative-box').style.display = 'none';
     const stage = document.getElementById('bats-minigame');
     stage.classList.add('active');
@@ -195,6 +199,7 @@ function startBatsMinigame() {
 }
 
 function startVinesMinigame() {
+    window.currentStage = 'vines';
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
     const stage = document.getElementById('vines-stage');
     stage.classList.add('active');

@@ -192,6 +192,7 @@ function initPrestory() {
             })
             .to([eyelidsTop, eyelidsBottom], { height: '40%', duration: 0.5, repeat: 1, yoyo: true })
             .add(() => {
+                window.currentStage = 'cave';
                 if (typeof initThreeCave === 'function') {
                     initThreeCave();
                 }
@@ -200,6 +201,7 @@ function initPrestory() {
 
     // --- ANIMATION LOOP ---
     function animate() {
+        if (window.currentStage !== 'prestory') return;
         requestAnimationFrame(animate);
 
         if (canMove) {
