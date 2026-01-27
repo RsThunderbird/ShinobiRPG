@@ -6,15 +6,14 @@ function initThreeGenjutsu() {
 
     // --- SETUP SCENE (HELLISH RED) ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0000); // Almost black red
-    scene.fog = new THREE.FogExp2(0x2a0000, 0.00015);
+    scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 1000000);
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true
     });
-    renderer.setClearColor(0x0a0000, 1);
+    renderer.setClearColor(0x000000, 0);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
@@ -66,7 +65,7 @@ function initThreeGenjutsu() {
     fbxLoader.load('assets/blackhole.fbx', (object) => {
         blackhole = object;
         // Positioned in the "vacuum" but not at zenith
-        blackhole.position.set(0, 80000, -50000);
+        blackhole.position.set(0, 40000, -50000);
         blackhole.scale.set(0.1, 0.1, 0.1);
         blackhole.rotation.set(0, 0, 0);
 
@@ -244,7 +243,7 @@ function initThreeGenjutsu() {
                         // "dont bring it down" -> Keep Y at 40000, far at Z -50000
                         // Scale 10x instead of 15x so it grows but stays in distance
                         blackhole.scale.set(10, 10, 10);
-                        blackhole.position.set(0, 80000, -50000);
+                        blackhole.position.set(0, 40000, -50000);
                         bhSpinSpeed = 0.1; // Spin much faster
                     }
 
