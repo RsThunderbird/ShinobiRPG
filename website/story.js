@@ -33,13 +33,42 @@ function init() {
     const startBtn = document.getElementById('start-button');
     if (startBtn) {
         startBtn.onclick = () => {
-            startGenjutsuStage();
+            startPrestoryStage();
         };
     }
 }
 
+function startPrestoryStage() {
+    // Hide Start Screen
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.style.display = 'none';
+
+    // Show Story Container
+    const storyContainer = document.getElementById('story-container');
+    if (storyContainer) {
+        storyContainer.style.display = 'block';
+        storyContainer.classList.remove('hidden');
+    }
+
+    // Activate 3D Forest stage div (reusing it for 3D container)
+    document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+    const forestStage = document.getElementById('forest-stage');
+    if (forestStage) {
+        forestStage.classList.add('active');
+        // Hide loading screen initially
+        const loading = forestStage.querySelector('#loading-screen');
+        if (loading) loading.style.display = 'none';
+    }
+
+    if (typeof initPrestory === 'function') {
+        initPrestory();
+    } else {
+        console.error("initPrestory not found!");
+    }
+}
+
 function startForestStage() {
-    // 1. Hide the Start Screen and Cinematic/Blinking stages
+    // 1. Deactivate all screens
     const startScreen = document.getElementById('start-screen');
     if (startScreen) startScreen.style.display = 'none';
 
@@ -49,48 +78,43 @@ function startForestStage() {
     const eyeOverlay = document.getElementById('eye-blinking-overlay');
     if (eyeOverlay) eyeOverlay.style.display = 'none';
 
-    // 2. Ensure the Story Container is visible and unblurred
+    // 2. Ensure the Story Container is visible
     const storyContainer = document.getElementById('story-container');
     if (storyContainer) {
         storyContainer.style.display = 'block';
         storyContainer.classList.remove('blurred', 'hidden');
     }
 
-    // 3. Deactivate all other stages and modals
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
 
-    // 4. Activate the Forest Stage
     const forestStage = document.getElementById('forest-stage');
     if (forestStage) {
         forestStage.classList.add('active');
+        const loading = forestStage.querySelector('#loading-screen');
+        if (loading) loading.style.display = 'flex';
     }
 
-    // 5. Show Game UI (Compass, crosshair, etc.)
     const compass = document.getElementById('compass-container');
     if (compass) compass.style.display = 'flex';
     const crosshair = document.getElementById('crosshair');
     if (crosshair) crosshair.style.display = 'block';
 
-    // 6. Initialize the Three.js scene from forest.js
     if (typeof initThreeForest === 'function') {
         initThreeForest();
-    } else {
-        console.error("initThreeForest not found! Check if forest.js is loaded correctly.");
     }
 }
 
 function startGenjutsuStage() {
-    // Hide overlays
     const startScreen = document.getElementById('start-screen');
     if (startScreen) startScreen.style.display = 'none';
-    const cinematicStage = document.getElementById('cinematic-stage');
-    if (cinematicStage) cinematicStage.style.display = 'none';
-    const eyeOverlay = document.getElementById('eye-blinking-overlay');
-    if (eyeOverlay) eyeOverlay.style.display = 'block';
-    gsap.set(".eyelid", { height: "50%" }); // Force close them initially
 
-    // Show Story Container
+    const eyeOverlay = document.getElementById('eye-blinking-overlay');
+    if (eyeOverlay) {
+        eyeOverlay.style.display = 'block';
+        gsap.set(".eyelid", { height: "50%" });
+    }
+
     const storyContainer = document.getElementById('story-container');
     if (storyContainer) {
         storyContainer.style.display = 'block';
@@ -98,100 +122,19 @@ function startGenjutsuStage() {
     }
 
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
-    document.getElementById('genjutsu-stage').classList.add('active');
+    const genjutsuStage = document.getElementById('genjutsu-stage');
+    if (genjutsuStage) genjutsuStage.classList.add('active');
 
-    // Show HUD
     const compass = document.getElementById('compass-container');
     if (compass) compass.style.display = 'flex';
     const crosshair = document.getElementById('crosshair');
     if (crosshair) crosshair.style.display = 'block';
-
-    // Show HP Bar
-    const hpBar = document.getElementById('hp-bar-container');
-    if (hpBar) hpBar.classList.remove('hidden');
 
     if (typeof initThreeGenjutsu === 'function') {
         initThreeGenjutsu();
     }
 }
 
-function setupMobileFullScreen() {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-        document.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-                });
-            }
-        }, { once: true });
-    }
-}
-
-function startBlinkingAnimation() {
-    const tl = gsap.timeline();
-    const eyelidsTop = document.querySelector('.eyelid.top');
-    const eyelidsBottom = document.querySelector('.eyelid.bottom');
-    const storyContainer = document.getElementById('story-container');
-
-    tl.to([eyelidsTop, eyelidsBottom], { height: '35%', duration: 3, repeat: 2, yoyo: true, ease: 'power1.inOut' })
-        .to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 4, ease: 'power2.inOut' })
-        .to(storyContainer, { filter: 'blur(0px)', duration: 5 }, '-=2')
-        .add(() => {
-            showNarrative("You gradually open your eyes. You find yourself in the middle of a cave.", [
-                {
-                    text: "Look around", action: () => {
-                        showNarrative("To your left and right, the cave splits. Choose a tunnel.", []);
-                        setupCaveChoice();
-                    }
-                }
-            ]);
-        });
-}
-
-function setupCaveChoice() {
-    const leftExit = document.getElementById('exit-left');
-    const rightExit = document.getElementById('exit-right');
-    document.getElementById('cave-stage').classList.add('active');
-
-    leftExit.onclick = () => handleChoice('left');
-    rightExit.onclick = () => handleChoice('right');
-}
-
-function handleChoice(choice) {
-    if (choice === 'right') {
-        showNarrative("The right tunnel is a dead end. Retrace your steps.", [
-            { text: "Go Left", action: () => handleChoice('left') }
-        ]);
-    } else {
-        document.getElementById('narrative-box').style.display = 'none';
-        // Transition using the "walking forward" asset
-        const caveBg = document.getElementById('cave-bg');
-        gsap.to(caveBg, {
-            scale: 1.5, opacity: 0, duration: 2, onComplete: () => {
-                document.getElementById('cave-stage').classList.remove('active');
-                startBatsMinigame();
-            }
-        });
-    }
-}
-
-document.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 'e') {
-        const narrativeBox = document.getElementById('narrative-box');
-        if (narrativeBox && narrativeBox.style.display !== 'none') {
-            const button = narrativeBox.querySelector('button');
-            if (button) {
-                button.click();
-            } else {
-                narrativeBox.style.display = 'none';
-            }
-        }
-    }
-});
-
-window.showNarrative = showNarrative;
-window.showNotification = showNotification;
 function showNarrative(text, buttons = []) {
     const box = document.getElementById('narrative-box');
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -240,7 +183,7 @@ function startBatsMinigame() {
     stage.classList.add('active');
     const container = document.getElementById('bats-container');
     container.innerHTML = '';
-    let batsLeft = 20;
+    let batsLeft = 15;
 
     for (let i = 0; i < batsLeft; i++) {
         const bat = document.createElement('img');
@@ -275,16 +218,14 @@ function startVinesMinigame() {
     const stage = document.getElementById('vines-stage');
     stage.classList.add('active');
 
-    // Set background image
     const exitImg = document.getElementById('exit-img');
     if (exitImg) exitImg.src = assets.vinesMinigameBg;
 
-    // Use the vines image correctly
     const container = document.getElementById('vines-overlay-img-container');
     container.innerHTML = '';
 
     let vinesCleared = 0;
-    const totalVines = 12;
+    const totalVines = 10;
 
     for (let i = 0; i < totalVines; i++) {
         const vine = document.createElement('img');
@@ -317,3 +258,16 @@ function startVinesMinigame() {
     }
 }
 
+document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'e') {
+        const narrativeBox = document.getElementById('narrative-box');
+        if (narrativeBox && narrativeBox.style.display !== 'none') {
+            const button = narrativeBox.querySelector('button');
+            if (button) {
+                button.click();
+            } else {
+                narrativeBox.style.display = 'none';
+            }
+        }
+    }
+});

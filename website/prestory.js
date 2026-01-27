@@ -128,7 +128,7 @@ function initPrestory() {
     let itachiModel;
     const loader = new THREE.GLTFLoader();
 
-    window.startItachiEncounter = function() {
+    window.startItachiEncounter = function () {
         window.removeEventListener('click', onMouseClick);
         if (typeof showNotification === 'function') showNotification("Chores done. Something feels strange...");
 
@@ -153,43 +153,43 @@ function initPrestory() {
         const tl = gsap.timeline();
         // Turn around
         tl.to(camera.rotation, { y: Math.PI, duration: 2, ease: "power2.inOut" })
-          .add(() => {
-              // Start blurring
-              const storyContainer = document.getElementById('story-container');
-              gsap.to(storyContainer, { filter: 'blur(10px)', duration: 3 });
-          })
-          .to(camera.position, { y: 0.2, z: 12, duration: 2, ease: "power2.in" }, "+=1") // Falling
-          .add(() => {
-              // Eye blinking sequence
-              startBlinkingTransition();
-          });
+            .add(() => {
+                // Start blurring
+                const storyContainer = document.getElementById('story-container');
+                gsap.to(storyContainer, { filter: 'blur(10px)', duration: 3 });
+            })
+            .to(camera.position, { y: 0.2, z: 12, duration: 2, ease: "power2.in" }, "+=1") // Falling
+            .add(() => {
+                // Eye blinking sequence
+                startBlinkingTransition();
+            });
     }
 
     function startBlinkingTransition() {
-        const eyelidsTop = document.querySelector('.eyelid-top');
-        const eyelidsBottom = document.querySelector('.eyelid-bottom');
+        const eyelidsTop = document.querySelector('.eyelid.top');
+        const eyelidsBottom = document.querySelector('.eyelid.bottom');
         const eyeOverlay = document.getElementById('eye-blinking-overlay');
 
         if (eyeOverlay) eyeOverlay.style.display = 'block';
 
         const tl = gsap.timeline();
         tl.to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 1, ease: "power2.inOut" })
-          .to([eyelidsTop, eyelidsBottom], { height: '40%', duration: 0.5, repeat: 1, yoyo: true })
-          .to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 1 })
-          .add(() => {
-              // Move Itachi to stand over the user
-              itachiModel.position.set(camera.position.x, 0, camera.position.z + 1);
-              itachiModel.lookAt(camera.position.x, 0, camera.position.z);
-          })
-          .to([eyelidsTop, eyelidsBottom], { height: '45%', duration: 2, repeat: 1, yoyo: true })
-          .add(() => {
-              // Transition to cave
-              if (typeof initThreeCave === 'function') {
-                  initThreeCave();
-              } else {
-                  console.log("initThreeCave not found yet.");
-              }
-          });
+            .to([eyelidsTop, eyelidsBottom], { height: '40%', duration: 0.5, repeat: 1, yoyo: true })
+            .to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 1 })
+            .add(() => {
+                // Move Itachi to stand over the user
+                itachiModel.position.set(camera.position.x, 0, camera.position.z + 1);
+                itachiModel.lookAt(camera.position.x, 0, camera.position.z);
+            })
+            .to([eyelidsTop, eyelidsBottom], { height: '45%', duration: 2, repeat: 1, yoyo: true })
+            .add(() => {
+                // Transition to cave
+                if (typeof initThreeCave === 'function') {
+                    initThreeCave();
+                } else {
+                    console.log("initThreeCave not found yet.");
+                }
+            });
     }
 
     function animate() {

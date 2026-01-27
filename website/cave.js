@@ -184,10 +184,12 @@ function initThreeCave() {
         if (side === 'right') {
             if (typeof showNarrative === 'function') {
                 showNarrative("This path seems to be a dead end. Better go the other way.", [
-                    { text: "Go back", action: () => {
-                        camera.position.set(0, 1.6, 2);
-                        pathTriggered = false;
-                    }}
+                    {
+                        text: "Go back", action: () => {
+                            camera.position.set(0, 1.6, 2);
+                            pathTriggered = false;
+                        }
+                    }
                 ]);
             }
         } else {
@@ -195,11 +197,13 @@ function initThreeCave() {
             if (typeof showNarrative === 'function') {
                 showNarrative("You venture deeper into the left tunnel...", []);
             }
-            gsap.to(camera.position, { z: -20, duration: 3, onComplete: () => {
-                if (typeof startBatsMinigame === 'function') {
-                    startBatsMinigame();
+            gsap.to(camera.position, {
+                z: -20, duration: 3, onComplete: () => {
+                    if (typeof startBatsMinigame === 'function') {
+                        startBatsMinigame();
+                    }
                 }
-            }});
+            });
         }
     }
 
@@ -215,8 +219,8 @@ function initThreeCave() {
     });
 
     // Opening Blinking Animation (Integrated)
-    const eyelidsTop = document.querySelector('.eyelid-top');
-    const eyelidsBottom = document.querySelector('.eyelid-bottom');
+    const eyelidsTop = document.querySelector('.eyelid.top');
+    const eyelidsBottom = document.querySelector('.eyelid.bottom');
     const storyContainer = document.getElementById('story-container');
 
     gsap.timeline()
