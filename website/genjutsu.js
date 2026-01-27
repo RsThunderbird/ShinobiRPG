@@ -81,41 +81,45 @@ function initThreeGenjutsu() {
         // MATERIAL CLEANUP
         blackhole.traverse((child) => {
             if (child.isMesh) {
-                // HIDE ANY INTERIOR SKY BOXES/SPHERES IN THE MODEL
-                if (child.name.toLowerCase().includes('sky') || child.name.toLowerCase().includes('dome') || child.scale.x > 1000) {
-                    child.visible = false;
+                const name = child.name.toLowerCase();
+
+                // 1. VOID THE CORE: Any central spheres/planets/interior must be absolute black
+                if (name.includes('planet') || name.includes('sphere') || name.includes('core') || name.includes('center') || name.includes('interior')) {
+                    child.material = new THREE.MeshBasicMaterial({ color: 0x000000 });
                     return;
                 }
 
-                const fixMat = (m) => {
-                    let map = m.map;
-                    // Manual texture assignment if map is missing
-                    if (!map) {
-                        const name = child.name.toLowerCase();
-                        if (name.includes('ring')) map = bhTexs.ring;
-                        else if (name.includes('light1') || name.includes('light_1')) map = bhTexs.light1;
-                        else if (name.includes('light2') || name.includes('light_2')) map = bhTexs.light2;
-                        else if (name.includes('light3') || name.includes('light_3')) map = bhTexs.light3;
-                        else if (name.includes('planet')) map = bhTexs.planet;
-                        else if (name.includes('core')) map = bhTexs.light1; // fallback
-                    }
+                // 2. ENERGY LAYERS: Apply specific textures and blending
+                let texture = null;
+                let isLight = name.includes('light');
+                let isRing = name.includes('ring');
 
-                    return new THREE.MeshBasicMaterial({
-                        map: map,
-                        color: 0xffffff,
-                        fog: false,
-                        transparent: true,
-                        opacity: m.opacity || 1,
-                        side: THREE.DoubleSide
-                    });
-                };
-                if (Array.isArray(child.material)) {
-                    child.material = child.material.map(fixMat);
-                } else {
-                    child.material = fixMat(child.material);
+                if (isRing) {
+                    texture = bhTexs.ring;
+                } else if (isLight) {
+                    if (name.includes('2')) texture = bhTexs.light2;
+                    else if (name.includes('3')) texture = bhTexs.light3;
+                    else texture = bhTexs.light1;
                 }
+
+                child.material = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    color: texture ? 0xffffff : 0x000000,
+                    transparent: true,
+                    blending: isLight ? THREE.AdditiveBlending : THREE.NormalBlending,
+                    side: THREE.DoubleSide,
+                    opacity: 1,
+                    depthWrite: !isLight // Glow layers shouldn't block depth
+                });
             }
         });
+
+        // 3. MANUAL EVENT HORIZON: Ensure there is always a dark center
+        const coreGeo = new THREE.SphereGeometry(1500, 32, 32);
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const eventHorizon = new THREE.Mesh(coreGeo, coreMat);
+        blackhole.add(eventHorizon);
+
         scene.add(blackhole);
     });
 
