@@ -66,7 +66,8 @@ function initThreeGenjutsu() {
         blackhole = object;
         // Positioned at the zenith (centre of the sky) - 100x higher (4,000,000)
         blackhole.position.set(0, 4000000, 0);
-        blackhole.scale.set(1, 1, 1);
+        // Initial scale at 10x because it's so high up (4,000,000)
+        blackhole.scale.set(10, 10, 10);
         blackhole.rotation.set(0, 0, 0);
 
         // MATERIAL CLEANUP
@@ -235,8 +236,8 @@ function initThreeGenjutsu() {
                     if (blackhole) {
                         // "change its width" -> Scale up dramatically but not engulfing
                         // "dont bring it down" -> Keep Y at 40000, far at Z -50000
-                        // Scale 10x as requested
-                        blackhole.scale.set(10, 10, 10);
+                        // Scale 100x as requested - since it's at 4,000,000 height
+                        blackhole.scale.set(100, 100, 100);
                         blackhole.position.set(0, 4000000, 0);
                         bhSpinSpeed = 0.1; // Spin much faster
                     }
