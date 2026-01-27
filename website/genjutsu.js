@@ -62,64 +62,32 @@ function initThreeGenjutsu() {
     let blackhole;
     let bhOrbitAngle = 0;
 
-    fbxLoader.load('assets/blackhole.fbx', (object) => {
+    fbxLoader.load('assets/testbhole.fbx', (object) => {
         blackhole = object;
         // Positioned at the zenith (centre of the sky) - 100x higher (4,000,000)
         blackhole.position.set(0, 4000000, 0);
-        blackhole.scale.set(0.1, 0.1, 0.1);
+        blackhole.scale.set(1, 1, 1);
         blackhole.rotation.set(0, 0, 0);
-
-        const texLoader = new THREE.TextureLoader();
-        const bhTexs = {
-            ring: texLoader.load('assets/textures/blackholering_1_color.png'),
-            light1: texLoader.load('assets/textures/blackholelight_1_color.png'),
-            light2: texLoader.load('assets/textures/blackholelight_2_color.png'),
-            light3: texLoader.load('assets/textures/blackholelight_3_color.png'),
-            planet: texLoader.load('assets/textures/planet.png')
-        };
 
         // MATERIAL CLEANUP
         blackhole.traverse((child) => {
             if (child.isMesh) {
-                const name = child.name.toLowerCase();
-
-                // 1. VOID THE CORE: Any central spheres/planets/interior must be absolute black
-                if (name.includes('planet') || name.includes('sphere') || name.includes('core') || name.includes('center') || name.includes('interior')) {
-                    child.material = new THREE.MeshBasicMaterial({ color: 0x000000 });
-                    return;
+                const fixMat = (m) => {
+                    return new THREE.MeshBasicMaterial({
+                        map: m.map,
+                        color: 0xffffff,
+                        transparent: true,
+                        opacity: m.opacity || 1,
+                        side: THREE.DoubleSide
+                    });
+                };
+                if (Array.isArray(child.material)) {
+                    child.material = child.material.map(fixMat);
+                } else {
+                    child.material = fixMat(child.material);
                 }
-
-                // 2. ENERGY LAYERS: Apply specific textures and blending
-                let texture = null;
-                let isLight = name.includes('light');
-                let isRing = name.includes('ring');
-
-                if (isRing) {
-                    texture = bhTexs.ring;
-                } else if (isLight) {
-                    if (name.includes('2')) texture = bhTexs.light2;
-                    else if (name.includes('3')) texture = bhTexs.light3;
-                    else texture = bhTexs.light1;
-                }
-
-                child.material = new THREE.MeshBasicMaterial({
-                    map: texture,
-                    color: texture ? 0xffffff : 0x000000,
-                    transparent: true,
-                    blending: isLight ? THREE.AdditiveBlending : THREE.NormalBlending,
-                    side: THREE.DoubleSide,
-                    opacity: 1,
-                    depthWrite: !isLight // Glow layers shouldn't block depth
-                });
             }
         });
-
-        // 3. MANUAL EVENT HORIZON: Ensure there is always a dark center
-        const coreGeo = new THREE.SphereGeometry(1500, 32, 32);
-        const coreMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-        const eventHorizon = new THREE.Mesh(coreGeo, coreMat);
-        blackhole.add(eventHorizon);
-
         scene.add(blackhole);
     });
 
@@ -207,7 +175,8 @@ function initThreeGenjutsu() {
         }
 
         if (blackhole) {
-            // Static variant as requested - no spin
+            // No orbit, just rotation on its own axis when triggered
+            blackhole.rotation.y += bhSpinSpeed;
         }
 
         renderer.render(scene, camera);
@@ -225,7 +194,7 @@ function initThreeGenjutsu() {
         // Pause for effectiveness before looking up
         setTimeout(() => {
             if (typeof showNarrative === 'function') {
-                showNarrative("What's happening?", [
+                showNarrative("What's going on??", [
                     { text: "...", action: () => startForcedLookup() }
                 ]);
             } else {
@@ -244,6 +213,8 @@ function initThreeGenjutsu() {
             duration: 3,
             ease: "power2.inOut",
             onComplete: () => {
+                // Blackhole starts spinning
+                bhSpinSpeed = 0.02;
                 setTimeout(() => {
                     blinkAndEpicZoom();
                 }, 2000);
@@ -267,7 +238,7 @@ function initThreeGenjutsu() {
                         // Scale 10x as requested
                         blackhole.scale.set(10, 10, 10);
                         blackhole.position.set(0, 4000000, 0);
-                        // bhSpinSpeed removed - static variant
+                        bhSpinSpeed = 0.1; // Spin much faster
                     }
 
                     // 4. Snap Eyes Open (BOOM MOMENT)
