@@ -8,10 +8,10 @@ function initThreeGenjutsu() {
     const scene = new THREE.Scene();
     scene.background = null;
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 20000);
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
-        alpha: true // CRITICAL: Transparent sky
+        alpha: true
     });
     renderer.setClearColor(0x000000, 0);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -25,11 +25,11 @@ function initThreeGenjutsu() {
         renderer.domElement.requestPointerLock();
     });
 
-    // Lights (Dim red for mood)
-    const ambientLight = new THREE.AmbientLight(0x440000, 0.6);
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0x660000, 0.8);
     scene.add(ambientLight);
-    const pointLight = new THREE.PointLight(0xff0000, 1.2);
-    pointLight.position.set(0, 10, 0);
+    const pointLight = new THREE.PointLight(0xff3300, 2.0);
+    pointLight.position.set(0, 15, 0);
     scene.add(pointLight);
 
     // Initial eye opening animation
@@ -53,7 +53,7 @@ function initThreeGenjutsu() {
             showNarrative("Where the heck am i..?");
         }
         if (typeof showNotification === 'function') {
-            showNotification("Quest: Reach the end of this narrow path");
+            showNotification("Quest: Escape the Genjutsu");
         }
     }, 2000);
 
@@ -62,24 +62,22 @@ function initThreeGenjutsu() {
     canvas.width = 512;
     canvas.height = 4096;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#000000'; // Black path
+    ctx.fillStyle = '#0a0a0a'; // Darker path
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw Blood Trail
-    ctx.strokeStyle = '#880000';
-    ctx.lineWidth = 15;
+    ctx.strokeStyle = '#990000';
+    ctx.lineWidth = 20;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(canvas.width / 2, canvas.height);
-    for (let y = canvas.height; y > 0; y -= 20) {
-        let x = canvas.width / 2 + (Math.random() - 0.5) * 50;
+    for (let y = canvas.height; y > 0; y -= 15) {
+        let x = canvas.width / 2 + (Math.random() - 0.5) * 60;
         ctx.lineTo(x, y);
-        // Blood splatters
-        if (Math.random() > 0.7) {
-            ctx.fillStyle = '#660000';
+        if (Math.random() > 0.6) {
+            ctx.fillStyle = '#770000';
             ctx.beginPath();
-            ctx.arc(x + (Math.random() - 0.5) * 30, y, Math.random() * 15, 0, Math.PI * 2);
+            ctx.arc(x + (Math.random() - 0.5) * 40, y, Math.random() * 20, 0, Math.PI * 2);
             ctx.fill();
         }
     }
@@ -88,10 +86,13 @@ function initThreeGenjutsu() {
     const pathTex = new THREE.CanvasTexture(canvas);
     pathTex.wrapS = THREE.RepeatWrapping;
     pathTex.wrapT = THREE.RepeatWrapping;
+    pathTex.repeat.set(1, 10);
 
-    // --- Path ---
+    // --- Environment ---
     const pathWidth = 10;
-    const pathLength = 5000;
+    const pathLength = 10000;
+
+    // 1. Black Path
     const pathGeo = new THREE.PlaneGeometry(pathWidth, pathLength);
     const pathMat = new THREE.MeshLambertMaterial({ map: pathTex });
     const path = new THREE.Mesh(pathGeo, pathMat);
@@ -99,16 +100,35 @@ function initThreeGenjutsu() {
     path.position.z = -pathLength / 2 + 50;
     scene.add(path);
 
-    // --- ERRATIC RED MOUNTAINS (Small & Spiky) ---
-    const mountainGeo = new THREE.ConeGeometry(3, 15, 4);
-    const mountainMat = new THREE.MeshLambertMaterial({ color: 0x660000 });
-    for (let i = 0; i < 400; i++) {
+    // 2. Lava/Red Floors
+    const lavaGeo = new THREE.PlaneGeometry(2000, pathLength);
+    const lavaMat = new THREE.MeshLambertMaterial({
+        color: 0x990000,
+        emissive: 0x440000,
+        transparent: true,
+        opacity: 0.9
+    });
+
+    const leftLava = new THREE.Mesh(lavaGeo, lavaMat);
+    leftLava.rotation.x = -Math.PI / 2;
+    leftLava.position.set(-1000 - pathWidth / 2 - 50, -0.5, -pathLength / 2 + 50);
+    scene.add(leftLava);
+
+    const rightLava = new THREE.Mesh(lavaGeo, lavaMat);
+    rightLava.rotation.x = -Math.PI / 2;
+    rightLava.position.set(1000 + pathWidth / 2 + 50, -0.5, -pathLength / 2 + 50);
+    scene.add(rightLava);
+
+    // 3. Spikes/Mountains
+    const mountainGeo = new THREE.ConeGeometry(4, 18, 4);
+    const mountainMat = new THREE.MeshLambertMaterial({ color: 0x550000 });
+    for (let i = 0; i < 800; i++) {
         const m = new THREE.Mesh(mountainGeo, mountainMat);
         let side = Math.random() > 0.5 ? 1 : -1;
-        let x = (pathWidth / 2 + 5 + Math.random() * 40) * side;
+        let x = (pathWidth / 2 + 2 + Math.random() * 20) * side;
         let z = -Math.random() * pathLength + 50;
-        m.position.set(x, 0, z);
-        m.scale.set(1, Math.random() * 2 + 0.5, 1);
+        m.position.set(x, -2, z);
+        m.scale.set(1, Math.random() * 2.5 + 0.5, 1);
         m.rotation.y = Math.random() * Math.PI;
         scene.add(m);
     }
@@ -116,7 +136,7 @@ function initThreeGenjutsu() {
     // --- SHARINGAN ---
     const texLoader = new THREE.TextureLoader();
     const sharinganTex = texLoader.load('assets/sharingan.png');
-    const sharinganGeo = new THREE.PlaneGeometry(60, 60);
+    const sharinganGeo = new THREE.PlaneGeometry(70, 70);
     const sharinganMat = new THREE.MeshBasicMaterial({
         map: sharinganTex,
         transparent: true,
@@ -125,7 +145,7 @@ function initThreeGenjutsu() {
         opacity: 0
     });
     const sharingan = new THREE.Mesh(sharinganGeo, sharinganMat);
-    sharingan.position.set(0, 400, -100);
+    sharingan.position.set(0, 500, -150);
     sharingan.rotation.x = Math.PI / 2;
     sharingan.visible = false;
     scene.add(sharingan);
@@ -134,7 +154,7 @@ function initThreeGenjutsu() {
     let moveF = false;
     let currentSpeed = 0;
     let cameraShake = new THREE.Vector3();
-    const baseSpeed = 2.0;
+    const baseSpeed = 2.5;
     const playerHeight = 2.2;
     let pitch = 0;
 
@@ -143,6 +163,15 @@ function initThreeGenjutsu() {
     let finished = false;
     let sharinganSpinSpeed = 0;
     let distanceWalked = 0;
+
+    const dialogues = [
+        { dist: 50, text: "Where's Zoro?" },
+        { dist: 100, text: "Did i die?" },
+        { dist: 150, text: "This place is giving me creeps." },
+        { dist: 200, text: "I think i just saw a human skull..." },
+        { dist: 250, text: "WHAT WAS THAT?" }
+    ];
+    let nextDialogueIdx = 0;
 
     camera.position.set(0, playerHeight, 0);
 
@@ -171,10 +200,10 @@ function initThreeGenjutsu() {
         cameraShake.set(
             Math.sin(time * 7) * 0.12,
             Math.cos(time * 6) * 0.12,
-            Math.sin(time * 5) * 0.08
+            Math.sin(time * 5) * 0.10
         );
-        const driftX = Math.sin(time * 0.5) * 0.15;
-        const swayZ = Math.sin(time * 0.3) * 0.2;
+        const driftX = Math.sin(time * 0.5) * 0.18;
+        const swayZ = Math.sin(time * 0.3) * 0.25;
 
         if (!cutsceneStarted) {
             if (moveF) {
@@ -189,14 +218,26 @@ function initThreeGenjutsu() {
 
             distanceWalked += currentSpeed;
 
-            if (distanceWalked >= 100) {
-                triggerCutscene();
+            // Dialogue checkpoints
+            if (nextDialogueIdx < dialogues.length && distanceWalked >= dialogues[nextDialogueIdx].dist) {
+                const diag = dialogues[nextDialogueIdx];
+                if (typeof showNarrative === 'function') {
+                    showNarrative(diag.text);
+                }
+                nextDialogueIdx++;
+
+                // If it's the last one, trigger cutscene
+                if (nextDialogueIdx === dialogues.length) {
+                    setTimeout(() => {
+                        triggerCutscene();
+                    }, 2000);
+                }
             }
         }
 
         const actualPos = camera.position.clone();
         camera.position.add(cameraShake);
-        camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.15;
+        camera.position.y = playerHeight + Math.sin(time * 1.5) * 0.18;
 
         if (!lookingUp) {
             const erraticYaw = Math.sin(time * 2.5) * 0.08 + Math.cos(time * 4.2) * 0.04;
@@ -206,6 +247,10 @@ function initThreeGenjutsu() {
 
         if (sharingan && sharingan.visible) {
             sharingan.rotation.z += sharinganSpinSpeed;
+            // Pulsing effect
+            const pulse = 1 + Math.sin(time * 2) * 0.05;
+            sharingan.scale.x *= pulse;
+            sharingan.scale.y *= pulse;
         }
 
         renderer.render(scene, camera);
@@ -220,49 +265,42 @@ function initThreeGenjutsu() {
 
         setTimeout(() => {
             if (typeof showNarrative === 'function') {
-                showNarrative("I feel like im about to..", [
-                    {
-                        text: "...", action: () => {
-                            showNarrative("What's going on?", [
-                                { text: "...", action: () => startForcedLookup() }
-                            ]);
-                        }
-                    }
+                showNarrative("What's going on?", [
+                    { text: "Look up", action: () => startForcedLookup() }
                 ]);
             } else {
                 startForcedLookup();
             }
-        }, 1500);
+        }, 1000);
     }
 
     function startForcedLookup() {
         lookingUp = true;
 
-        // Forced Lookup to Zenith
         gsap.to(camera.rotation, {
             x: Math.PI / 2.1,
             y: 0,
             z: 0,
-            duration: 5,
+            duration: 6,
             ease: "power2.inOut",
             onStart: () => {
                 sharingan.visible = true;
-                gsap.to(sharinganMat, { opacity: 1, duration: 3 });
+                gsap.to(sharinganMat, { opacity: 1, duration: 4 });
             },
             onComplete: () => {
-                gsap.to(sharingan.scale, { x: 10, y: 10, z: 1, duration: 12, ease: "sine.inOut" });
-                gsap.to(sharingan.position, { y: 60, z: -20, duration: 12, ease: "power1.in" });
+                gsap.to(sharingan.scale, { x: 12, y: 12, z: 1, duration: 15, ease: "sine.inOut" });
+                gsap.to(sharingan.position, { y: 50, z: -30, duration: 15, ease: "power1.in" });
 
                 sharinganSpinSpeed = 0.005;
                 gsap.to({ val: 0.005 }, {
-                    val: 0.25,
-                    duration: 10,
+                    val: 0.3,
+                    duration: 12,
                     onUpdate: function () { sharinganSpinSpeed = this.targets()[0].val; }
                 });
 
                 setTimeout(() => {
                     blinkAndEpicZoom();
-                }, 10000);
+                }, 12000);
             }
         });
     }
@@ -279,16 +317,16 @@ function initThreeGenjutsu() {
                     gsap.to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 0.15, ease: "expo.out" });
 
                     gsap.to(camera.position, {
-                        x: "+=12",
-                        y: "+=5",
+                        x: "+=15",
+                        y: "+=6",
                         duration: 0.05,
-                        repeat: 25,
+                        repeat: 30,
                         yoyo: true
                     });
 
                     setTimeout(() => {
                         finishGenjutsu();
-                    }, 1000);
+                    }, 1500);
                 }, 1500);
             }
         });
@@ -312,7 +350,7 @@ function initThreeGenjutsu() {
         document.body.appendChild(videoContainer);
         const video = document.createElement('video');
         video.src = 'assets/itachi_sharingan.mp4';
-        video.muted = false;
+        video.muted = true; // MUST BE MUTED
         video.autoplay = true;
         video.className = 'cinematic-video-small';
         videoContainer.appendChild(video);
