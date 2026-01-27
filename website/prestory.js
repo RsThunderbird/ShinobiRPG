@@ -1,25 +1,26 @@
 /**
- * prestory.js - Automatic cutscene and wood-cutting minigame
+ * prestory.js - First-person backyard intro with wood-cutting task
  */
 
 function initPrestory() {
-    const container = document.getElementById('three-container'); // Reusing the same container
+    const container = document.getElementById('three-container');
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    container.innerHTML = '';
 
     // --- SETUP SCENE ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87ceeb); // Sky blue
-    scene.fog = new THREE.FogExp2(0x87ceeb, 0.01);
+    scene.background = new THREE.Color(0x87ceeb); // Bright backyard sky
+    scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.2));
     renderer.shadowMap.enabled = true;
-    container.innerHTML = ''; // Clear container
     container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
     const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
@@ -27,122 +28,133 @@ function initPrestory() {
     sunLight.castShadow = true;
     scene.add(sunLight);
 
-    // --- BACKYARD ENVIRONMENT ---
-    // Grass
-    const groundGeo = new THREE.PlaneGeometry(100, 100);
+    // --- ENVIRONMENT ---
+    const groundGeo = new THREE.PlaneGeometry(200, 200);
     const groundMat = new THREE.MeshLambertMaterial({ color: 0x3d7a32 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Simple House
-    const houseGroup = new THREE.Group();
-    const houseBase = new THREE.Mesh(new THREE.BoxGeometry(8, 5, 8), new THREE.MeshLambertMaterial({ color: 0x8b4513 }));
-    houseBase.position.y = 2.5;
-    houseBase.castShadow = true;
-    houseGroup.add(houseBase);
-
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(7, 4, 4), new THREE.MeshLambertMaterial({ color: 0x4a2b10 }));
-    roof.position.y = 7;
+    // House
+    const house = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(10, 6, 10), new THREE.MeshLambertMaterial({ color: 0x8b4513 }));
+    body.position.y = 3;
+    house.add(body);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(8, 5, 4), new THREE.MeshLambertMaterial({ color: 0x4a2b10 }));
+    roof.position.y = 8.5;
     roof.rotation.y = Math.PI / 4;
-    houseGroup.add(roof);
-
-    houseGroup.position.set(-15, 0, -10);
-    scene.add(houseGroup);
+    house.add(roof);
+    house.position.set(-20, 0, -15);
+    scene.add(house);
 
     // Fence
-    for (let i = -20; i < 20; i += 2) {
+    for (let i = -30; i < 30; i += 2) {
         const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.5, 0.2), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
-        post.position.set(i, 0.75, -20);
+        post.position.set(i, 0.75, -25);
         scene.add(post);
-        if (i < 18) {
-            const rail = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.1), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
-            rail.position.set(i + 1, 1.2, -20);
-            scene.add(rail);
-        }
     }
 
-    // Well
-    const well = new THREE.Group();
-    const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 1, 8), new THREE.MeshLambertMaterial({ color: 0x777777 }));
-    wellBase.position.y = 0.5;
-    well.add(wellBase);
-    well.position.set(10, 0, -5);
-    scene.add(well);
-
-    // --- WOOD CUTTING MINIGAME ---
+    // --- WOOD CUTTING SETUP ---
     const logsGroup = new THREE.Group();
     scene.add(logsGroup);
-
     let logsToCut = 3;
     let cutCount = 0;
 
-    function spawnLog(index) {
+    function spawnLog(x, z) {
         const logGroup = new THREE.Group();
-        const log = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 1, 8), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
-        log.rotation.z = Math.PI / 2;
-        log.position.y = 0.3;
-        logGroup.add(log);
+        const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.2, 8), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
+        cylinder.rotation.z = Math.PI / 2;
+        cylinder.position.y = 0.4;
+        logGroup.add(cylinder);
 
-        // Highlight area (simple sphere/marker)
-        const highlight = new THREE.Mesh(new THREE.SphereGeometry(0.15), new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.8 }));
-        highlight.position.set((Math.random() - 0.5) * 0.6, 0.3, (Math.random() - 0.5) * 0.6);
+        const highlight = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.7 }));
+        highlight.position.set(0, 0.6, 0);
         highlight.userData.isHighlight = true;
         logGroup.add(highlight);
 
-        logGroup.position.set(index * 2, 0, 5);
+        logGroup.position.set(x, 0, z);
         logsGroup.add(logGroup);
     }
 
-    for (let i = 0; i < logsToCut; i++) spawnLog(i);
+    spawnLog(0, -5);
+    spawnLog(4, -6);
+    spawnLog(-4, -4);
 
-    camera.position.set(0, 1.6, 10);
-    camera.lookAt(0, 1, 5);
+    // --- MOVEMENT CONTROLS ---
+    let moveF = false, moveB = false, moveL = false, moveR = false, canMove = true;
+    let yaw = 0, pitch = 0;
+    const velocity = new THREE.Vector3();
+    const playerHeight = 2.0;
 
-    // --- RAYCASTER FOR CLICKS ---
+    camera.position.set(0, playerHeight, 5);
+
+    const onKeyDown = (e) => {
+        if (!canMove) return;
+        switch (e.code) {
+            case 'KeyW': moveF = true; break;
+            case 'KeyS': moveB = true; break;
+            case 'KeyA': moveL = true; break;
+            case 'KeyD': moveR = true; break;
+        }
+    };
+    const onKeyUp = (e) => {
+        switch (e.code) {
+            case 'KeyW': moveF = false; break;
+            case 'KeyS': moveB = false; break;
+            case 'KeyA': moveL = false; break;
+            case 'KeyD': moveR = false; break;
+        }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+
+    document.addEventListener('mousemove', (e) => {
+        if (document.pointerLockElement === renderer.domElement && canMove) {
+            yaw -= e.movementX * 0.002;
+            pitch -= e.movementY * 0.002;
+            pitch = Math.max(-1.4, Math.min(1.4, pitch));
+        }
+    });
+
+    renderer.domElement.addEventListener('click', () => {
+        if (!document.pointerLockElement) {
+            renderer.domElement.requestPointerLock();
+        } else {
+            performAction();
+        }
+    });
+
     const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    function onMouseClick(event) {
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-
+    function performAction() {
+        if (!canMove) return;
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
         const intersects = raycaster.intersectObjects(logsGroup.children, true);
-        if (intersects.length > 0) {
-            const hit = intersects.find(i => i.object.userData.isHighlight);
-            if (hit) {
-                hit.object.visible = false;
-                hit.object.userData.isHighlight = false;
-                cutCount++;
-                if (cutCount === logsToCut) {
-                    startItachiEncounter();
-                }
+        const hit = intersects.find(i => i.object.userData.isHighlight);
+        if (hit && hit.object.visible) {
+            hit.object.visible = false;
+            cutCount++;
+            if (typeof showNotification === 'function') showNotification(`Log cut (${cutCount}/${logsToCut})`);
+            if (cutCount === logsToCut) {
+                startItachiEncounter();
             }
         }
     }
-    window.addEventListener('click', onMouseClick);
 
     // --- ITACHI ENCOUNTER ---
     let itachiModel;
-    const loader = new THREE.GLTFLoader();
-
-    window.startItachiEncounter = function () {
-        window.removeEventListener('click', onMouseClick);
+    function startItachiEncounter() {
+        canMove = false;
+        moveF = moveB = moveL = moveR = false;
         if (typeof showNotification === 'function') showNotification("Chores done. Something feels strange...");
 
-        loader.load('assets/itachi.glb', (gltf) => {
+        const gltfLoader = new THREE.GLTFLoader();
+        gltfLoader.load('assets/itachi.glb', (gltf) => {
             itachiModel = gltf.scene;
-            // Scale to ~2m
-            const box = new THREE.Box3().setFromObject(itachiModel);
-            const size = box.getSize(new THREE.Vector3());
-            const scaleFactor = 2 / (size.y || 1);
-            itachiModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
-
-            // Place behind the user
-            itachiModel.position.set(0, 0, 15);
-            itachiModel.rotation.y = Math.PI;
+            itachiModel.scale.set(1.5, 1.5, 1.5);
+            // Behind player
+            itachiModel.position.set(camera.position.x, 0, camera.position.z + 5);
+            itachiModel.lookAt(camera.position.x, 0, camera.position.z);
             scene.add(itachiModel);
 
             setTimeout(triggerTurnAround, 2000);
@@ -151,56 +163,78 @@ function initPrestory() {
 
     function triggerTurnAround() {
         const tl = gsap.timeline();
-        // Turn around
+        // Force turn around to face Itachi
         tl.to(camera.rotation, { y: Math.PI, duration: 2, ease: "power2.inOut" })
             .add(() => {
-                // Start blurring
                 const storyContainer = document.getElementById('story-container');
-                gsap.to(storyContainer, { filter: 'blur(10px)', duration: 3 });
+                if (storyContainer) gsap.to(storyContainer, { filter: 'blur(10px)', duration: 3 });
             })
-            .to(camera.position, { y: 0.2, z: 12, duration: 2, ease: "power2.in" }, "+=1") // Falling
+            .to(camera.position, { y: 0.2, z: camera.position.z + 1, duration: 2, ease: "power2.in" }, "+=1")
             .add(() => {
-                // Eye blinking sequence
                 startBlinkingTransition();
             });
     }
 
     function startBlinkingTransition() {
+        const eyeOverlay = document.getElementById('eye-blinking-overlay');
         const eyelidsTop = document.querySelector('.eyelid.top');
         const eyelidsBottom = document.querySelector('.eyelid.bottom');
-        const eyeOverlay = document.getElementById('eye-blinking-overlay');
 
         if (eyeOverlay) eyeOverlay.style.display = 'block';
 
-        const tl = gsap.timeline();
-        tl.to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 1, ease: "power2.inOut" })
-            .to([eyelidsTop, eyelidsBottom], { height: '40%', duration: 0.5, repeat: 1, yoyo: true })
-            .to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 1 })
+        gsap.timeline()
+            .to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 1.5, ease: "power2.inOut" })
             .add(() => {
-                // Move Itachi to stand over the user
-                itachiModel.position.set(camera.position.x, 0, camera.position.z + 1);
-                itachiModel.lookAt(camera.position.x, 0, camera.position.z);
+                // Move Itachi to stand right over the user
+                if (itachiModel) {
+                    itachiModel.position.set(camera.position.x, 0, camera.position.z - 0.5);
+                }
             })
-            .to([eyelidsTop, eyelidsBottom], { height: '45%', duration: 2, repeat: 1, yoyo: true })
+            .to([eyelidsTop, eyelidsBottom], { height: '40%', duration: 0.5, repeat: 1, yoyo: true })
             .add(() => {
-                // Transition to cave
                 if (typeof initThreeCave === 'function') {
                     initThreeCave();
-                } else {
-                    console.log("initThreeCave not found yet.");
                 }
             });
     }
 
+    // --- ANIMATION LOOP ---
     function animate() {
         requestAnimationFrame(animate);
+
+        if (canMove) {
+            const delta = 0.016;
+            const speed = 0.15;
+            const dir = new THREE.Vector3();
+            camera.getWorldDirection(dir);
+            dir.y = 0; dir.normalize();
+            const side = new THREE.Vector3().crossVectors(camera.up, dir).normalize();
+
+            const move = new THREE.Vector3();
+            if (moveF) move.add(dir);
+            if (moveB) move.addScaledVector(dir, -1);
+            if (moveL) move.add(side);
+            if (moveR) move.addScaledVector(side, -1);
+
+            if (move.length() > 0) {
+                camera.position.addScaledVector(move.normalize(), speed);
+            }
+            camera.rotation.set(pitch, yaw, 0, 'YXZ');
+        }
+
         renderer.render(scene, camera);
     }
     animate();
 
-    // Initial instruction
+    // Resize handler
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
     setTimeout(() => {
-        if (typeof showNarrative === 'function') showNarrative("Finish your chores. Cut the wood logs.", []);
+        if (typeof showNarrative === 'function') showNarrative("Finish your chores. Cut the wood logs with your axe (Click to Interact).", []);
     }, 1000);
 }
 

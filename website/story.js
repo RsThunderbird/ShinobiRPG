@@ -39,52 +39,39 @@ function init() {
 }
 
 function startPrestoryStage() {
-    // Hide Start Screen
+    // 1. Hide Overlays
     const startScreen = document.getElementById('start-screen');
     if (startScreen) startScreen.style.display = 'none';
 
-    // Show Story Container
+    // 2. Show Story Container
     const storyContainer = document.getElementById('story-container');
     if (storyContainer) {
         storyContainer.style.display = 'block';
-        storyContainer.classList.remove('hidden');
+        storyContainer.classList.remove('hidden', 'blurred');
     }
 
-    // Activate 3D Forest stage div (reusing it for 3D container)
+    // 3. Clear all stages and activate Forest Stage (for the Three.js container)
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
     const forestStage = document.getElementById('forest-stage');
     if (forestStage) {
         forestStage.classList.add('active');
-        // Hide loading screen initially
         const loading = forestStage.querySelector('#loading-screen');
         if (loading) loading.style.display = 'none';
     }
 
+    // 4. Show HUD
+    const compass = document.getElementById('compass-container');
+    if (compass) compass.style.display = 'none'; // No compass in backyard
+    const crosshair = document.getElementById('crosshair');
+    if (crosshair) crosshair.style.display = 'block';
+
+    // 5. Init Prestory
     if (typeof initPrestory === 'function') {
         initPrestory();
-    } else {
-        console.error("initPrestory not found!");
     }
 }
 
 function startForestStage() {
-    // 1. Deactivate all screens
-    const startScreen = document.getElementById('start-screen');
-    if (startScreen) startScreen.style.display = 'none';
-
-    const cinematicStage = document.getElementById('cinematic-stage');
-    if (cinematicStage) cinematicStage.style.display = 'none';
-
-    const eyeOverlay = document.getElementById('eye-blinking-overlay');
-    if (eyeOverlay) eyeOverlay.style.display = 'none';
-
-    // 2. Ensure the Story Container is visible
-    const storyContainer = document.getElementById('story-container');
-    if (storyContainer) {
-        storyContainer.style.display = 'block';
-        storyContainer.classList.remove('blurred', 'hidden');
-    }
-
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
 
@@ -93,6 +80,12 @@ function startForestStage() {
         forestStage.classList.add('active');
         const loading = forestStage.querySelector('#loading-screen');
         if (loading) loading.style.display = 'flex';
+    }
+
+    const storyContainer = document.getElementById('story-container');
+    if (storyContainer) {
+        storyContainer.style.display = 'block';
+        storyContainer.classList.remove('blurred', 'hidden');
     }
 
     const compass = document.getElementById('compass-container');
@@ -106,24 +99,12 @@ function startForestStage() {
 }
 
 function startGenjutsuStage() {
-    const startScreen = document.getElementById('start-screen');
-    if (startScreen) startScreen.style.display = 'none';
-
-    const eyeOverlay = document.getElementById('eye-blinking-overlay');
-    if (eyeOverlay) {
-        eyeOverlay.style.display = 'block';
-        gsap.set(".eyelid", { height: "50%" });
-    }
-
-    const storyContainer = document.getElementById('story-container');
-    if (storyContainer) {
-        storyContainer.style.display = 'block';
-        storyContainer.classList.remove('blurred', 'hidden');
-    }
-
     document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
     const genjutsuStage = document.getElementById('genjutsu-stage');
     if (genjutsuStage) genjutsuStage.classList.add('active');
+
+    const eyeOverlay = document.getElementById('eye-blinking-overlay');
+    if (eyeOverlay) eyeOverlay.style.display = 'block';
 
     const compass = document.getElementById('compass-container');
     if (compass) compass.style.display = 'flex';
@@ -183,7 +164,7 @@ function startBatsMinigame() {
     stage.classList.add('active');
     const container = document.getElementById('bats-container');
     container.innerHTML = '';
-    let batsLeft = 15;
+    let batsLeft = 10;
 
     for (let i = 0; i < batsLeft; i++) {
         const bat = document.createElement('img');
