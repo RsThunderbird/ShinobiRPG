@@ -64,10 +64,19 @@ function initThreeGenjutsu() {
 
     fbxLoader.load('assets/blackhole.fbx', (object) => {
         blackhole = object;
-        // Positioned in the "vacuum" but not at zenith
-        blackhole.position.set(0, 40000, -50000);
+        // Positioned at the zenith (centre of the sky)
+        blackhole.position.set(0, 40000, 0);
         blackhole.scale.set(0.1, 0.1, 0.1);
         blackhole.rotation.set(0, 0, 0);
+
+        const texLoader = new THREE.TextureLoader();
+        const bhTexs = {
+            ring: texLoader.load('assets/textures/blackholering_1_color.png'),
+            light1: texLoader.load('assets/textures/blackholelight_1_color.png'),
+            light2: texLoader.load('assets/textures/blackholelight_2_color.png'),
+            light3: texLoader.load('assets/textures/blackholelight_3_color.png'),
+            planet: texLoader.load('assets/textures/planet.png')
+        };
 
         // MATERIAL CLEANUP
         blackhole.traverse((child) => {
@@ -79,12 +88,25 @@ function initThreeGenjutsu() {
                 }
 
                 const fixMat = (m) => {
+                    let map = m.map;
+                    // Manual texture assignment if map is missing
+                    if (!map) {
+                        const name = child.name.toLowerCase();
+                        if (name.includes('ring')) map = bhTexs.ring;
+                        else if (name.includes('light1') || name.includes('light_1')) map = bhTexs.light1;
+                        else if (name.includes('light2') || name.includes('light_2')) map = bhTexs.light2;
+                        else if (name.includes('light3') || name.includes('light_3')) map = bhTexs.light3;
+                        else if (name.includes('planet')) map = bhTexs.planet;
+                        else if (name.includes('core')) map = bhTexs.light1; // fallback
+                    }
+
                     return new THREE.MeshBasicMaterial({
-                        map: m.map,
+                        map: map,
                         color: 0xffffff,
-                        fog: false, // ENSURE IT IGNORES ANY GLOBAL FOG (even though we removed it)
+                        fog: false,
                         transparent: true,
-                        opacity: m.opacity || 1
+                        opacity: m.opacity || 1,
+                        side: THREE.DoubleSide
                     });
                 };
                 if (Array.isArray(child.material)) {
@@ -200,7 +222,7 @@ function initThreeGenjutsu() {
         // Pause for effectiveness before looking up
         setTimeout(() => {
             if (typeof showNarrative === 'function') {
-                showNarrative("What's going on??", [
+                showNarrative("What's happening?", [
                     { text: "...", action: () => startForcedLookup() }
                 ]);
             } else {
@@ -213,7 +235,7 @@ function initThreeGenjutsu() {
         lookingUp = true;
         // 1. Forced Lookup Animation
         gsap.to(camera.rotation, {
-            x: Math.PI / 3, // Look up at the blackhole
+            x: Math.PI / 2, // Look straight up at the zenith
             y: 0,
             z: 0,
             duration: 3,
@@ -241,9 +263,9 @@ function initThreeGenjutsu() {
                     if (blackhole) {
                         // "change its width" -> Scale up dramatically but not engulfing
                         // "dont bring it down" -> Keep Y at 40000, far at Z -50000
-                        // Scale 10x instead of 15x so it grows but stays in distance
-                        blackhole.scale.set(10, 10, 10);
-                        blackhole.position.set(0, 40000, -50000);
+                        // Scale 3x instead of 10x as requested
+                        blackhole.scale.set(3, 3, 3);
+                        blackhole.position.set(0, 40000, 0);
                         bhSpinSpeed = 0.1; // Spin much faster
                     }
 
