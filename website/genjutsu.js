@@ -154,7 +154,7 @@ function initThreeGenjutsu() {
     let moveF = false;
     let currentSpeed = 0;
     let cameraShake = new THREE.Vector3();
-    const baseSpeed = 0.6; // Slowed down by ~75% (was 2.5)
+    const baseSpeed = 0.25; // Reduced by ~90% (from 2.5)
     const playerHeight = 2.2;
     let pitch = 0;
 
@@ -248,9 +248,7 @@ function initThreeGenjutsu() {
 
         if (sharingan && sharingan.visible) {
             sharingan.rotation.z += sharinganSpinSpeed;
-            const pulse = 1 + Math.sin(time * 3) * 0.08;
-            sharingan.scale.x *= pulse;
-            sharingan.scale.y *= pulse;
+            // Removed cumulative pulse to fix the 'bouncing' bug
         }
 
         renderer.render(scene, camera);
