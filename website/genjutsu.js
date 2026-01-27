@@ -8,7 +8,7 @@ function initThreeGenjutsu() {
     const scene = new THREE.Scene();
     scene.background = null;
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 1000000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 100000000);
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true
@@ -64,8 +64,8 @@ function initThreeGenjutsu() {
 
     fbxLoader.load('assets/blackhole.fbx', (object) => {
         blackhole = object;
-        // Positioned at the zenith (centre of the sky)
-        blackhole.position.set(0, 40000, 0);
+        // Positioned at the zenith (centre of the sky) - 100x higher (4,000,000)
+        blackhole.position.set(0, 4000000, 0);
         blackhole.scale.set(0.1, 0.1, 0.1);
         blackhole.rotation.set(0, 0, 0);
 
@@ -265,7 +265,7 @@ function initThreeGenjutsu() {
                         // "dont bring it down" -> Keep Y at 40000, far at Z -50000
                         // Scale 3x instead of 10x as requested
                         blackhole.scale.set(3, 3, 3);
-                        blackhole.position.set(0, 40000, 0);
+                        blackhole.position.set(0, 4000000, 0);
                         bhSpinSpeed = 0.1; // Spin much faster
                     }
 
