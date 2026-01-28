@@ -41,6 +41,31 @@ let advectionProgram, divergenceProgram, curlProgram, vorticityProgram;
 let pressureProgram, gradienSubtractProgram, displayMaterial;
 let blit;
 
+function isMobile() {
+    return /Mobi|Android/i.test(navigator.userAgent);
+}
+
+function generateColor() {
+    let c = HSVtoRGB(Math.random(), 1.0, 1.0);
+    c.r *= 0.15;
+    c.g *= 0.15;
+    c.b *= 0.15;
+    return c;
+}
+
+function pointerPrototype() {
+    this.id = -1;
+    this.texcoordX = 0;
+    this.texcoordY = 0;
+    this.prevTexcoordX = 0;
+    this.prevTexcoordY = 0;
+    this.deltaX = 0;
+    this.deltaY = 0;
+    this.down = false;
+    this.moved = false;
+    this.color = [30, 0, 300];
+}
+
 // Use a self-invoking function to avoid global pollution and ensure order
 function initFluid() {
     canvas = document.getElementById('fluid-canvas') || document.getElementsByTagName('canvas')[0];
@@ -90,53 +115,6 @@ function initFluid() {
         SUNRAYS_WEIGHT: 1.0,
         SOUND_SENSITIVITY: 0.25,
         FREQ_RANGE: 8,
-    }
-
-    // Random splat timer removed
-    var _runRandom = false;
-    var _isSleep = false;
-    function randomSplat() {
-        if (_runRandom == true && _isSleep == false)
-            splatStack.push(parseInt(Math.random() * 20) + 5);
-    }
-
-    document.addEventListener("visibilitychange", function () {
-        _isSleep = document.hidden;
-    }, false);
-
-    function multipleSplats(amount) {
-        for (let i = 0; i < amount; i++) {
-            const color = config.COLORFUL ? generateColor() : Object.assign({}, config.POINTER_COLOR.getRandom());
-            color.r *= 10.0;
-            color.g *= 10.0;
-            color.b *= 10.0;
-            const x = canvas.width * Math.random();
-            const y = canvas.height * Math.random();
-            const dx = 1000 * (Math.random() - 0.5);
-            const dy = 1000 * (Math.random() - 0.5);
-            splat(x, y, dx, dy, color);
-        }
-    }
-
-    function generateColor() {
-        let c = HSVtoRGB(Math.random(), 1.0, 1.0);
-        c.r *= 0.15;
-        c.g *= 0.15;
-        c.b *= 0.15;
-        return c;
-    }
-
-    function pointerPrototype() {
-        this.id = -1;
-        this.texcoordX = 0;
-        this.texcoordY = 0;
-        this.prevTexcoordX = 0;
-        this.prevTexcoordY = 0;
-        this.deltaX = 0;
-        this.deltaY = 0;
-        this.down = false;
-        this.moved = false;
-        this.color = [30, 0, 300];
     }
 
     pointers = [];
@@ -325,9 +303,7 @@ function initFluid() {
             gui.close();
     }
 
-    function isMobile() {
-        return /Mobi|Android/i.test(navigator.userAgent);
-    }
+
 
     function captureScreenshot() {
         let res = getResolution(config.CAPTURE_RESOLUTION);
