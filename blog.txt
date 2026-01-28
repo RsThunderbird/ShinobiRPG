@@ -1,0 +1,282 @@
+Dev Notes - The First.
+New 
+Trials is now live.
+Trade command created, check it out it's pretty fun
+Commands: Mentor, Scroll select no longer need the right case to be able to select things.
+Train command up and running
+Ranked command is live, just ignore the bugged profile.
+
+Changes
+Previously, to rank up you must win battles in order to rank up. The new system is different. Your rank is determined by your ELO which is earned through ranked against real players. Ranked has its own ladder offering rewards, check with /ranked rewards
+ADMINS can no longer abuse inf money glitch from /gift money 🤣
+
+Upcoming
+Ranked will be fixed, eventually.
+Brand new lore added to scrolls since the current one is lame
+Profile is getting changed. Non-donators will have a lame no color profile. Donators, Legendary Ninja have their own colored themes whereas Jinchuriiki get to choose from 5 different themes. That's not it. Profile will have several pages Including a very important one; ranked profile. Yes This is where all you can flex all that no life grinding. We don't have our own ranked badges..yet. We will, eventually.
+Bloodlines are COming
+Whatever the bug fixes
+
+2nd: 
+UPDATES
+/jutsu added
+/jutsuinfo added
+/tutorial command updated
+Server now has a small chance to randomly spawn loot, be active.
+
+3rd:
+The random drop event drops the following:
+1 money
+10k money
+100k money
+ramen(random)
+secret combo
+100 SS ultra rare
+
+4th:
+I've added a new command /event particularly for you beta testers. This command shows the concept of how future "Premium Spins" are gonna be as well as gives ya'll acess to every jutsu in the game. I recommend spinning 1 jutsu at once to avoid clutters in your gift inventory. Test all the jutsus and report bugs. 
+There's 2 new untested things in tutorial command as well, check for errors and bug exploits. People can possibly just claim the ramen and wait for the command to expire and do it all over again.
+Trials now drop jutsus.
+Aranks now scale based on your level and give HELLA money. i got 200k from 5 battles :pepesmile: 
+
+UPCOMING
+We've designed our own lore and plan on releasing a story mode soon, it's pretty intresting. 
+Ranked mode is being changed; your opponents who were users are now replaced by NPC's to skip wait timers on ranked. The ranked gamemode will feature a series of battles including a storyline to make it more dark and intresting.
+Scroll command is getting a godly update. Players can learn the "Asukkys Blade of Execution"(which is broken asf btw) by completing some stories, quests and missions. It's gonna be quite the grind though.
+Soon the bot will be listed on official platforms like top.gg which marks the "release" of the bot, so hype it up!
+
+Also lmk all the errors 🙏 we're also short on active mods and admins so if anyone's willing to step up lmk
+
+5th:
+Hi :pepesmile: 
+Live now on the official version
+Completely revamped leveling system: Now you just accumulate exp from doing missions and spend that exp to level up.
+Bloodlines added.
+Scrolls command completely revamped: Added dungeons, 4 different npcs' with their own questlines, changed how you learn jutsus from scrolls and many scrolls and other rewards obtainable in dungeons.
+F-rank mission added: Low cooldown grinding command
+Sranks updated with original lore.
+Ranked now has two modes: NPC vs user and user vs user.
+Custom Jutsu added to the shop
+*Tutorial command has been updated with all the new stuff and also when you finish the tutorial, you'll see something very cool. This cool thing will be used in the future 
+
+What's next? after a few more changes to the rewards and making sure everything is working properly, I'll consider the bot officially released and run some ads for more people. 
+Upcoming Server Events:
+We need to get a Hokage and a Akatsuki Leader who actually knows about the game. Hokage is selected through an election while the Akatsuki Leader is decided through a tournament for rogue ninjas. We'll do this once we hit 100-150 members. 
+
+Once we have both the Hokage and the Leader, we can have wars between the akatsuki and the village. 
+we'll have a full on event relating to this. 
+Implementation of clans is still on hold because i dont have alot of ideas. Give me some ⁠・𝚂𝚞𝚐𝚐𝚎𝚜𝚝𝚒𝚘𝚗 
+MOREVER, we'll soon have a voting mission that drops rewards on voting. I'll try doing the same with /bump
+
+
+6th:
+Back :pepesmile: 
+Changes: 
+Shinobi RPG (the bot) is now a fully functional ai, you can talk to it by pinging it
+The rewards are now sent to your gift inventory instead of being directly added to your profile, i did this because there was an issue where players lose their data randomly.
+There will be a secret SS shop that is randomly spawns whenever the server is very active. Look out for the message "Goodnight Everyone."
+Brand new forest of death event that happens every 3 hours: Players are divided into teams and given private channels. Then the teams compete in a game as long as they're the last one's standing. This game is all about who's faster as the timer gets shorter and shorter for team eliminations.
+Fixed over a million bugs(no joke)
+Added /meme and /imbored commands check them out
+Added a /event command in which ss can be used to spin very powerful jutsus and other things that are very helpful such as ramen and exp.
+Changes made to ranked: I've noticed how ranked having divisions was too much of a grind to even reach Chunin level. So to fix that, i've removed divisions. Players can now attain higher mentor ranks without having to queue up 100 games to reach Chuunin.
+Crank command added vote for rewards. (run crank command again to claim the rewards)
+
+Upcoming: 
+Otsutsuki mission: This mission is an end game mission. You'll have to be very strong to surivive atleast a round in this missions, rewards are very high as well.
+Many other event commands mostly for fun to get a break from the usual missions.
+
+Brand new concept: Memories 
+Memories are randomly occuring events in the bot after you defeat certain npc's. This was initially added to the tutorial command in which the player(you) find yourself inside Hashirama Senju's body and you fight madara. It was a really cool addition, now it's gonna be everywhere with rewards and lore.
+
+WAR
+The war is a special server event that happens whenever the akatsuki leader decides to attack the village. The war happens between the hokage and the akatsuki leader. The initial stages are about who has the better defense/attack. The akatsuki make nuclear chakra bombs to infiltrate the village's defenses. Whoever has a higher defense/bomb damage wins the initial stage. As for the actual battle; the akatsuki's aim is to capture the Jinchuriki targeted by the akatsuki leader (this jinchuriki is an actual player) but they'll have to face the anbu first to get to the Jinchuriki. Hokage can decide 5 people from the anbu or even himself to fight 5 members from the akatsuki or the akatsuki leader. Whoever wins this fight may seem like the winner of it all, but there's plot armors for both sides. IF the akatsuki wins this 5v5 then the Jinchuriki (player) will face the akatsuki's 5 members except....the jinchuriki has RAID BOSS level stats. IF the Anbu were to win the 5v5, it's a battle between Akatsuki Leader and Hokage to decide who wins it, the village is in favor though, the akatsuki MUST face the raid boss jinchuriki even if they loss or win the 5v5 HAH.
+
+The war command isnt on the official version yet mainly because 1) we dont have a Hokage yet. We'll hold a tournament for the hokage similar to how we did for the akatsuki leader which went pretty well and was very fun to watch. 2) We do not have enough players, it seems the bot has ALOOOOOOOOT of enrolled members but they dont actually know what to do/whats going on. To fix that,
+
+I've trained Shinobi RPG to answer ALL of your questions, or just say "I'm a new player, help me catch up" and it will help you figure out things. In short, if needed. 
+Furthermore, Players can directly learn some jutsus from the shop itself, without having to learn it from the scroll or awakening it. 
+
+*otsutsuki command hasnt been added to the official version yet but 
+if you have any suggestions use ⁠・𝚂𝚞𝚐𝚐𝚎𝚜𝚝𝚒𝚘𝚗 and report any bugs immidiately. 
+Have fun!
+
+
+7th 
+Ai new ver
+has more information than ever
+changes to exp drops
+
+
+8th:
+added akatsuki command so anyone can join akatsuki at will. Akatsuki earn bounty from missions and this bounty points will be hunted by the anbu. Bounty points can be spent inside the akatsuki shop(not added yet) and Anbu earn honor from hunting down the akatsuki. The bounty gets transferred to the Anbu in the form of Honor. Honor works the same way as bounty, they have a seperate shop. 
+What to expect inside the akatsuki shop vs the anbu shop:
+
+The anbu shop is special: it is the only place where you can obtain accessories. YES :huh:
+The akatsuki shop: this is where you buy nuclear weapons
+
+Anbu recruitment system is different from that of the akatsuki. The anbu must complete the quests given to them in limited time
+(most of this stuff hasnt been added yet but yeah this is what you will see in the next few days.)
+For feedback and suggestions goto #suggestions bruh this font 
+
+Oh yh clan system will also be added. Idk what to do with them yet, i need suggestions
+
+9th
+Changes:
+I noticed the game revolving around the basic missions so i had to spice them up to make them atleast a little interesting.  So! The game is a full on RPG now. It has a map, you're free to go anywhere you want on the map as long as you beat the areas Guardian. Guardians are bosses so they might be pretty tough, but its worth it. There's gonna be 9 total regions:
+Land of Fire (You start here, Tier 1) Basic rewards and material drop.
+The Village of Sound (Tier 2) x2 of the rewards & materials dropped.
+The Country of Rain (Tier 3) x3
+Land of Wind (Tier 4) x4
+and so on until 
+The valley of the End (Tier 9) x9
+
+Note that these numbers might sound insane and they actually are. The brank you do in Land of Fire will give u 100 exp but the same in valley of end(different npc) will give you 900. The catch is that the Guardians between Tiers are omega broken. So do not expect yourself to easily climb to  Tier 9's.
+All of the above stuff are done through these commands: /travel challenge, /travel move, /travel view, /map. 
+
+CLANS
+Clans are here! Anyone can form a clan as long as your not broke(1000 SS) 
+clan commands: There's alot 😄
+
+/clan create 
+clan settings 
+/clan invite <user> 
+clan kick <user>
+clan disband - disbands the clan
+clan lab 
+clan appoint 
+clan leaderboard
+clan rules: 
+clan capture: 
+clan bank: 
+clan shop:
+clan war:
+just read the description of each clan related command, they're very simple. But I'll explain a few important ones. As i mentioned before, the game now features a map. So uh clans can capture anything on the map and its theirs. If i wanted to capture Land of Fire, which if not captured by anyone is 500 POWER. My clan needs to have 500 or above power to capture this territory or im cooked. What increases power? WEAPONS! 
+Weapons: Weapons list for all clans to create with materials:
+Chakra Blade: for each quantity; 10x rope, 10x wood, 10x copper, 10x iron, 10x gun powder, 10x metal (+25 power for each chakra blade added to clan strength)
+Chakra Canon: for each quantity; same as chakra blade but everything is 50x (+75)
+Ninjutsu Drones: 100x of each (+125)
+Jutsu Absorption Arm: 50x of each listed PLUS 10x RARE resin. (found in tier 4+ regions) (+250) 
+Lightning Release Suit: 20x Rare resin, 250x iron, Lightning Resin 5x (found in tier 5+ regions)(+400) 
+Sand Mines: 10x copper, 10x iron, 25x gun powder, Mythical Sand 1x (found in tier 6+ regions)(+200) 
+Artificial acid rain clouds: 10x rare resin, 10x lightning resin, Holy waters 1x <-- (found in tier 7+ regions) (+300) 
+The Cosmic trinity: 3x Holy waters, 3x Mythical Sand, 3x A Piece of Earth <-- (found in tier 8+) regions(+550) 
+Nuclear Chakra Bomb: 250x of all the basic materials listed in chakra blade, 10x of the materials listed in The cosmic Trinity and 5x of "Phazal" found in tier 9+ regions. (+750)
+
+
+This might seem a little confusing but dw, when your inside a clan you can look inside /clan lab to view all the weapons. They're easy to understand there.
+The result of all that hardwork for clans?
+Based on your clans tier, your rewards are distributed. The rewards are distributed every month. So they're pretty big. And yes, all of these rewards are distributed to every single member.
+
+I'm also actively working on a winter update and make limited time stuff. 
+
+
+10th:
+Winter Update FULL BLOG MISSING.
+
+
+11th: 
+Upcoming: 1st Feb 2026.
+Hi :huh: 
+Here with the biggest update ShinobiRPG has ever seen. 
+ 
+Contents:
+New Event,
+New Srank,
+New Secret Multiplayer mode :eyes: ,
+New Jutsu,
+New ways to get Premium Stuff for F2P players
+New command: `/refer`
+New Card Collection Game because i was bored
+New Bank feature?? :dance~1: 
+New SICK profile theme: Akatsuki
+New progression system :FINALLY: 
+New `/practice` command
+New `fight: friendly` command
+New website integrated `/jutsu` and `/search` command
+
+Now i start explaining these :dies: 
+
+New Event: Akatsuki.
+What?? What's going on? https://shinobirpg.online, go there and login and start the story, it'll save me a 100 lines of explanation :pray: 
+After you catch up to the story, you can now run /event, you cannot do it before that :hehe~2: 
+commands included
+- /event: Summon
+- /event: Story
+- /event: shop
+7 new event only jutsus added. Including Izanami, one of the most broken things i have ever created. 
+Rest of the event stuff will include the usual stuff, ramen, exp, money and whatever i missed out. 
+
+New Srank:
+The srank after the Kurenai srank, continuing the lore.
+
+New secret multiplayer mode:
+supposed to be a secret. :shrug: 
+
+New Jutsu:
+I decided its about time i adress the serious issue in the game; if you dont have a custom your useless. I'm gonna be focusing on new players and helping them get new jutsus that actually are useful through mentors, scrolls and the shop. 
+another jutsu related command: /jutsu and /search, /search command can be used to search any jutsu from the codebase and it's gonna get u a detailed explanation, which is supposed to help player retention.
+
+
+New ways to get stuff for f2p players:
+Having a website allows for much more scope that's gonna enable both player and developer happiness. The website will feature a "Rewards" button which is basically watching ads in exchange for in-game content. The website will feature a full table of contents that can be obtained from these ads, which also includes Shinobi Shards and direct in game game-passes. 
+
+`/refer` command, i should've made this very long ago but yeah, here you go. If you bring in new players, give them your referral code. use /refer without any options selected to see your permanent referral code, you can give these to new players for both to receive a nice reward. new players have 24 hours before they can claim a referral code or its cooked 
+You CANNOT create a billion alts and abuse this, it's all logged :yippe: its gonna get you banned.
+
+Thunder Federal Government Fraud Bank:
+**Note**: This is a in-game bank and does not involve real money. 
+SO why does it exist? 
+- You can exchange money with a similar currency to SS, but not exactly SS. 
+- You can take Loans of SS and you MUST repay it in 3 days, the tenure does not change. The interest is 0% but the time does not change. The amount of SS you can take is also limited so that players dont leave just because they couldnt repay.
+SO what happens when players **fail** to repay? The bank will feature catalog from which you can select the amount of ss but it also includes the penalty if you fail, this will be a % of your stats, Goodluck!
+
+New Progression System:
+Chuunin and Jounin exams will be held! :POLICE: The Admins will manually pass you through tests. :POLICE:  It's nothing special, though. If you've met the level criteria, use /rankup and you'll be guided.
+
+Practice Command:
+You can now use practice command to test your jutsus anytime. This training dummy will have infinity hp and eat all your attacks like a good boy. 
+
+friendly fight mode:
+Unfair? try this. In this mode, both you and your opponents stats are fixed to 15000. 
+This mode will point out all the op customs and i nerf them :peepoEvil:
+Alright...The Card Game..
+On first glance, this is just another card collecting game. 
+Your not wrong, it is. The higher the rarity of the card, the better. Except, these cards are actually very precious. The normal /summon command is obviously luck based and its gonna get you characters you've never seen before. Sell these useless cards to obtain a brand new currency called Essence. 
+The Conversion:
+1 RYO (SRPG CURRENCY) = 0.5 Essence.
+You can sell the useless characters to collect alot of essence. This Essence is very essential :kekW: 
+You can use it to buy actual Big Bois from the market, yh there's a market. Both System and player Driven. 
+Obviously, there's gonna be rarities
+Mythical, legendary, Epic,  Rare, Uncommon and Common same as usual.
+SOOO how does it all work? let me break it down for you :cat_dance: 
+You buy a Common Card from the market. Here's where things get interesting: The market will NOT include unknown cards from barely known anime, its gonna be the top 100 anime. Every card has stats. The higher the rarity, the more the stats. The goal obviously is to get a mythic but to get that :eyes_sus: obviously you'll have to work for it. Pay alot of money and get some special stuff :hehehehe: 
+
+How does it relate to the main game? The main game is about to be gutted. The numbers, they're getting out of hand so im gonna do a patch after which everyones gonna notice a giga nerf in the damage numbers. To adjust, i will also reduce the numbers of all NPCs so the grinding is unfazed. 
+
+Owning a mythical card lets say Son Goku, 
+He has 430,000 HP,
+250k Power,
+250k Defense 
+"Kamehameha" 
+These numbers are hypothetical and are gonna be changed in the actual game but basically the stats are added to your own like an accessory as long as you have this card equipped. The kamehameha? Yeah, he's also gonna assist you in real battles. 
+These cards disappear after usage, so they are temporary stats boost basically. :question: :question: :question: 
+
+Outside of the original game, whats the point?
+You can collect as many cards as you want and create a Team of 5. You can challenge real players or test them against npcs. 
+You can view all related commands  using /Cgame help
+
+That's it for the Card game.
+------------------------------------------THE DEVS TALK--------------------------------------------------------
+ANOTHER GAME: Cultivation
+
+<space for asukky>
+
+Expansion to the entire anime verse?
+- Npcs from all of animeverse added,
+- New commands related to them? Although just adding npcs is more than enough.
+- Moves, obviously. 
+- Idk what else, still in progress.
+
+Now i'm gonna include whatever i didnt mention that was added, bug fixes, changes, whatever is getting nerfed etc. 
+which requires alot of talking :man_elf:

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - ShinobiRPG</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        .content-section {
+            padding: 120px 20px 60px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .legal-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #fff;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1.1em;
+            margin-top: 20px;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        p,
+        ul,
+        li {
+            font-size: 1em;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        .last-updated {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .notice {
+            background: rgba(255, 71, 87, 0.1);
+            border-left: 4px solid var(--accent-color);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .notice p {
+            margin-bottom: 0;
+            color: #eee;
+        }
+
+        .link {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .link:hover {
+            text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="fluid-canvas"></canvas>
+    <header class="main-header">
+        <nav class="main-nav">
+            <a href="index.html" class="logo">ShinobiRPG</a>
+            <div class="header-links">
+                <a href="index.html">Home</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="content-section">
+        <div class="legal-container">
+            <h1>The Hidden Village Records (Privacy Policy)</h1>
+            <p class="last-updated">Last Updated: September 28, 2025</p>
+
+            <div class="notice">
+                <p><strong>BRIEF:</strong> This document outlines what information <strong>Shinobi RPG</strong>
+                    collects, why it is collected, and how it is used. We are committed to protecting your privacy.</p>
+            </div>
+
+            <h2>1. Scrolls of Identity: Data Collection</h2>
+            <p>The Bot collects the minimum necessary information to operate the game and maintain your progress:</p>
+
+            <h3>1.1 Discord Data</h3>
+            <ul>
+                <li><strong>Discord User ID (UID):</strong> Your unique identifier used to link game stats.</li>
+                <li><strong>Guild (Server) ID:</strong> Used for per-server configuration.</li>
+            </ul>
+
+            <h3>1.2 Gameplay Data</h3>
+            <ul>
+                <li><strong>In-Game Progress:</strong> Level, currency, inventory, and mission status.</li>
+                <li><strong>Command Timestamps:</strong> Used for rate-limiting and anti-abuse.</li>
+            </ul>
+
+            <h2>2. Use of Collected Data</h2>
+            <p>Your data is used exclusively for the game's functionality, technical support, and leaderboards. We
+                <strong>do not sell or trade</strong> your data.</p>
+
+            <h2>3. Third-Party Intelligence (AI)</h2>
+            <p>Optional AI features are powered by Google's Gemini. Prompts are sent to Google's API but are not
+                permanently stored by us. Google's own privacy policies apply to that processing.</p>
+
+            <h2>4. Data Security</h2>
+            <p>All gameplay data is stored in a private database with restricted access. While we use industry-standard
+                measures, no method is 100% secure.</p>
+
+            <h2>5. Your Rights: Data Control</h2>
+            <p>You have the right to request deletion of your data. Contact us via our official Discord to request a
+                full wipe of your game profile. Note: This action is permanent and irreversible.</p>
+
+            <div
+                style="margin-top: 50px; text-align: center; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                <p>&copy; 2026 Shinobi RPG. | <a href="https://discord.gg/D9RX9wjJDS" class="link">Official Discord</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script src="fluid.js"></script>
+</body>
+
+</html>

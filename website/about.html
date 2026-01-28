@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - ShinobiRPG</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        .content-section {
+            padding: 120px 20px 60px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .about-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 60px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: var(--accent-color);
+        }
+
+        .lead {
+            font-size: 1.3em;
+            color: #fff;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            text-align: left;
+            margin-top: 50px;
+        }
+
+        .grid-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .grid-item h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+
+        p {
+            font-size: 1.05em;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .cta-section {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .glass-btn {
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-container {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="fluid-canvas"></canvas>
+    <header class="main-header">
+        <nav class="main-nav">
+            <a href="index.html" class="logo">ShinobiRPG</a>
+            <div class="header-links">
+                <a href="index.html">Home</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="content-section">
+        <div class="about-container">
+            <h1>Beyond the Game</h1>
+            <p class="lead">The best combat-focused Discord RPG where strategy reigns supreme.</p>
+
+            <p>Welcome to Shinobi RPG. We're on a mission to create the most engaging, strategic, and interactive
+                fighting RPG on Discord. Here, your level isn't everything—your strategy is.</p>
+
+            <div class="grid">
+                <div class="grid-item">
+                    <h2>Infinite Depth</h2>
+                    <p>With over 120 commands and endless jutsu combinations, you can craft builds that define your
+                        legacy. Defeat level 100 pros as a beginner by mastering the timing of your moves.</p>
+                </div>
+                <div class="grid-item">
+                    <h2>Live Events</h2>
+                    <p>The world of Shinobi RPG never sleeps. We run seasonal events and lore-driven updates like the
+                        Akatsuki raids to keep the village active and the challenges fresh.</p>
+                </div>
+                <div class="grid-item">
+                    <h2>Community First</h2>
+                    <p>We believe in building more than just a bot; we're building a home. Every player is part of our
+                        story, and we actively engage with the community to shape the future of the game.</p>
+                </div>
+                <div class="grid-item">
+                    <h2>Fair Play</h2>
+                    <p>Success shouldn't be gated by a wallet. While we offer premium perks, every bit of power can be
+                        earned through gameplay or by participating in our rewards program.</p>
+                </div>
+            </div>
+
+            <div class="cta-section">
+                <h2>Join the Legacy</h2>
+                <p>Ready to start your story and become a legend in the hidden village?</p>
+                <a href="https://discord.gg/D9RX9wjJDS" class="glass-btn">Join Our Discord</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="fluid.js"></script>
+</body>
+
+</html>

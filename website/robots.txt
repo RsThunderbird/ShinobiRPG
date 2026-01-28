@@ -1,0 +1,13 @@
+# This file tells web crawlers which pages or files the crawler can or can't request from your site.
+
+User-agent: *
+Allow: /
+
+# Disallow backend functions from being crawled
+Disallow: /functions/
+
+# Disallow the gwent directory (this should be removed entirely as per the AdSense checklist)
+Disallow: /gwent/
+
+# Sitemap location - It is highly recommended to generate a sitemap.xml file and place it in this directory.
+Sitemap: https://shinobirpg.online/sitemap.xml

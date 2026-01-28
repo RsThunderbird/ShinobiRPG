@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - ShinobiRPG</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        .content-section {
+            padding: 120px 20px 60px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .legal-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #fff;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1.2em;
+            margin-top: 20px;
+            color: var(--text-secondary);
+        }
+
+        p,
+        ul,
+        li {
+            font-size: 1em;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        .last-updated {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .link {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .link:hover {
+            text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="fluid-canvas"></canvas>
+    <header class="main-header">
+        <nav class="main-nav">
+            <a href="index.html" class="logo">ShinobiRPG</a>
+            <div class="header-links">
+                <a href="index.html">Home</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="content-section">
+        <div class="legal-container">
+            <h1>The Shinobi Pact (Terms of Service)</h1>
+            <p class="last-updated">Last Updated: September 28, 2025</p>
+
+            <h2>1. Acceptance of the Pact</h2>
+            <p>By summoning and using the <strong>Shinobi RPG</strong> bot (the "Bot") on Discord, you (the "Shinobi")
+                agree to be bound by these Terms of Service. If you do not agree to these terms, you must cease all
+                interaction with the Bot immediately and banish it from your server.</p>
+
+            <h2>2. The Shinobi Code (Rules of Conduct)</h2>
+            <p>To ensure a fair and enjoyable experience for all, the following actions are strictly prohibited and may
+                result in a permanent ban from the Bot's services:</p>
+            <ul>
+                <li><strong>Macro-Jutsu & Scripting:</strong> Using automated scripts, macros, or self-bots to interact
+                    with the Bot or gain an unfair advantage.</li>
+                <li><strong>Bounty Hunting (Exploiting):</strong> Exploiting bugs or glitches to gain currency, items,
+                    or experience. Major bugs must be reported to the Kage (owner) via the official support server.</li>
+                <li><strong>Dark Arts (Harassment):</strong> Using the Bot to harass, threaten, or insult other players.
+                </li>
+                <li><strong>Illegal Trade:</strong> Selling or trading in-game items, currency, or accounts for
+                    real-world money (RMT) outside of authorized channels.</li>
+                <li><strong>Assault on the Village (Bot Abuse):</strong> Intentionally spamming commands to lag or crash
+                    the Bot.</li>
+            </ul>
+
+            <h2>3. Ownership of the Scrolls</h2>
+            <p>The Bot, its code, jutsus, artwork, and all associated content are the property of the Kage
+                (RsThunderbird). You are granted a limited, non-exclusive license to use the Bot for personal,
+                non-commercial entertainment on Discord.</p>
+
+            <h2>4. Disclaimer of Liability</h2>
+            <p>The Bot is provided "as is" and "as available." The Kage makes no warranties, expressed or implied,
+                regarding the reliability or stability of the Bot. We are not responsible for any data loss, server
+                downtime, or emotional distress caused by losing a high-stakes duel.</p>
+
+            <h2>5. Termination of Service</h2>
+            <p>The Kage reserves the right to terminate your access to the Bot at any time, for any reason, without
+                prior notice, especially if the Shinobi Code is violated.</p>
+
+            <h2>6. Changes to the Pact</h2>
+            <p>These terms may be updated at any time. Continued use of the Bot after changes are posted constitutes
+                acceptance of the new Pact.</p>
+
+            <div
+                style="margin-top: 50px; text-align: center; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                <p>&copy; 2026 Shinobi RPG. | <a href="https://discord.gg/D9RX9wjJDS" class="link">Official Discord</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script src="fluid.js"></script>
+</body>
+
+</html>

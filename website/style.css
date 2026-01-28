@@ -213,6 +213,23 @@ body {
 .footer-content p {
     color: #666;
     font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.footer-links {
+    font-size: 0.8em;
+    color: #444;
+}
+
+.footer-links a {
+    color: #888;
+    text-decoration: none;
+    margin: 0 5px;
+    transition: 0.3s;
+}
+
+.footer-links a:hover {
+    color: var(--accent-color);
 }
 
 /* Responsive adjustments */

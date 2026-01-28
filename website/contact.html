@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - ShinobiRPG</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        .content-section {
+            padding: 120px 20px 60px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .contact-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 60px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: var(--accent-color);
+        }
+
+        .lead {
+            font-size: 1.2em;
+            color: var(--text-secondary);
+            margin-bottom: 50px;
+        }
+
+        .contact-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .method-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 40px 30px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            transition: 0.3s;
+        }
+
+        .method-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+            background: rgba(255, 71, 87, 0.05);
+        }
+
+        .method-icon {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .method-card h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .method-card p {
+            font-size: 0.95em;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .btn-small {
+            display: inline-block;
+            padding: 10px 25px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            color: #fff;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .btn-small:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            box-shadow: var(--accent-glow);
+        }
+
+        .bug-report-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px dashed var(--glass-border);
+            text-align: left;
+        }
+
+        .bug-report-section h2 {
+            font-family: var(--font-heading);
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+
+        .bug-list {
+            margin-top: 20px;
+            list-style: none;
+        }
+
+        .bug-list li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+
+        .bug-list li::before {
+            content: '➤';
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .contact-methods {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-container {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="fluid-canvas"></canvas>
+    <header class="main-header">
+        <nav class="main-nav">
+            <a href="index.html" class="logo">ShinobiRPG</a>
+            <div class="header-links">
+                <a href="index.html">Home</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="content-section">
+        <div class="contact-container">
+            <h1>Summon the Staff</h1>
+            <p class="lead">Got questions, bugs, or business inquiries? We're here to help.</p>
+
+            <div class="contact-methods">
+                <div class="method-card">
+                    <span class="method-icon">💬</span>
+                    <h2>Discord</h2>
+                    <p>The fastest way to get support. Join our community and chat with us directly.</p>
+                    <a href="https://discord.gg/D9RX9wjJDS" class="btn-small">Join Server</a>
+                </div>
+                <div class="method-card">
+                    <span class="method-icon">📧</span>
+                    <h2>Email</h2>
+                    <p>For formal inquiries, partnerships, or detailed technical reports.</p>
+                    <a href="mailto:acethe9515@gmail.com" class="btn-small">Send Email</a>
+                </div>
+            </div>
+
+            <div class="bug-report-section">
+                <h2>Found a Bug?</h2>
+                <p>Help us squash them! When reporting, please include as much detail as possible to help our team
+                    investigate.</p>
+                <ul class="bug-list">
+                    <li>What you were doing when it occurred</li>
+                    <li>What actually happened vs what you expected</li>
+                    <li>Screenshots or error messages</li>
+                    <li>Your Discord ID for rewards</li>
+                </ul>
+                <p style="margin-top: 20px; font-style: italic; color: var(--accent-color);">Bug reporters are rewarded
+                    with in-game bonuses!</p>
+            </div>
+
+            <div
+                style="margin-top: 50px; text-align: center; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                <p>&copy; 2026 Shinobi RPG. | <a href="index.html" class="link">Return Home</a></p>
+            </div>
+        </div>
+    </main>
+
+    <script src="fluid.js"></script>
+</body>
+
+</html>
