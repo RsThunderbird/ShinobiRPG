@@ -1,9 +1,0 @@
-127.0.0.1 - - [27/Jan/2026 16:43:06] "GET /test_cave.html HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jan/2026 16:43:06] "GET /story.css HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jan/2026 16:43:06] "GET /forest.js HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jan/2026 16:43:06] "GET /genjutsu.js HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jan/2026 16:43:06] "GET /walk.js HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jan/2026 16:43:06] "GET /story.js HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jan/2026 16:43:06] "GET /prestory.js HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jan/2026 16:43:06] "GET /cave.js HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jan/2026 16:43:10] "GET /assets/itachi.glb HTTP/1.1" 200 -

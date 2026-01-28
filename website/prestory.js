@@ -14,6 +14,7 @@ function initPrestory() {
     scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    window.prestoryCamera = camera;
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.2));
@@ -63,10 +64,19 @@ function initPrestory() {
 
     function spawnLog(x, z) {
         const logGroup = new THREE.Group();
-        const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.2, 8), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
-        cylinder.rotation.z = Math.PI / 2;
-        cylinder.position.y = 0.4;
-        logGroup.add(cylinder);
+        logGroup.userData.isLog = true;
+
+        const log1 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.6, 8), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
+        log1.rotation.z = Math.PI / 2;
+        log1.position.set(-0.3, 0.4, 0);
+        logGroup.add(log1);
+        logGroup.userData.log1 = log1;
+
+        const log2 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.6, 8), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
+        log2.rotation.z = Math.PI / 2;
+        log2.position.set(0.3, 0.4, 0);
+        logGroup.add(log2);
+        logGroup.userData.log2 = log2;
 
         const highlight = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.7 }));
         highlight.position.set(0, 0.6, 0);
@@ -130,13 +140,25 @@ function initPrestory() {
         if (!canMove) return;
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
         const intersects = raycaster.intersectObjects(logsGroup.children, true);
-        const hit = intersects.find(i => i.object.userData.isHighlight);
-        if (hit && hit.object.visible) {
-            hit.object.visible = false;
+        const highlightHit = intersects.find(i => i.object.userData.isHighlight);
+        if (highlightHit && highlightHit.object.visible) {
+            highlightHit.object.visible = false;
+
+            // Log breaking animation
+            let parent = highlightHit.object.parent;
+            if (parent && parent.userData.isLog) {
+                const l1 = parent.userData.log1;
+                const l2 = parent.userData.log2;
+                gsap.to(l1.position, { x: -1.2, y: 0, duration: 0.5, ease: "power2.out" });
+                gsap.to(l1.rotation, { x: 1, z: Math.PI / 2 + 0.5, duration: 0.5 });
+                gsap.to(l2.position, { x: 1.2, y: 0, duration: 0.5, ease: "power2.out" });
+                gsap.to(l2.rotation, { x: -1, z: Math.PI / 2 - 0.5, duration: 0.5 });
+            }
+
             cutCount++;
             if (typeof showNotification === 'function') showNotification(`Log cut (${cutCount}/${logsToCut})`);
             if (cutCount === logsToCut) {
-                startItachiEncounter();
+                setTimeout(startItachiEncounter, 1000);
             }
         }
     }
@@ -151,10 +173,20 @@ function initPrestory() {
         const gltfLoader = new THREE.GLTFLoader();
         gltfLoader.load('assets/itachi.glb', (gltf) => {
             itachiModel = gltf.scene;
-            itachiModel.scale.set(1.5, 1.5, 1.5);
-            // Behind player
-            itachiModel.position.set(camera.position.x, 0, camera.position.z + 5);
-            itachiModel.lookAt(camera.position.x, 0, camera.position.z);
+
+            // Standard scale to 2m
+            const box = new THREE.Box3().setFromObject(itachiModel);
+            const size = box.getSize(new THREE.Vector3());
+            const scaleFactor = 2.0 / (size.y || 1);
+            itachiModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+            // Position behind player, ensuring he's not underground
+            // If his origin is at the center, we need to lift him by half his height
+            const height = size.y * scaleFactor;
+            itachiModel.position.set(camera.position.x, height / 2, camera.position.z + 5);
+
+            // Look at player
+            itachiModel.lookAt(camera.position.x, height / 2, camera.position.z);
             scene.add(itachiModel);
 
             setTimeout(triggerTurnAround, 2000);
@@ -163,16 +195,30 @@ function initPrestory() {
 
     function triggerTurnAround() {
         const tl = gsap.timeline();
-        // Force turn around to face Itachi
-        tl.to(camera.rotation, { y: Math.PI, duration: 2, ease: "power2.inOut" })
-            .add(() => {
-                const storyContainer = document.getElementById('story-container');
-                if (storyContainer) gsap.to(storyContainer, { filter: 'blur(10px)', duration: 3 });
-            })
-            .to(camera.position, { y: 0.2, z: camera.position.z + 1, duration: 2, ease: "power2.in" }, "+=1")
-            .add(() => {
-                startBlinkingTransition();
-            });
+        // Calculate target rotation to look at Itachi's face
+        // Itachi is at z + 5, camera is at z.
+        // Rotation Y should be Math.PI (behind)
+        // Rotation X should be slightly up if we are looking at his face
+
+        tl.to(camera.rotation, {
+            x: 0.3, // Tilt up slightly
+            y: Math.PI,
+            duration: 3,
+            ease: "power2.inOut"
+        })
+        .add(() => {
+            const storyContainer = document.getElementById('story-container');
+            if (storyContainer) gsap.to(storyContainer, { filter: 'blur(10px)', duration: 3 });
+        })
+        .to(camera.position, {
+            y: 0.2,
+            z: camera.position.z + 1,
+            duration: 2,
+            ease: "power2.in"
+        }, "+=1")
+        .add(() => {
+            startBlinkingTransition();
+        });
     }
 
     function startBlinkingTransition() {
@@ -187,15 +233,46 @@ function initPrestory() {
             .add(() => {
                 // Move Itachi to stand right over the user
                 if (itachiModel) {
-                    itachiModel.position.set(camera.position.x, 0, camera.position.z - 0.5);
+                    const box = new THREE.Box3().setFromObject(itachiModel);
+                    const size = box.getSize(new THREE.Vector3());
+                    itachiModel.position.set(camera.position.x, size.y / 2, camera.position.z - 0.5);
                 }
             })
             .to([eyelidsTop, eyelidsBottom], { height: '40%', duration: 0.5, repeat: 1, yoyo: true })
+            .to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 1.0 }) // Final shut
             .add(() => {
-                window.currentStage = 'cave';
-                if (typeof initThreeCave === 'function') {
-                    initThreeCave();
-                }
+                // Show "A few days later" transition
+                const storyContainer = document.getElementById('story-container');
+                const intermission = document.createElement('div');
+                intermission.id = 'intermission-overlay';
+                intermission.style.position = 'fixed';
+                intermission.style.top = '0';
+                intermission.style.left = '0';
+                intermission.style.width = '100%';
+                intermission.style.height = '100%';
+                intermission.style.background = 'black';
+                intermission.style.color = 'white';
+                intermission.style.display = 'flex';
+                intermission.style.alignItems = 'center';
+                intermission.style.justifyContent = 'center';
+                intermission.style.fontSize = '2rem';
+                intermission.style.fontFamily = "'Cinzel', serif";
+                intermission.style.zIndex = '10000';
+                intermission.style.opacity = '0';
+                intermission.innerText = "A few days later...";
+                document.body.appendChild(intermission);
+
+                gsap.to(intermission, { opacity: 1, duration: 1, onComplete: () => {
+                    setTimeout(() => {
+                        gsap.to(intermission, { opacity: 0, duration: 1, onComplete: () => {
+                            intermission.remove();
+                            window.currentStage = 'cave';
+                            if (typeof initThreeCave === 'function') {
+                                initThreeCave();
+                            }
+                        }});
+                    }, 3000);
+                }});
             });
     }
 
@@ -219,7 +296,13 @@ function initPrestory() {
             if (moveR) move.addScaledVector(side, -1);
 
             if (move.length() > 0) {
-                camera.position.addScaledVector(move.normalize(), speed);
+                const nextPos = camera.position.clone().addScaledVector(move.normalize(), speed);
+
+                // Invisible Boundaries
+                const limit = 45;
+                if (Math.abs(nextPos.x) < limit && Math.abs(nextPos.z) < limit) {
+                    camera.position.copy(nextPos);
+                }
             }
             camera.rotation.set(pitch, yaw, 0, 'YXZ');
         }

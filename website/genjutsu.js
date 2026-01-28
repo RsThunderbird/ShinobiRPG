@@ -26,6 +26,8 @@ function initThreeGenjutsu() {
     if (questUi) questUi.classList.add('hidden');
     const compass = document.getElementById('compass-container');
     if (compass) compass.style.display = 'none';
+    const narrativeBox = document.getElementById('narrative-box');
+    if (narrativeBox) narrativeBox.style.display = 'none';
 
     renderer.domElement.addEventListener('click', () => {
         renderer.domElement.requestPointerLock();
@@ -312,6 +314,7 @@ function initThreeGenjutsu() {
     }
 
     function blinkAndEpicZoom() {
+        // Force eyelids to stay shut (50%) and never open during this sequence
         gsap.to([eyelidsTop, eyelidsBottom], {
             height: '50%',
             duration: 0.5,
@@ -321,8 +324,11 @@ function initThreeGenjutsu() {
                 gsap.to(genjutsuMusic, { volume: 0, duration: 1, onComplete: () => genjutsuMusic.pause() });
                 sharingan.visible = false;
 
+                // Ensure eyelids stay shut
+                eyelidsTop.style.height = '50%';
+                eyelidsBottom.style.height = '50%';
+
                 setTimeout(() => {
-                    // Removed the brief eye-opening as it was reported as a glitch
                     gsap.to(camera.position, {
                         x: "+=20",
                         y: "+=8",
@@ -340,15 +346,12 @@ function initThreeGenjutsu() {
     }
 
     function finishGenjutsu() {
-        gsap.to([eyelidsTop, eyelidsBottom], {
-            height: '50%',
-            duration: 1.0,
-            ease: "power2.inOut",
-            onComplete: () => {
-                finished = true;
-                playFinalCinematic();
-            }
-        });
+        // Keeping eyelids at 50% explicitly
+        eyelidsTop.style.height = '50%';
+        eyelidsBottom.style.height = '50%';
+
+        finished = true;
+        playFinalCinematic();
     }
 
     function playFinalCinematic() {
@@ -382,7 +385,7 @@ function initThreeGenjutsu() {
                         });
                     }
                 });
-            }, 2000);
+            }, 7000);
         };
     }
 
