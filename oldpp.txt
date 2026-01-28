@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shinobi RPG - Privacy Policy (The Hidden Village Records)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Font and Base Styles (Copied from ToS for consistency) */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a; /* Dark, almost black background for contrast */
+            color: #d1d5db; /* Light gray text */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        /* The Scroll Container */
+        .shinobi-scroll {
+            background-color: #f7e6c4; /* Parchment/Tan color */
+            color: #333333; /* Dark text on light background */
+            max-width: 900px;
+            width: 100%;
+            padding: 3rem 2rem;
+            border: 4px solid #a0522d; /* Sienna border for a wooden scroll edge */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            line-height: 1.75;
+            text-align: justify;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 100% 25px;
+        }
+        
+        /* Thematic Heading Styles */
+        h1 {
+            color: #006600; /* Green/Forest themed primary title for "Village Records" */
+            border-bottom: 2px solid #006600;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        h2 {
+            color: #4b5563; /* Dark gray for subheadings */
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px dashed #d1d5db;
+            padding-bottom: 0.25rem;
+        }
+
+        .scroll-footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid #a0522d;
+            text-align: center;
+            font-size: 0.875rem;
+            color: #555;
+        }
+
+        .notice {
+            background-color: #ccffcc; /* Light green for a "safe" notice */
+            border-left: 5px solid #006600;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            color: #333;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="shinobi-scroll rounded-lg shadow-xl">
+        <!-- Main Title -->
+        <h1>The Hidden Village Records (Privacy Policy)</h1>
+        <p class="text-center text-sm mb-6">Last Updated: September 28, 2025</p>
+
+        <div class="notice">
+            <p><strong>BRIEF:</strong> This document outlines what information the **Shinobi RPG** bot (the "Bot") collects from you, the user (the "Shinobi"), why it is collected, and how it is used. Our Kage (owner) is committed to protecting your privacy.</p>
+        </div>
+
+        <!-- 1. Data Collected and Purpose -->
+        <h2>1. Scrolls of Identity: Data Collection</h2>
+        <p>The Bot collects and stores the minimum necessary information required to operate the **Shinobi RPG** service and maintain your in-game progress. We collect the following types of data:</p>
+
+        <h3 class="text-lg font-semibold mt-4 text-[#4b5563]">1.1 Discord Data (Required for Game Functionality)</h3>
+        <ul class="list-disc ml-6 mt-2 mb-4">
+            <li><strong>Discord User ID (UID):</strong> Your unique 18-digit Discord identifier.
+                <p class="text-sm italic ml-4"><strong>Purpose:</strong> This is the primary key used to link all your game data (stats, inventory, etc.) to your account. It is essential for gameplay and cannot be removed without losing all game progress.</p>
+            </li>
+            <li><strong>Guild (Server) ID:</strong> The unique identifier of the Discord server where you use the Bot.
+                <p class="text-sm italic ml-4"><strong>Purpose:</strong> Used for per-server configuration and moderation settings, ensuring the Bot respects server-specific rules.</p>
+            </li>
+        </ul>
+
+        <h3 class="text-lg font-semibold mt-4 text-[#4b5563]">1.2 Gameplay Data (Automatically Generated)</h3>
+        <ul class="list-disc ml-6 mt-2 mb-4">
+            <li><strong>In-Game Progress & Stats:</strong> Your level, currency, inventory items, jutsu learned, and current mission status.
+                <p class="text-sm italic ml-4"><strong>Purpose:</strong> To track your progress and provide the core RPG experience. This data is created and updated based on your interactions with the Bot.</p>
+            </li>
+            <li><strong>Command Usage Timestamps:</strong> Records of when you use certain commands (e.g., to prevent spam or command abuse).
+                <p class="text-sm italic ml-4"><strong>Purpose:</strong> For essential rate-limiting, anti-spam, and general stability monitoring.</p>
+            </li>
+        </ul>
+
+        <!-- 2. The Use of Your Data -->
+        <h2>2. Use of Collected Data</h2>
+        <p>Your data is used exclusively for the **Shinobi RPG** service and related operational functions:</p>
+        <ul class="list-disc ml-6 mt-2 mb-4">
+            <li>To enable your participation in the RPG (e.g., leveling up, spending currency).</li>
+            <li>To provide technical support and address bugs or data issues.</li>
+            <li>To generate and display leaderboards.</li>
+            <li>To enforce the rules outlined in the **Shinobi Pact (Terms of Service)**.</li>
+        </ul>
+        <p class="font-semibold text-red-700 mt-4">IMPORTANT: We do not sell, rent, or trade your data. We do not use your data for marketing, profiling, or advertising purposes.</p>
+
+        <!-- 3. Third-Party Interactions (AI Model) -->
+        <h2>3. Third-Party Intelligence: The Gemini AI Model</h2>
+        <p>The Bot features an optional AI companion powered by **Google's Gemini 2.5 Flash Lite** model. When you directly mention the Bot to converse with the AI:</p>
+        <ul class="list-disc ml-6 mt-2 mb-4">
+            <li><strong>Input Transmission:</strong> The text of your specific query to the AI (your "prompt") is sent to Google's API for processing and generation of a response.</li>
+            <li><strong>No Data Retention by Kage:</strong> The Kage does not permanently store the content of your specific AI chat prompts or the generated responses.</li>
+            <li><strong>Third-Party Policy:</strong> While we do not retain this chat data, the processing and usage of data by the Google Gemini API are governed by Google's own privacy and service policies. We encourage users to review those terms for more information regarding data handling.</li>
+        </ul>
+        
+        <!-- 4. Data Storage and Security -->
+        <h2>4. Data Sealing Jutsu: Storage and Security</h2>
+        <ul class="list-disc ml-6 mt-2 mb-4">
+            <li><strong>Storage Location:</strong> All gameplay data is stored securely in a dedicated, private database.</li>
+            <li><strong>Access:</strong> Access to the database is strictly limited to the Bot owner (the Kage) and authorized Bot administrators for the sole purpose of maintenance, updates, and moderation.</li>
+            <li><strong>Security:</strong> We implement industry-standard security measures to protect stored data from unauthorized access. However, no electronic transmission or storage method is 100% secure, and we cannot guarantee absolute security.</li>
+        </ul>
+
+        <!-- 5. Your Rights and Data Removal -->
+        <h2>5. The Shinobi's Rights: Data Control</h2>
+        <p>As a Shinobi, you maintain the right to control your data:</p>
+        <ul class="list-disc ml-6 mt-2 mb-4">
+            <li><strong>Right to Deletion:</strong> You have the right to request the deletion of all your stored gameplay data.
+                <p class="text-sm italic ml-4"><strong>Procedure:</strong> To request data deletion, you must contact the Kage (owner) or an authorized Bot administrator via our official server whose link is provided at the end. Upon verifiable request, your data will be permanently deleted from our database. Note that deleting your data means **you will lose all game progress, items, and stats**.</p>
+            </li>
+            <li><strong>Right to Access:</strong> You can request a copy of the specific data we hold about your account.</li>
+            <li><strong>Deletion of Discord Account:</strong> If you delete your Discord account, the link between your data and your Discord profile will be severed. We will not be able to identify your data, but the data may remain in our database until a manual cleanup process is run or a deletion request is filed for the orphaned data.</li>
+        </ul>
+
+        <!-- 6. Policy Changes -->
+        <h2>6. Scrolls of Change: Policy Updates</h2>
+        <p>The Kage reserves the right to update this Privacy Policy at any time. We will notify users of any material changes by posting the new policy on this page and updating the "Last Updated" date at the top. Your continued use of the Bot after a change constitutes your acceptance of the revised policy.</p>
+
+
+        <div class="scroll-footer">
+            <p>&copy; 2025 Shinobi RPG Bot. All rights reserved. | For support or data requests, please contact us at our official server  <a href="https://discord.gg/gCcEksvubb" target="_blank">[Shinobi RPG Official Discord Server.]</a></p>
+        </div>
+    </div>
+</body>
+</html>

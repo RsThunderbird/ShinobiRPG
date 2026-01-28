@@ -49,16 +49,9 @@ function initPrestory() {
     scene.add(house);
 
     // Fence
-    for (let i = -30; i < 30; i += 2) {
-        const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.5, 0.2), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
-        post.position.set(i, 0.75, -25);
-        scene.add(post);
-    }
-
     // --- INVISIBLE BORDERS ---
     const borderGeo = new THREE.BoxGeometry(200, 10, 1);
     const borderMat = new THREE.MeshBasicMaterial({ visible: false });
-
     const wallN = new THREE.Mesh(borderGeo, borderMat); wallN.position.set(0, 5, -25); scene.add(wallN);
     const wallS = new THREE.Mesh(borderGeo, borderMat); wallS.position.set(0, 5, 25); scene.add(wallS);
     const wallE = new THREE.Mesh(borderGeo, borderMat); wallE.rotation.y = Math.PI / 2; wallE.position.set(30, 5, 0); scene.add(wallE);
@@ -74,17 +67,17 @@ function initPrestory() {
         const logGroup = new THREE.Group();
         logGroup.userData.isLogGroup = true;
 
-        // The main log
+        // The main intact log
         const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.2, 8), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
         cylinder.rotation.z = Math.PI / 2;
         cylinder.position.y = 0.4;
         cylinder.name = "mainLog";
         logGroup.add(cylinder);
 
-        // Highlight
-        const highlight = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.7 }));
+        const highlight = new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.7 }));
         highlight.position.set(0, 0.8, 0);
         highlight.userData.isHighlight = true;
+        highlight.userData.parentLog = logGroup;
         logGroup.add(highlight);
 
         logGroup.position.set(x, 0, z);
@@ -98,6 +91,7 @@ function initPrestory() {
     // --- MOVEMENT CONTROLS ---
     let moveF = false, moveB = false, moveL = false, moveR = false, canMove = true;
     let yaw = 0, pitch = 0;
+    const velocity = new THREE.Vector3();
     const playerHeight = 2.0;
 
     camera.position.set(0, playerHeight, 5);
@@ -145,32 +139,28 @@ function initPrestory() {
         const intersects = raycaster.intersectObjects(logsGroup.children, true);
         const hit = intersects.find(i => i.object.userData.isHighlight);
         if (hit && hit.object.visible) {
-            hit.object.visible = false;
+            const highlight = hit.object;
+            highlight.visible = false;
 
-            // Break log logic
-            const logGroup = hit.object.parent;
+            const logGroup = highlight.userData.parentLog;
             const mainLog = logGroup.getObjectByName("mainLog");
             if (mainLog) mainLog.visible = false;
 
-            // Create two half logs
+            // Create two half logs for the break effect
             const half1 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.6, 8), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
             const half2 = half1.clone();
-
             half1.rotation.z = Math.PI / 2;
             half2.rotation.z = Math.PI / 2;
-
             half1.position.set(-0.3, 0.4, 0);
             half2.position.set(0.3, 0.4, 0);
-
             logGroup.add(half1);
             logGroup.add(half2);
 
-            // Animation for breaking
-            gsap.to(half1.position, { x: -1, y: 0.2, duration: 0.5, ease: "bounce.out" });
-            gsap.to(half1.rotation, { x: 1, z: Math.PI / 2 + 0.5, duration: 0.5 });
-
-            gsap.to(half2.position, { x: 1, y: 0.2, duration: 0.5, ease: "bounce.out" });
-            gsap.to(half2.rotation, { x: -1, z: Math.PI / 2 - 0.5, duration: 0.5 });
+            // Animate half logs flying apart
+            gsap.to(half1.position, { x: -1.2, y: 0.2, duration: 0.6, ease: "power2.out" });
+            gsap.to(half1.rotation, { x: 2, z: 1.5, duration: 0.6 });
+            gsap.to(half2.position, { x: 1.2, y: 0.2, duration: 0.6, ease: "power2.out" });
+            gsap.to(half2.rotation, { x: -2, z: 1.7, duration: 0.6 });
 
             cutCount++;
             if (typeof showNotification === 'function') showNotification(`Log cut (${cutCount}/${logsToCut})`);
@@ -191,13 +181,13 @@ function initPrestory() {
         gltfLoader.load('assets/itachi.glb', (gltf) => {
             itachiModel = gltf.scene;
 
-            // Normalize height to ~2.2m
+            // Normalize height to 2.2 meters
             const box = new THREE.Box3().setFromObject(itachiModel);
             const size = box.getSize(new THREE.Vector3());
             const scaleFactor = 2.2 / (size.y || 1);
             itachiModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
-            // Feet on ground
+            // Position behind player, feet on ground
             itachiModel.position.set(camera.position.x, 0, camera.position.z - 6);
             itachiModel.lookAt(camera.position.x, 0, camera.position.z);
             scene.add(itachiModel);
@@ -209,7 +199,7 @@ function initPrestory() {
     function triggerTurnAround() {
         const tl = gsap.timeline();
 
-        // 1. Look Center/Up first
+        // 1. Look Center/Up first (pitch center)
         tl.to({ p: pitch }, {
             p: 0,
             duration: 1,
@@ -225,24 +215,27 @@ function initPrestory() {
             ease: "power2.inOut"
         }, "+=0.2");
 
+        // 3. Blur and Zoom in
         tl.add(() => {
             const storyContainer = document.getElementById('story-container');
             if (storyContainer) gsap.to(storyContainer, { filter: 'blur(10px)', duration: 3 });
         }, "-=1");
 
-        // 3. Zoom/Blur/Eye-shut
-        tl.to(camera.position, { y: 0.4, z: camera.position.z - 1.5, duration: 2.5, ease: "power2.in" }, "+=0.5")
+        tl.to(camera.position, {
+            x: itachiModel.position.x,
+            z: itachiModel.position.z + 2.5,
+            y: 1.7,
+            duration: 3,
+            ease: "power2.in"
+        }, "+=0.5")
             .add(() => {
                 startBlinkingTransition();
             });
     }
 
     function startBlinkingTransition() {
-        const eyeOverlay = document.getElementById('eye-blinking-overlay');
         const eyelidsTop = document.querySelector('.eyelid.top');
         const eyelidsBottom = document.querySelector('.eyelid.bottom');
-
-        if (eyeOverlay) eyeOverlay.style.display = 'block';
 
         gsap.timeline()
             .to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 1.5, ease: "power2.inOut" })
@@ -255,6 +248,9 @@ function initPrestory() {
                             initThreeCave();
                         }
                     });
+                } else {
+                    window.currentStage = 'cave';
+                    if (typeof initThreeCave === 'function') initThreeCave();
                 }
             });
     }
@@ -280,13 +276,14 @@ function initPrestory() {
 
             if (move.length() > 0) {
                 const nextPos = camera.position.clone().addScaledVector(move.normalize(), speed);
-                // Simple collision check with borders
+
+                // Keep within backyard borders
                 if (Math.abs(nextPos.x) < 28 && Math.abs(nextPos.z) < 23) {
                     camera.position.copy(nextPos);
                 }
             }
+            camera.rotation.set(pitch, yaw, 0, 'YXZ');
         }
-        camera.rotation.set(pitch, yaw, 0, 'YXZ');
 
         renderer.render(scene, camera);
     }
@@ -300,7 +297,7 @@ function initPrestory() {
     });
 
     setTimeout(() => {
-        if (typeof showNarrative === 'function') showNarrative("Finish your chores. Cut the wood logs with your axe (Click Highlight).", []);
+        if (typeof showNarrative === 'function') showNarrative("Finish your chores. Cut the wood logs with your axe (Click to Interact).", []);
     }, 1000);
 }
 
