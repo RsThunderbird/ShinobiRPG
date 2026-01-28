@@ -247,6 +247,7 @@ function initThreeForest() {
     let moveF = false, moveB = false, moveL = false, moveR = false, running = false, velocity = new THREE.Vector3(), canJump = true, playerHeight = 2.0, yaw = 0, pitch = 0;
 
     const onKeyDown = (e) => {
+        if (window.currentStage !== 'forest') return;
         switch (e.code) {
             case 'KeyW': moveF = true; break;
             case 'KeyS': moveB = true; break;
@@ -281,6 +282,7 @@ function initThreeForest() {
     document.addEventListener('keyup', onKeyUp);
 
     function checkInteraction() {
+        if (window.currentStage !== 'forest') return;
         if (!zoroModel) return;
         const dist = camera.position.distanceTo(zoroPos);
         if (dist < 4) { // Reduced even more to prevent accidental triggers
@@ -362,32 +364,53 @@ function initThreeForest() {
         const eyelidsTop = document.querySelector('.eyelid.top');
         const eyelidsBottom = document.querySelector('.eyelid.bottom');
 
-        showNotification("You start feeling dizzy...");
+        // Spawn Itachi behind
+        const gltfLoader = new THREE.GLTFLoader();
+        gltfLoader.load('assets/itachi.glb', (gltf) => {
+            const itachi = gltf.scene;
 
-        // 1. Blur vision gradually
-        gsap.to(storyContainer, { filter: 'blur(20px)', duration: 4 });
-        gsap.to(camera, { fov: 30, duration: 4, onUpdate: () => camera.updateProjectionMatrix() });
+            // Standard scale to 2m
+            const box = new THREE.Box3().setFromObject(itachi);
+            const size = box.getSize(new THREE.Vector3());
+            const scaleFactor = 2.0 / (size.y || 1);
+            itachi.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
-        setTimeout(() => {
-            showNotification("Your vision is fading...");
-        }, 1500);
+            // Behind player
+            const dir = new THREE.Vector3();
+            camera.getWorldDirection(dir);
+            dir.y = 0; dir.normalize();
+            itachi.position.copy(camera.position).addScaledVector(dir, -4);
+            const h = size.y * scaleFactor;
+            itachi.position.y = getTerrainHeight(itachi.position.x, itachi.position.z) + h / 2;
+            itachi.lookAt(camera.position.x, itachi.position.y, camera.position.z);
+            scene.add(itachi);
 
-        // 2. Shut eyes
-        if (eyeOverlay) eyeOverlay.style.display = 'block';
-        gsap.to([eyelidsTop, eyelidsBottom], {
-            height: '50%',
-            duration: 2,
-            delay: 2.5,
-            ease: "power2.inOut",
-            onComplete: () => {
-                // Stop forest music
-                if (forestMusic) forestMusic.stop();
+            showNarrative("Zoro: Who's that behind you?", [
+                { text: "What?", action: () => {
+                    showNarrative("User: Not again...", [
+                        { text: "...", action: () => {
+                            // Start blurring and falling
+                            showNotification("You start feeling dizzy...");
+                            gsap.to(storyContainer, { filter: 'blur(20px)', duration: 4 });
+                            gsap.to(camera, { fov: 30, duration: 4, onUpdate: () => camera.updateProjectionMatrix() });
 
-                // Switch to Genjutsu Stage
-                setTimeout(() => {
-                    startGenjutsuStage();
-                }, 1000);
-            }
+                            if (eyeOverlay) eyeOverlay.style.display = 'block';
+                            gsap.to([eyelidsTop, eyelidsBottom], {
+                                height: '50%',
+                                duration: 2,
+                                delay: 1.5,
+                                ease: "power2.inOut",
+                                onComplete: () => {
+                                    if (forestMusic) forestMusic.stop();
+                                    setTimeout(() => {
+                                        startGenjutsuStage();
+                                    }, 1000);
+                                }
+                            });
+                        }}
+                    ]);
+                }}
+            ]);
         });
     }
 
@@ -525,19 +548,19 @@ function initThreeForest() {
 
     if (isMobile) {
         document.getElementById('mobile-controls').style.display = 'block';
-        window.addEventListener('touchend', (e) => { if (e.target === renderer.domElement) onMouseClick(e.changedTouches[0]); });
+        window.addEventListener('touchend', (e) => { if (window.currentStage !== 'forest') return; if (e.target === renderer.domElement) onMouseClick(e.changedTouches[0]); });
         const jc = document.getElementById('joystick-container'), jo = document.getElementById('joystick');
         let jAct = false, tsX, tsY;
         jc.addEventListener('touchstart', (e) => { jAct = true; const t = e.touches[0], r = jc.getBoundingClientRect(); tsX = r.left + r.width / 2; tsY = r.top + r.height / 2; e.preventDefault(); }, { passive: false });
         window.addEventListener('touchmove', (e) => { if (!jAct) return; const t = Array.from(e.touches).find(t => { const r = jc.getBoundingClientRect(); return t.clientX > r.left - 50 && t.clientX < r.right + 50 && t.clientY > r.top - 50 && t.clientY < r.bottom + 50; }) || e.touches[0]; const dx = t.clientX - tsX, dy = t.clientY - tsY, ds = Math.sqrt(dx * dx + dy * dy), max = 40; const a = Math.atan2(dy, dx), mx = Math.min(ds, max) * Math.cos(a), my = Math.min(ds, max) * Math.sin(a); jo.style.transform = `translate(calc(-50% + ${mx}px), calc(-50% + ${my}px))`; moveF = my < -10; moveB = my > 10; moveL = mx < -10; moveR = mx > 10; }, { passive: false });
-        window.addEventListener('touchend', () => { if (!jAct) return; jAct = false; jo.style.transform = 'translate(-50%, -50%)'; moveF = moveB = moveL = moveR = false; });
+        window.addEventListener('touchend', () => { if (window.currentStage !== 'forest') return; if (!jAct) return; jAct = false; jo.style.transform = 'translate(-50%, -50%)'; moveF = moveB = moveL = moveR = false; });
         document.getElementById('jump-btn').addEventListener('touchstart', (e) => { if (canJump) { velocity.y = 15; canJump = false; } e.preventDefault(); }, { passive: false });
         document.getElementById('run-btn').addEventListener('touchstart', (e) => { running = true; e.preventDefault(); }, { passive: false });
         document.getElementById('run-btn').addEventListener('touchend', (e) => { running = false; e.preventDefault(); }, { passive: false });
         let ltX, ltY, loId = null;
         window.addEventListener('touchstart', (e) => { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (t.clientX > window.innerWidth / 2) { loId = t.identifier; ltX = t.clientX; ltY = t.clientY; } } });
         window.addEventListener('touchmove', (e) => { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (t.identifier === loId) { yaw -= (t.clientX - ltX) * 0.005; pitch -= (t.clientY - ltY) * 0.005; pitch = Math.max(-1.4, Math.min(1.4, pitch)); ltX = t.clientX; ltY = t.clientY; } } });
-        window.addEventListener('touchend', (e) => { for (let i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === loId) loId = null; if (camera.position.distanceTo(zoroPos) < 4) checkInteraction(); });
+        window.addEventListener('touchend', (e) => { if (window.currentStage !== 'forest') return; for (let i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === loId) loId = null; if (camera.position.distanceTo(zoroPos) < 4) checkInteraction(); });
     }
 
     const clock = new THREE.Clock(), cPtr = document.getElementById('compass-pointer'), dTxt = document.getElementById('distance-text');
