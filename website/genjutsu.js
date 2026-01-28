@@ -21,13 +21,11 @@ function initThreeGenjutsu() {
     const crosshair = document.getElementById('crosshair');
     if (crosshair) crosshair.style.display = 'block';
 
-    // Clear ALL UI
+    // Ensure all Forest UI is hidden
     const questUi = document.getElementById('quest-ui');
     if (questUi) questUi.classList.add('hidden');
     const compass = document.getElementById('compass-container');
     if (compass) compass.style.display = 'none';
-    const narrative = document.getElementById('narrative-box');
-    if (narrative) narrative.style.display = 'none';
 
     renderer.domElement.addEventListener('click', () => {
         renderer.domElement.requestPointerLock();
@@ -324,9 +322,7 @@ function initThreeGenjutsu() {
                 sharingan.visible = false;
 
                 setTimeout(() => {
-                    // Fix: Ensure eyes stay shut during the screen shake zoom
-                    gsap.set([eyelidsTop, eyelidsBottom], { height: '50%' });
-
+                    // Removed the brief eye-opening as it was reported as a glitch
                     gsap.to(camera.position, {
                         x: "+=20",
                         y: "+=8",

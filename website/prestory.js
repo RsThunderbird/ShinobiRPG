@@ -49,13 +49,11 @@ function initPrestory() {
     scene.add(house);
 
     // Fence
-    // --- INVISIBLE BORDERS ---
-    const borderGeo = new THREE.BoxGeometry(200, 10, 1);
-    const borderMat = new THREE.MeshBasicMaterial({ visible: false });
-    const wallN = new THREE.Mesh(borderGeo, borderMat); wallN.position.set(0, 5, -25); scene.add(wallN);
-    const wallS = new THREE.Mesh(borderGeo, borderMat); wallS.position.set(0, 5, 25); scene.add(wallS);
-    const wallE = new THREE.Mesh(borderGeo, borderMat); wallE.rotation.y = Math.PI / 2; wallE.position.set(30, 5, 0); scene.add(wallE);
-    const wallW = new THREE.Mesh(borderGeo, borderMat); wallW.rotation.y = Math.PI / 2; wallW.position.set(-30, 5, 0); scene.add(wallW);
+    for (let i = -30; i < 30; i += 2) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.5, 0.2), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
+        post.position.set(i, 0.75, -25);
+        scene.add(post);
+    }
 
     // --- WOOD CUTTING SETUP ---
     const logsGroup = new THREE.Group();
@@ -65,19 +63,14 @@ function initPrestory() {
 
     function spawnLog(x, z) {
         const logGroup = new THREE.Group();
-        logGroup.userData.isLogGroup = true;
-
-        // The main intact log
         const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.2, 8), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
         cylinder.rotation.z = Math.PI / 2;
         cylinder.position.y = 0.4;
-        cylinder.name = "mainLog";
         logGroup.add(cylinder);
 
-        const highlight = new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.7 }));
-        highlight.position.set(0, 0.8, 0);
+        const highlight = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.7 }));
+        highlight.position.set(0, 0.6, 0);
         highlight.userData.isHighlight = true;
-        highlight.userData.parentLog = logGroup;
         logGroup.add(highlight);
 
         logGroup.position.set(x, 0, z);
@@ -139,33 +132,11 @@ function initPrestory() {
         const intersects = raycaster.intersectObjects(logsGroup.children, true);
         const hit = intersects.find(i => i.object.userData.isHighlight);
         if (hit && hit.object.visible) {
-            const highlight = hit.object;
-            highlight.visible = false;
-
-            const logGroup = highlight.userData.parentLog;
-            const mainLog = logGroup.getObjectByName("mainLog");
-            if (mainLog) mainLog.visible = false;
-
-            // Create two half logs for the break effect
-            const half1 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.6, 8), new THREE.MeshLambertMaterial({ color: 0x5d4037 }));
-            const half2 = half1.clone();
-            half1.rotation.z = Math.PI / 2;
-            half2.rotation.z = Math.PI / 2;
-            half1.position.set(-0.3, 0.4, 0);
-            half2.position.set(0.3, 0.4, 0);
-            logGroup.add(half1);
-            logGroup.add(half2);
-
-            // Animate half logs flying apart
-            gsap.to(half1.position, { x: -1.2, y: 0.2, duration: 0.6, ease: "power2.out" });
-            gsap.to(half1.rotation, { x: 2, z: 1.5, duration: 0.6 });
-            gsap.to(half2.position, { x: 1.2, y: 0.2, duration: 0.6, ease: "power2.out" });
-            gsap.to(half2.rotation, { x: -2, z: 1.7, duration: 0.6 });
-
+            hit.object.visible = false;
             cutCount++;
             if (typeof showNotification === 'function') showNotification(`Log cut (${cutCount}/${logsToCut})`);
             if (cutCount === logsToCut) {
-                setTimeout(startItachiEncounter, 1000);
+                startItachiEncounter();
             }
         }
     }
@@ -180,15 +151,9 @@ function initPrestory() {
         const gltfLoader = new THREE.GLTFLoader();
         gltfLoader.load('assets/itachi.glb', (gltf) => {
             itachiModel = gltf.scene;
-
-            // Normalize height to 2.2 meters
-            const box = new THREE.Box3().setFromObject(itachiModel);
-            const size = box.getSize(new THREE.Vector3());
-            const scaleFactor = 2.2 / (size.y || 1);
-            itachiModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
-
-            // Position behind player, feet on ground
-            itachiModel.position.set(camera.position.x, 0, camera.position.z - 6);
+            itachiModel.scale.set(1.5, 1.5, 1.5);
+            // Behind player
+            itachiModel.position.set(camera.position.x, 0, camera.position.z + 5);
             itachiModel.lookAt(camera.position.x, 0, camera.position.z);
             scene.add(itachiModel);
 
@@ -198,59 +163,38 @@ function initPrestory() {
 
     function triggerTurnAround() {
         const tl = gsap.timeline();
-
-        // 1. Look Center/Up first (pitch center)
-        tl.to({ p: pitch }, {
-            p: 0,
-            duration: 1,
-            onUpdate: function () { pitch = this.targets()[0].p; },
-            ease: "power2.inOut"
-        });
-
-        // 2. Turn around to face Itachi
-        tl.to({ y: yaw }, {
-            y: yaw + Math.PI,
-            duration: 2,
-            onUpdate: function () { yaw = this.targets()[0].y; },
-            ease: "power2.inOut"
-        }, "+=0.2");
-
-        // 3. Blur and Zoom in
-        tl.add(() => {
-            const storyContainer = document.getElementById('story-container');
-            if (storyContainer) gsap.to(storyContainer, { filter: 'blur(10px)', duration: 3 });
-        }, "-=1");
-
-        tl.to(camera.position, {
-            x: itachiModel.position.x,
-            z: itachiModel.position.z + 2.5,
-            y: 1.7,
-            duration: 3,
-            ease: "power2.in"
-        }, "+=0.5")
+        // Force turn around to face Itachi
+        tl.to(camera.rotation, { y: Math.PI, duration: 2, ease: "power2.inOut" })
+            .add(() => {
+                const storyContainer = document.getElementById('story-container');
+                if (storyContainer) gsap.to(storyContainer, { filter: 'blur(10px)', duration: 3 });
+            })
+            .to(camera.position, { y: 0.2, z: camera.position.z + 1, duration: 2, ease: "power2.in" }, "+=1")
             .add(() => {
                 startBlinkingTransition();
             });
     }
 
     function startBlinkingTransition() {
+        const eyeOverlay = document.getElementById('eye-blinking-overlay');
         const eyelidsTop = document.querySelector('.eyelid.top');
         const eyelidsBottom = document.querySelector('.eyelid.bottom');
+
+        if (eyeOverlay) eyeOverlay.style.display = 'block';
 
         gsap.timeline()
             .to([eyelidsTop, eyelidsBottom], { height: '50%', duration: 1.5, ease: "power2.inOut" })
             .add(() => {
-                // Intermission: "A few days later"
-                if (typeof showIntermission === 'function') {
-                    showIntermission("A few days later", 3000, () => {
-                        window.currentStage = 'cave';
-                        if (typeof initThreeCave === 'function') {
-                            initThreeCave();
-                        }
-                    });
-                } else {
-                    window.currentStage = 'cave';
-                    if (typeof initThreeCave === 'function') initThreeCave();
+                // Move Itachi to stand right over the user
+                if (itachiModel) {
+                    itachiModel.position.set(camera.position.x, 0, camera.position.z - 0.5);
+                }
+            })
+            .to([eyelidsTop, eyelidsBottom], { height: '40%', duration: 0.5, repeat: 1, yoyo: true })
+            .add(() => {
+                window.currentStage = 'cave';
+                if (typeof initThreeCave === 'function') {
+                    initThreeCave();
                 }
             });
     }
@@ -275,12 +219,7 @@ function initPrestory() {
             if (moveR) move.addScaledVector(side, -1);
 
             if (move.length() > 0) {
-                const nextPos = camera.position.clone().addScaledVector(move.normalize(), speed);
-
-                // Keep within backyard borders
-                if (Math.abs(nextPos.x) < 28 && Math.abs(nextPos.z) < 23) {
-                    camera.position.copy(nextPos);
-                }
+                camera.position.addScaledVector(move.normalize(), speed);
             }
             camera.rotation.set(pitch, yaw, 0, 'YXZ');
         }

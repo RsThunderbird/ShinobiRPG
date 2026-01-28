@@ -357,49 +357,37 @@ function initThreeForest() {
     }
 
     function triggerPortalTransition() {
-        // Clear Forest UI
-        const questUi = document.getElementById('quest-ui');
-        if (questUi) questUi.classList.add('hidden');
-        const compass = document.getElementById('compass-container');
-        if (compass) compass.style.display = 'none';
-
         const storyContainer = document.getElementById('story-container');
         const eyeOverlay = document.getElementById('eye-blinking-overlay');
         const eyelidsTop = document.querySelector('.eyelid.top');
         const eyelidsBottom = document.querySelector('.eyelid.bottom');
 
-        // Load Itachi for the ambush
-        loader.load('assets/itachi.glb', (gltf) => {
-            const itachi = gltf.scene;
-            const box = new THREE.Box3().setFromObject(itachi);
-            const sf = 2.2 / (box.getSize(new THREE.Vector3()).y || 1);
-            itachi.scale.set(sf, sf, sf);
+        showNotification("You start feeling dizzy...");
 
-            const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
-            itachi.position.set(camera.position.x - dir.x * 4, 0, camera.position.z - dir.z * 4);
-            itachi.lookAt(camera.position.x, 0, camera.position.z);
-            scene.add(itachi);
+        // 1. Blur vision gradually
+        gsap.to(storyContainer, { filter: 'blur(20px)', duration: 4 });
+        gsap.to(camera, { fov: 30, duration: 4, onUpdate: () => camera.updateProjectionMatrix() });
 
-            showNarrative("User: Not again..");
+        setTimeout(() => {
+            showNotification("Your vision is fading...");
+        }, 1500);
 
-            showNotification("You start feeling dizzy...");
-            gsap.to(storyContainer, { filter: 'blur(20px)', duration: 4 });
-            gsap.to(camera, { fov: 30, duration: 4, onUpdate: () => camera.updateProjectionMatrix() });
+        // 2. Shut eyes
+        if (eyeOverlay) eyeOverlay.style.display = 'block';
+        gsap.to([eyelidsTop, eyelidsBottom], {
+            height: '50%',
+            duration: 2,
+            delay: 2.5,
+            ease: "power2.inOut",
+            onComplete: () => {
+                // Stop forest music
+                if (forestMusic) forestMusic.stop();
 
-            if (eyeOverlay) eyeOverlay.style.display = 'block';
-            gsap.to([eyelidsTop, eyelidsBottom], {
-                height: '50%',
-                duration: 2,
-                delay: 2.5,
-                ease: "power2.inOut",
-                onComplete: () => {
-                    if (forestMusic) forestMusic.stop();
-                    setTimeout(() => {
-                        window.currentStage = 'genjutsu';
-                        startGenjutsuStage();
-                    }, 1000);
-                }
-            });
+                // Switch to Genjutsu Stage
+                setTimeout(() => {
+                    startGenjutsuStage();
+                }, 1000);
+            }
         });
     }
 
