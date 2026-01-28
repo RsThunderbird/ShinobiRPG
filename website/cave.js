@@ -52,11 +52,11 @@ function initThreeCave() {
 
     // --- TUNNEL OPENINGS ---
     // Left Tunnel (Valid)
-    const leftMarker = createRock(-8, 1, -12, 1);
+    const leftMarker = createRock(-6, 1, -10, 1);
     leftMarker.material = new THREE.MeshLambertMaterial({ color: 0x00ff00, emissive: 0x004400 });
 
     // Right Tunnel (Dead End)
-    const rightMarker = createRock(8, 1, -12, 1);
+    const rightMarker = createRock(6, 1, -10, 1);
     rightMarker.material = new THREE.MeshLambertMaterial({ color: 0xff0000, emissive: 0x440000 });
 
     // Path indicators 2D
@@ -71,8 +71,8 @@ function initThreeCave() {
         sprite.position.set(x, 4, z); sprite.scale.set(4, 2, 1);
         scene.add(sprite);
     };
-    createMarkerText("EXIT PATH", -8, -12);
-    createMarkerText("DEAD END", 8, -12);
+    createMarkerText("EXIT PATH", -6, -10);
+    createMarkerText("DEAD END", 6, -10);
 
     // Actual Openings: Carve out space (visually we just don't put rocks there)
     // Left Path
@@ -276,6 +276,7 @@ function initThreeCave() {
     gsap.set([eyelidsTop, eyelidsBottom], { height: '50%' });
 
     setTimeout(() => {
+        gsap.to(document.getElementById('story-container'), { filter: 'blur(0px)', duration: 3 });
         gsap.timeline()
             .to([eyelidsTop, eyelidsBottom], { height: '35%', duration: 1.5, repeat: 1, yoyo: true })
             .to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 3, ease: "power2.out" })
