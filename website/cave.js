@@ -1,5 +1,5 @@
 /**
- * cave.js - 3D Cave environment and main story progression
+ * cave.js - 3D Cave environment with traversal and minigame
  */
 
 function initThreeCave() {
@@ -8,8 +8,8 @@ function initThreeCave() {
 
     // --- SETUP SCENE ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050005); // Very dark purple/black
-    scene.fog = new THREE.FogExp2(0x050005, 0.05);
+    scene.background = new THREE.Color(0x050005);
+    scene.fog = new THREE.FogExp2(0x050005, 0.04);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -19,117 +19,88 @@ function initThreeCave() {
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    // Lights - Dim and moody
-    const ambientLight = new THREE.AmbientLight(0x221133, 0.5);
+    const ambientLight = new THREE.AmbientLight(0x221133, 0.6);
     scene.add(ambientLight);
 
-    const spotLight = new THREE.PointLight(0xaa00ff, 2, 20);
-    spotLight.position.set(0, 5, 0);
-    scene.add(spotLight);
+    const mainLight = new THREE.PointLight(0xaa00ff, 2, 30);
+    mainLight.position.set(0, 5, 0);
+    scene.add(mainLight);
 
     // --- CAVE GEOMETRY ---
-    // Floor
-    const floorGeo = new THREE.PlaneGeometry(100, 100, 20, 20);
-    // Add some noise to the floor
-    const posAttr = floorGeo.attributes.position;
-    for (let i = 0; i < posAttr.count; i++) {
-        posAttr.setZ(i, Math.random() * 0.5);
-    }
-    floorGeo.computeVertexNormals();
-    const floorMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
+    const rockMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+    const floorGeo = new THREE.PlaneGeometry(100, 200, 20, 20);
+    const floor = new THREE.Mesh(floorGeo, rockMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Walls (Using a large cylinder or custom meshes)
-    const caveGroup = new THREE.Group();
-    scene.add(caveGroup);
-
-    function createRock(x, y, z, scale = 1, color = 0x222222) {
+    function createRock(x, y, z, scale = 2) {
         const geo = new THREE.DodecahedronGeometry(scale, 0);
-        const mat = new THREE.MeshLambertMaterial({ color: color });
-        const mesh = new THREE.Mesh(geo, mat);
+        const mesh = new THREE.Mesh(geo, rockMat);
         mesh.position.set(x, y, z);
         mesh.rotation.set(Math.random(), Math.random(), Math.random());
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        caveGroup.add(mesh);
+        scene.add(mesh);
         return mesh;
     }
 
-    // Build cave walls roughly matching the image
-    for (let i = 0; i < 100; i++) {
-        const angle = (i / 100) * Math.PI * 2;
-        const r = 10 + Math.random() * 2;
-        const x = Math.cos(angle) * r;
-        const z = Math.sin(angle) * r;
-        createRock(x, Math.random() * 10, z, 2 + Math.random() * 3);
+    // Build the "Intro Chamber"
+    for (let i = 0; i < 40; i++) {
+        const angle = (i / 40) * Math.PI * 2;
+        const r = 12 + Math.random() * 2;
+        createRock(Math.cos(angle) * r, Math.random() * 8, Math.sin(angle) * r, 3 + Math.random() * 2);
     }
 
-    // Tunnels
-    // Left Tunnel
+    // --- TUNNEL OPENINGS ---
+    // Left Tunnel (Valid)
+    const leftMarker = createRock(-8, 1, -12, 1);
+    leftMarker.material = new THREE.MeshLambertMaterial({ color: 0x00ff00, emissive: 0x004400 });
+
+    // Right Tunnel (Dead End)
+    const rightMarker = createRock(8, 1, -12, 1);
+    rightMarker.material = new THREE.MeshLambertMaterial({ color: 0xff0000, emissive: 0x440000 });
+
+    // Path indicators 2D
+    const createMarkerText = (text, x, z) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256; canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 40px Cinzel'; ctx.textAlign = 'center';
+        ctx.fillText(text, 128, 64);
+        const tex = new THREE.CanvasTexture(canvas);
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex }));
+        sprite.position.set(x, 4, z); sprite.scale.set(4, 2, 1);
+        scene.add(sprite);
+    };
+    createMarkerText("EXIT PATH", -8, -12);
+    createMarkerText("DEAD END", 8, -12);
+
+    // Actual Openings: Carve out space (visually we just don't put rocks there)
+    // Left Path
     for (let i = 0; i < 20; i++) {
-        createRock(-8 - Math.random() * 2, Math.random() * 8, -5 - i, 3);
-        createRock(-12 - Math.random() * 2, Math.random() * 8, -5 - i, 3);
-        // Add some green "vines" hanging
-        if (i % 5 === 0) {
-            const vine = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 5), new THREE.MeshLambertMaterial({ color: 0x1a4d1a }));
-            vine.position.set(-10, 5, -5 - i);
-            caveGroup.add(vine);
-        }
+        createRock(-12, Math.random() * 8, -15 - i * 3, 4);
+        createRock(-4, Math.random() * 8, -15 - i * 3, 4);
     }
-    // Right Tunnel
-    for (let i = 0; i < 20; i++) {
-        createRock(8 + Math.random() * 2, Math.random() * 8, -5 - i, 3);
-        createRock(12 + Math.random() * 2, Math.random() * 8, -5 - i, 3);
+    // Right Path
+    for (let i = 0; i < 10; i++) {
+        createRock(4, Math.random() * 8, -15 - i * 3, 4);
+        createRock(12, Math.random() * 8, -15 - i * 3, 4);
+        if (i === 9) createRock(8, 2, -15 - i * 3, 6); // Blockage
     }
-
-    // Glowing Mushrooms
-    function createMushroom(x, z) {
-        const group = new THREE.Group();
-        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.2), new THREE.MeshLambertMaterial({ color: 0xcccccc }));
-        const cap = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0xaa00ff, emissive: 0x440066 }));
-        cap.position.y = 0.1;
-        group.add(stem);
-        group.add(cap);
-        group.position.set(x, 0.1, z);
-        scene.add(group);
-
-        const light = new THREE.PointLight(0xaa00ff, 0.5, 2);
-        light.position.set(x, 0.5, z);
-        scene.add(light);
-    }
-
-    for (let i = 0; i < 30; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const r = 5 + Math.random() * 4;
-        createMushroom(Math.cos(angle) * r, Math.sin(angle) * r);
-    }
-
-    // Floating Particles
-    const partGeo = new THREE.BufferGeometry();
-    const partCount = 200;
-    const posArray = new Float32Array(partCount * 3);
-    for (let i = 0; i < partCount * 3; i++) {
-        posArray[i] = (Math.random() - 0.5) * 40;
-    }
-    partGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-    const partMat = new THREE.PointsMaterial({ color: 0xaa00ff, size: 0.05, transparent: true, opacity: 0.6 });
-    const particles = new THREE.Points(partGeo, partMat);
-    scene.add(particles);
 
     // --- MOVEMENT ---
     camera.position.set(0, 1.6, 5);
-    let moveF = false, moveB = false, moveL = false, moveR = false, running = false, velocity = new THREE.Vector3(), canJump = true, playerHeight = 1.6, yaw = 0, pitch = 0;
+    let moveF = false, moveB = false, moveL = false, moveR = false, canMove = true;
+    let yaw = 0, pitch = 0;
+    const velocity = new THREE.Vector3();
+    const playerHeight = 1.6;
 
     const onKeyDown = (e) => {
+        if (!canMove) return;
         switch (e.code) {
             case 'KeyW': moveF = true; break;
             case 'KeyS': moveB = true; break;
             case 'KeyA': moveL = true; break;
             case 'KeyD': moveR = true; break;
-            case 'ShiftLeft': running = true; break;
         }
     };
     const onKeyUp = (e) => {
@@ -138,68 +109,42 @@ function initThreeCave() {
             case 'KeyS': moveB = false; break;
             case 'KeyA': moveL = false; break;
             case 'KeyD': moveR = false; break;
-            case 'ShiftLeft': running = false; break;
         }
     };
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
-    if (isMobile) {
-        // Assume mobile controls are handled by story.html UI if present,
-        // but for now let's just use click to move forward as a fallback
-    }
-
-    function animate() {
-        if (window.currentStage !== 'cave') return;
-        requestAnimationFrame(animate);
-        const delta = 0.016; // approx
-
-        let s = running ? 0.15 : 0.07;
-        const dir = new THREE.Vector3(); camera.getWorldDirection(dir); dir.y = 0; dir.normalize();
-        const side = new THREE.Vector3().crossVectors(camera.up, dir).normalize();
-        const m = new THREE.Vector3();
-        if (moveF) m.add(dir); if (moveB) m.addScaledVector(dir, -1);
-        if (moveL) m.add(side); if (moveR) m.addScaledVector(side, -1);
-        if (m.length() > 0) camera.position.addScaledVector(m.normalize(), s);
-
-        camera.rotation.set(pitch, yaw, 0, 'YXZ');
-
-        // Check for Tunnel Selection
-        if (camera.position.z < -2) {
-            if (camera.position.x < -2) {
-                triggerPath('left');
-            } else if (camera.position.x > 2) {
-                triggerPath('right');
-            }
+    document.addEventListener('mousemove', (e) => {
+        if (document.pointerLockElement === renderer.domElement && canMove) {
+            yaw -= e.movementX * 0.002;
+            pitch -= e.movementY * 0.002;
+            pitch = Math.max(-1.4, Math.min(1.4, pitch));
         }
+    });
 
-        renderer.render(scene, camera);
-    }
-    animate();
+    renderer.domElement.addEventListener('click', () => {
+        renderer.domElement.requestPointerLock();
+    });
 
+    // --- PROGRESSION ---
     let pathTriggered = false;
+    let movementPhase = 'START'; // START, TUNNEL, WALK, VINES
+
     function triggerPath(side) {
         if (pathTriggered) return;
         pathTriggered = true;
 
         if (side === 'right') {
             if (typeof showNarrative === 'function') {
-                showNarrative("This path seems to be a dead end. Better go the other way.", [
-                    {
-                        text: "Go back", action: () => {
-                            camera.position.set(0, 1.6, 2);
-                            pathTriggered = false;
-                        }
-                    }
+                showNarrative("This path is blocked. You need to find another way.", [
+                    { text: "Go back", action: () => { camera.position.set(0, 1.6, 2); pathTriggered = false; } }
                 ]);
             }
         } else {
-            // Left Path - Correct one
-            if (typeof showNarrative === 'function') {
-                showNarrative("You venture deeper into the left tunnel...", []);
-            }
+            // Correct Path
+            canMove = false;
             gsap.to(camera.position, {
-                z: -20, duration: 3, onComplete: () => {
+                x: -8, z: -25, duration: 4, onComplete: () => {
                     if (typeof startBatsMinigame === 'function') {
                         startBatsMinigame();
                     }
@@ -208,31 +153,136 @@ function initThreeCave() {
         }
     }
 
-    document.addEventListener('mousemove', (e) => {
-        if (document.pointerLockElement === renderer.domElement) {
-            yaw -= e.movementX * 0.002;
-            pitch -= e.movementY * 0.002;
-            pitch = Math.max(-1.4, Math.min(1.4, pitch));
-        }
-    });
-    renderer.domElement.addEventListener('click', () => {
-        renderer.domElement.requestPointerLock();
-    });
+    // This is called after bats are cleared by story.js
+    window.startCaveWalkPhase = function () {
+        canMove = true;
+        pathTriggered = false;
+        movementPhase = 'WALK';
+        camera.position.set(-8, 1.6, -30);
+        showNotification("Something is flickering in the distance. Move forward.");
 
-    // Opening Blinking Animation (Integrated)
+        // Add more rocks for the long walk
+        for (let i = 0; i < 100; i++) {
+            createRock(-15 + (Math.random() - 0.5) * 5, Math.random() * 8, -40 - i * 4, 6);
+            createRock(-1 + (Math.random() - 0.5) * 5, Math.random() * 8, -40 - i * 4, 6);
+        }
+
+        // Add glowing mushrooms to lead the way
+        for (let i = 0; i < 20; i++) {
+            const light = new THREE.PointLight(0x00ffff, 1, 10);
+            light.position.set(-8 + (Math.random() - 0.5) * 4, 0.5, -50 - i * 20);
+            scene.add(light);
+        }
+    }
+
+    // Final Vines Phase
+    const vinesGroup = new THREE.Group();
+    scene.add(vinesGroup);
+    let vinesLeft = 15;
+
+    function initVinesPhase() {
+        canMove = false;
+        movementPhase = 'VINES';
+        camera.position.set(-8, 1.6, -450); // End of walk
+        camera.lookAt(-8, 1.6, -500);
+
+        // Forest light behind vines
+        const forestLight = new THREE.PointLight(0x87ceeb, 5, 50);
+        forestLight.position.set(-8, 2, -470);
+        scene.add(forestLight);
+
+        const vineMat = new THREE.MeshLambertMaterial({ color: 0x1a4d1a });
+        for (let i = 0; i < vinesLeft; i++) {
+            const vine = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 6), vineMat);
+            vine.position.set(-8 + (Math.random() - 0.5) * 4, 1.5, -462 + (Math.random() - 0.5) * 1);
+            vine.rotation.z = (Math.random() - 0.5) * 0.5;
+            vine.userData.isVine = true;
+            vinesGroup.add(vine);
+        }
+
+        showNarrative("The exit is completely blocked by thick vines. Tear them down one by one.", []);
+    }
+
+    const raycaster = new THREE.Raycaster();
+    function performVineAction() {
+        if (movementPhase !== 'VINES') return;
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+        const hits = raycaster.intersectObjects(vinesGroup.children);
+        if (hits.length > 0) {
+            const vine = hits[0].object;
+            gsap.to(vine.position, {
+                y: -5, duration: 0.5, onComplete: () => {
+                    vine.visible = false;
+                    vinesLeft--;
+                    if (vinesLeft === 0) finishCave();
+                }
+            });
+        }
+    }
+
+    function finishCave() {
+        showNarrative("The path is clear. You step out into the sunlight...", [
+            { text: "Exit Cave", action: () => startForestStage() }
+        ]);
+    }
+
+    // --- ANIMATION LOOP ---
+    function animate() {
+        if (window.currentStage !== 'cave') return;
+        requestAnimationFrame(animate);
+
+        if (canMove) {
+            const delta = 0.016;
+            const speed = 0.1; // Reduced speed as requested
+            const dir = new THREE.Vector3(); camera.getWorldDirection(dir); dir.y = 0; dir.normalize();
+            const side = new THREE.Vector3().crossVectors(camera.up, dir).normalize();
+            const move = new THREE.Vector3();
+            if (moveF) move.add(dir); if (moveB) move.addScaledVector(dir, -1);
+            if (moveL) move.add(side); if (moveR) move.addScaledVector(side, -1);
+
+            if (move.length() > 0) {
+                const nextPos = camera.position.clone().addScaledVector(move.normalize(), speed);
+
+                // Boundaries
+                if (movementPhase === 'START') {
+                    if (nextPos.length() < 20) camera.position.copy(nextPos);
+                } else if (movementPhase === 'WALK') {
+                    if (nextPos.x > -14 && nextPos.x < -2) camera.position.copy(nextPos);
+                }
+            }
+
+            // Path Check
+            if (movementPhase === 'START' && camera.position.z < -4) {
+                if (camera.position.x < -2) triggerPath('left');
+                else if (camera.position.x > 2) triggerPath('right');
+            }
+
+            // Walk End Check
+            if (movementPhase === 'WALK' && camera.position.z < -450) {
+                initVinesPhase();
+            }
+        }
+
+        camera.rotation.set(pitch, yaw, 0, 'YXZ');
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('click', performVineAction);
+
+    // Initial Blink
     const eyelidsTop = document.querySelector('.eyelid.top');
     const eyelidsBottom = document.querySelector('.eyelid.bottom');
-    const storyContainer = document.getElementById('story-container');
+    gsap.set([eyelidsTop, eyelidsBottom], { height: '50%' });
 
-    gsap.timeline()
-        .to([eyelidsTop, eyelidsBottom], { height: '35%', duration: 2, repeat: 1, yoyo: true })
-        .to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 3 })
-        .to(storyContainer, { filter: 'blur(0px)', duration: 4 }, "-=2")
-        .add(() => {
-            if (typeof showNarrative === 'function') {
-                showNarrative("You wake up in a damp, dark cave. Two tunnels lie ahead.", []);
-            }
-        });
+    setTimeout(() => {
+        gsap.timeline()
+            .to([eyelidsTop, eyelidsBottom], { height: '35%', duration: 1.5, repeat: 1, yoyo: true })
+            .to([eyelidsTop, eyelidsBottom], { height: '0%', duration: 3, ease: "power2.out" })
+            .add(() => {
+                showNarrative("You wake up with a pounding headache. Two tunnels lie ahead. Choose wisely.", []);
+            });
+    }, 1000);
 }
 
 window.initThreeCave = initThreeCave;

@@ -161,6 +161,32 @@ function showNotification(text) {
     }, 4000);
 }
 
+function showIntermission(text, duration = 3000, callback) {
+    const overlay = document.getElementById('intermission-overlay');
+    const textEl = document.getElementById('intermission-text');
+    if (!overlay || !textEl) return;
+
+    textEl.innerText = text;
+    overlay.style.display = 'flex';
+
+    gsap.to(overlay, {
+        opacity: 1,
+        duration: 1,
+        onComplete: () => {
+            setTimeout(() => {
+                if (callback) callback();
+                gsap.to(overlay, {
+                    opacity: 0,
+                    duration: 1,
+                    onComplete: () => {
+                        overlay.style.display = 'none';
+                    }
+                });
+            }, duration);
+        }
+    });
+}
+
 function startBatsMinigame() {
     window.currentStage = 'bats';
     document.getElementById('narrative-box').style.display = 'none';
@@ -182,7 +208,16 @@ function startBatsMinigame() {
             if (batsLeft === 0) {
                 stage.classList.remove('active');
                 showNarrative("The bats are gone. You continue deeper...", [
-                    { text: "Next", action: () => startVinesMinigame() }
+                    {
+                        text: "Next", action: () => {
+                            if (typeof startCaveWalkPhase === 'function') {
+                                startCaveWalkPhase();
+                            } else {
+                                // Fallback to forest if function missing
+                                startForestStage();
+                            }
+                        }
+                    }
                 ]);
             }
         };

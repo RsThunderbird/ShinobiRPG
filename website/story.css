@@ -839,3 +839,34 @@ html {
     height: 100%;
     background: transparent !important;
 }
+
+#intermission-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+#intermission-text {
+    font-family: 'Cinzel', serif;
+    font-size: 3rem;
+    color: #fff;
+    letter-spacing: 10px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+@media screen and (max-width: 768px) {
+    #intermission-text {
+        font-size: 1.5rem;
+        letter-spacing: 5px;
+    }
+}
